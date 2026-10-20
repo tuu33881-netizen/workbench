@@ -756,7 +756,11 @@ function normalizeLots(text){
   return out;
 }
 function parseBets0(text){
-  text=normalizeLots(String(text));
+  text=String(text).replace(/[\uFF01-\uFF5E]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\u3000/g," ");
+  text=normalizeLots(text);
+  // 龙平100 / 龙羊平特100 → 平特龙… ；50各 → 各50
+  text=text.replace(/([羊猪兔蛇虎狗牛龙马猴鼠鸡龍馬雞豬](?:[\s、，,.]*[羊猪兔蛇虎狗牛龙马猴鼠鸡龍馬雞豬])*)\s*(平特一肖|平特|平)(?![码碼])/g,"$2$1 ");
+  text=text.replace(/(\d+(?:\s*[百千万])?|[一二两三四五六七八九十百千万]+)\s*(?:元|块)?\s*各(?=\s*(?:$|[\n。；;]))/gm,"各$1");
   text=text.replace(/(平特一肖|平特|平|特肖|特码)\s*[。；;\n]+/g,"$1 ").replace(/(平特?)?本命(平特?)?/g," 平"+BM()+" ");
   const out=[];
   text.split(/[\n。；;]+/).forEach(line=>{
