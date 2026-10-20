@@ -81,6 +81,7 @@ textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;paddin
 #tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid #cfe9d8;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
 #tabbar button{flex:1;border:0;background:none;padding:12px 0;font-size:15px;color:#777;cursor:pointer}#tabbar button.on{color:#16b55a;font-weight:700;box-shadow:inset 0 3px 0 #16b55a}
 body{padding-bottom:56px}
+.rebl{font-size:12px;color:#888;margin:0 0 3px}
 .hist{padding:8px 14px 20px;font-size:13px}
 .hist table{width:100%;border-collapse:collapse}
 .hist td,.hist th{border-bottom:1px solid #eee;padding:5px 4px;text-align:left}
@@ -880,6 +881,11 @@ function hitLine(b){
 }
 function rawOf(b){return String(b.note||"").replace(/^工作台：|^粘贴：/,"")}
 function orderAmt(L){return L.reduce((a,b)=>a+(+b.amount||0),0)}
+function rebTag(bs,h){
+  const a=bs.reduce((x,b)=>x+(+rebInfo(b).amt||0),0), st=bs.reduce((x,b)=>x+(+b.amount||0),0);
+  const pc=a>0&&st>0?Math.round(a/st*1000)/10:0;
+  return h+`<div class="rebl">退水 ${fmt(Math.round(a*100)/100)}${pc?`（${pc}%）`:""}</div>`;
+}
 function orderLines(L){
   const buckets=[], map={};
   L.forEach(b=>{
@@ -887,7 +893,7 @@ function orderLines(L){
     if(map[k]==null){map[k]=buckets.length;buckets.push([])}
     buckets[map[k]].push(b);
   });
-  return buckets.map(bs=>{
+  return buckets.map(bs=>rebTag(bs,(()=>{
     const wins=bs.filter(b=>b.res==="win");
     if(bs[0].zexp){
       const b0=bs[0],lot=LN[lotOf(b0)]||"",tot=orderAmt(bs);
@@ -916,7 +922,7 @@ function orderLines(L){
     else line=bs.map(contentLine).join("<br>");
     if(pends.length===bs.length)return `<div class="muted">${line}（未开）</div>`;
     return `<div>${line}</div>`;
-  }).join("");
+  })())).join("");
 }
 function dayBets(){const dt=$("wb_date").value||today();return D.bets.filter(b=>b.date===dt)}
 function refreshToSelect(){
@@ -940,7 +946,7 @@ function renderSlip(){
   const G0={}; B.forEach(b=>{(G0[b.grp||1]=G0[b.grp||1]||[]).push(b)});
   const nOrd=Object.keys(G0).length;
   $("wb_sum").innerHTML=B.length?
-    `订单: <b>${nOrd}</b>　总额: <b>${fmt(tot)}</b>　FS: <b>${fmt(s.reb)}</b>${pend?`　<small>（${pend}笔未开）</small>`:""}<br>`+
+    `订单: <b>${nOrd}</b>　总额: <b>${fmt(tot)}</b>　退水: <b>${fmt(s.reb)}</b>${pend?`　<small>（${pend}笔未开）</small>`:""}<br>`+
     `中奖情况: ${winSum}<br>`+
     `盈亏<small class="muted">${VL()}</small>: <span class="${s.pl*PV()>=0?"pl-win":"pl-lose"}">${sg(s.pl*PV())}</span>`
     :`<span class="muted">还没有 ${dt.slice(5)} 的注单，点上面「粘贴注单」添加</span>`;
@@ -961,7 +967,7 @@ function renderSlip(){
   const cols=[0,1,2].map(i=>gk.slice(i*per,i*per+per)).filter(c=>c.length);
   let no=0;
   let html=cols.map(col=>`<table><tr><th>#</th><th>金额</th><th>内容</th></tr>`+col.map(g=>row(G[g],++no)).join("")+"</table>").join("");
-  html+=`<table style="grid-column:1/-1"><tr class="gsum"><td colspan="3">总计 下注${fmt(tot)}　返还${fmt(s.ret)}　FS${fmt(s.reb)}　盈亏${VL()} <span class="${s.pl*PV()>=0?"pos":"neg"}">${sg(s.pl*PV())}</span></td></tr></table>`;
+  html+=`<table style="grid-column:1/-1"><tr class="gsum"><td colspan="3">总计 下注${fmt(tot)}　返还${fmt(s.ret)}　退水${fmt(s.reb)}　盈亏${VL()} <span class="${s.pl*PV()>=0?"pos":"neg"}">${sg(s.pl*PV())}</span></td></tr></table>`;
   $("wb_cards").innerHTML=html;
   $("wb_foot").textContent=`日期: ${dt.slice(5)}`;
   $("wb_cards").querySelectorAll("[data-dg]").forEach(x=>x.onclick=()=>{
