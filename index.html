@@ -742,14 +742,16 @@ function flush(g,out){
   g.items.forEach(it=>mk(typeFor(it),[it],g.amount==null?null:(each?g.amount:Math.round(g.amount/g.items.length*100)/100),each?[]:["已平分金额"]));
 }
 function normalizeLots(text){
-  const re=/^[ \t]*(新澳|新奥|老澳|老奥|澳|奥|香港|港)[ \t]*[:：]?[ \t]*/;
+  const W="(新澳|新奥|老澳|老奥|澳|奥|香港|港)";
+  const re=new RegExp("^[ \\t]*"+W+"[ \\t]*[:：]?[ \\t]*"), te=new RegExp("[ \\t]*[:：]?[ \\t]*"+W+"[ \\t]*[:：]?[ \\t]*$");
   const can=w=>/^老/.test(w)?"老澳":/^(香|港)/.test(w)?"香港":"新澳";
+  const L=text.split("\n").map(l=>{let m=l.match(re);if(m)return{lot:can(m[1]),t:l.slice(m[0].length),own:1};
+    m=l.match(te);if(m)return{lot:can(m[1]),t:l.slice(0,m.index),own:1};return{lot:null,t:l}});
+  // 单独一行的彩种：管后面的行；若在最后（后面没有注），管前面没写彩种的行
   let cur=null;
-  return text.split("\n").map(l=>{
-    const m=l.match(re);
-    if(m){cur=can(m[1]);const rest=l.slice(m[0].length);return rest.trim()?cur+" "+rest:""}
-    return cur&&l.trim()?cur+" "+l:l;
-  }).join("\n");
+  L.forEach((x,k)=>{if(x.own&&!x.t.trim()){cur=x.lot;if(!L.slice(k+1).some(y=>y.t.trim()))L.slice(0,k).forEach(y=>{if(!y.own&&!y.hl&&y.t.trim())y.lot=x.lot})}
+    else if(!x.own&&x.t.trim()&&cur){x.lot=cur;x.hl=1} else if(x.own)cur=cur;});
+  return L.map(x=>x.t.trim()?(x.lot?x.lot+" ":"")+x.t:"").join("\n");
 }
 function parseBets0(text){
   text=String(text).replace(/[\uFF01-\uFF5E]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\u3000/g," ");
