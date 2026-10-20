@@ -882,9 +882,14 @@ function hitLine(b){
 function rawOf(b){return String(b.note||"").replace(/^工作台：|^粘贴：/,"")}
 function orderAmt(L){return L.reduce((a,b)=>a+(+b.amount||0),0)}
 function rebTag(bs,h){
-  const a=bs.reduce((x,b)=>x+(+rebInfo(b).amt||0),0), st=bs.reduce((x,b)=>x+(+b.amount||0),0);
-  const pc=a>0&&st>0?Math.round(a/st*1000)/10:0;
-  return h+`<div class="rebl">退水 ${fmt(Math.round(a*100)/100)}${pc?`（${pc}%）`:""}</div>`;
+  let a=0; const F={}, Z={};
+  bs.forEach(b=>{const r=rebInfo(b),v=+r.amt||0,st=+b.amount||0;a+=v;
+    if(v>0&&st>0){const f=rebFam(b.type)||TL(b.type);(F[f]=F[f]||new Set()).add(Math.round(v/st*1000)/10)}
+    else if(/平特马/.test(r.src||""))Z["平特马不退"]=1; else if(b.type==="平特尾数")Z["平特尾不退"]=1;});
+  const fs=Object.keys(F), rates=[...new Set(fs.flatMap(f=>[...F[f]]))];
+  const parts=fs.length>1||rates.length>1?fs.map(f=>f+[...F[f]].join("/")+"%"):rates.map(x=>x+"%");
+  parts.push(...Object.keys(Z));
+  return h+`<div class="rebl">退水 ${fmt(Math.round(a*100)/100)}${parts.length?`（${parts.join("，")}）`:""}</div>`;
 }
 function orderLines(L){
   const buckets=[], map={};
