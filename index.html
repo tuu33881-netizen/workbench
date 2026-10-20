@@ -878,6 +878,13 @@ function orderLines(L){
   });
   return buckets.map(bs=>{
     const wins=bs.filter(b=>b.res==="win");
+    if(bs[0].zexp){
+      const b0=bs[0],lot=LN[lotOf(b0)]||"",tot=orderAmt(bs);
+      const line=`${lot} ${esc(b0.zexp)} 各数${fmt(b0.amount)}（${bs.length}个号，共${fmt(tot)}）`;
+      if(wins.length)return `<div class="muted">${line}</div>`+wins.map(hitLine).join("");
+      if(bs.every(b=>b.res==="pend"))return `<div class="muted">${line}（未开）</div>`;
+      return `<div>${line}（未中）</div>`;
+    }
     const pends=bs.filter(b=>b.res==="pend");
     if(wins.length){
       let h=wins.map(hitLine).join("");
@@ -983,7 +990,7 @@ $("wb_save").onclick=()=>{
       const last=Object.values(DRAWS).filter(d=>d.lot===lot).sort((a,b)=>b.issue.localeCompare(a.issue))[0];
       is=last?String(+last.issue+1):dt.replace(/-/g,"")+"01";
     }
-    D.bets.push({id:uid(),date:dt,issue:is,lot,type:r.type,content:r.content,amount:r.amount,odds:r.odds,net:isNet(r.type),note:"工作台："+r.raw,grp:gmap(r.grp),res:"pend",ret:0});
+    D.bets.push({id:uid(),date:dt,issue:is,lot,type:r.type,content:r.content,amount:r.amount,odds:r.odds,net:isNet(r.type),note:"工作台："+r.raw,...(r.zexp?{zexp:r.zexp}:{}),grp:gmap(r.grp),res:"pend",ret:0});
   });
   settleAll(); save();
   const nSaved=[...new Set(wbPV.map(r=>r.grp||1))].length;
