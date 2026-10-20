@@ -77,6 +77,10 @@ textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;paddin
 .rsec{margin:6px 0}.rsec h4{margin:4px 0;font-size:13px;color:#333}.rlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px}
 .ritem{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e3e3e3;border-radius:6px;padding:3px 6px}.ritem .ball{margin:0}.ritem small{color:#c62828;margin-left:auto}
 .rmore{font-size:12px;margin-top:4px;background:none;border:0;color:#1565c0;cursor:pointer;padding:0}
+#rk{max-width:1100px;margin:auto;background:#fff;min-height:100vh}
+#tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid #cfe9d8;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+#tabbar button{flex:1;border:0;background:none;padding:12px 0;font-size:15px;color:#777;cursor:pointer}#tabbar button.on{color:#16b55a;font-weight:700;box-shadow:inset 0 3px 0 #16b55a}
+body{padding-bottom:56px}
 .hist{padding:8px 14px 20px;font-size:13px}
 .hist table{width:100%;border-collapse:collapse}
 .hist td,.hist th{border-bottom:1px solid #eee;padding:5px 4px;text-align:left}
@@ -157,11 +161,13 @@ textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;paddin
   </details>
   <div class="cgrid" id="wb_cards"></div>
   <div class="dfoot" id="wb_foot"></div>
-  <details class="rank" id="wb_rank" open><summary>今晚排名</summary><div class="rtab" id="wb_rtab"></div><div id="wb_rbody"></div></details>
   <div class="hist"><b>历史</b><div id="wb_hist"></div></div>
 </div>
 
 <!-- 设置 -->
+<div id="rk" style="display:none"><div class="dh"><span>今晚排名</span><span id="rk_date" style="margin-left:auto;font-size:13px;color:#fff;opacity:.9"></span></div>
+<div class="rank"><div class="rtab" id="wb_rtab"></div><div id="wb_rbody"></div></div></div>
+<nav id="tabbar"><button type="button" data-s="app" class="on">工作台</button><button type="button" data-s="rk">排名</button></nav>
 <div id="set">
   <div class="panel">
     <h3>设置</h3>
@@ -985,6 +991,7 @@ function rankData(B,lot){
 }
 function renderRank(){
   const el=$("wb_rbody"); if(!el)return;
+  if($("rk_date"))$("rk_date").textContent=$("wb_date").value||today();
   const B=dayBets(), LOTS3=["新澳","老澳","香港"];
   $("wb_rtab").innerHTML=LOTS3.map(l=>`<button type="button" data-l="${l}" class="${l===rLot?"on":""}">${LN[l]||l}</button>`).join("");
   const R=rankData(B,rLot), TOP=8;
@@ -1002,6 +1009,8 @@ function renderRank(){
   el.innerHTML=h;
 }
 document.addEventListener("click",e=>{const t=e.target;
+  if(t.closest&&t.closest("#tabbar button")){const k=t.closest("button").dataset.s;$("app").style.display=k==="app"?"":"none";$("rk").style.display=k==="rk"?"":"none";
+    document.querySelectorAll("#tabbar button").forEach(b=>b.classList.toggle("on",b.dataset.s===k));if(k==="rk")renderRank();scrollTo(0,0);return}
   if(t.closest&&t.closest("#wb_rtab button")){rLot=t.closest("button").dataset.l;renderRank()}
   else if(t.id==="wb_rmore"){rAll=!rAll;renderRank()}});
 function renderWB(){renderSlip();renderHist();renderRank()}
