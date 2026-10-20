@@ -195,7 +195,7 @@ body{padding-bottom:56px}
       <label>普通平特<input id="r_ping" type="number" step="0.1"></label>
       <label>连肖<input id="r_lian" type="number" step="0.1"></label>
     </div>
-    <p class="note">平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。净盈亏＝返还−下注+退点。<br>数据只存在本机当前浏览器，不会同步到其他设备。</p>
+    <p class="note">平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。净盈亏＝返还−下注+退点。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v13</small></p>
     <div class="btns">
       <button type="button" class="ok" id="s_save">保存</button>
       <button type="button" class="g" id="s_close">关闭</button>
@@ -1125,7 +1125,11 @@ $("s_clr").onclick=()=>{
 window.__WB={parseBets,oddsOf,rebInfo,settleAll,judge,get D(){return D},get DRAWS(){return DRAWS},setTestData(d,dr){D=d;if(dr)DRAWS=dr},fmt,pl,agg,BM,canReb,Store,loadData,saveUser,fetchLaoFromSite,ingestLao,fetchDraws,saveManualDraw,renderBalls,pickBestDate};
 </script>
 <script>
-if('serviceWorker' in navigator && location.protocol==='https:'){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  var hadSW=!!navigator.serviceWorker.controller, reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){if(hadSW&&!reloaded){reloaded=true;location.reload()}});
+  addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){r.update();document.addEventListener('visibilitychange',function(){if(!document.hidden)r.update()})}).catch(function(){})});
+}
 </script>
 </body>
 </html>
