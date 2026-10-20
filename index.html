@@ -670,7 +670,7 @@ function tokenize(line){
   const T=[]; let x=line.replace(/[龍馬雞豬號連碼萬塊]/g,c=>TRAD[c]); let m;
   const R=[
     [/^[\s,，、.。;；:：+＋\-－—_~～·]+/,()=>null],
-    [/^(?:新?澳门?|老澳门?|老奥|老澳|香港|奥门?)\s*[:：]?/,m=>{const t=m[0];let lot=null;if(/香港/.test(t))lot="香港";else if(/老/.test(t))lot="老澳";else if(/澳|奥/.test(t))lot="新澳";return lot?{k:"lot",v:lot}:null}],
+    [/^(?:老[澳奥]门?|新?[澳奥]门?|香港)\s*[:：]?/,m=>{const t=m[0];let lot=null;if(/香港/.test(t))lot="香港";else if(/老/.test(t))lot="老澳";else if(/澳|奥/.test(t))lot="新澳";return lot?{k:"lot",v:lot}:null}],
     [/^(\d{1,2}(?:\s*[.．、,，\s]\s*\d{1,2})*)\s*号/,m=>({k:"nums",v:m[1].split(/[^\d]+/).filter(Boolean).map(Number)})],
     [/^(平特一肖|平特|平(?!码)|特码单码|特码|特肖|([二三四五])连肖?|特(?=\s*\d|尾|[羊猪兔蛇虎狗牛龙马猴鼠鸡]))/,m=>({k:"play",v:m[1],n:m[2]})],
     [/^本命/,()=>({k:"zod",v:BM()})],
@@ -742,18 +742,14 @@ function flush(g,out){
   g.items.forEach(it=>mk(typeFor(it),[it],g.amount==null?null:(each?g.amount:Math.round(g.amount/g.items.length*100)/100),each?[]:["已平分金额"]));
 }
 function normalizeLots(text){
-  const map={新澳:"新澳",新奥:"新澳",新澳门:"新澳",奥:"新澳",澳门:"新澳",老奥:"老澳",老澳:"老澳",老澳门:"老澳",香港:"香港"};
-  const re=/(新澳|新奥|新澳门|老奥|老澳|老澳门|香港)/g;
-  let out="", last=0, m, chunks=[];
-  while((m=re.exec(text))){chunks.push({t:text.slice(last,m.index),lot:map[m[1]]});last=m.index+m[0].length}
-  chunks.push({t:text.slice(last),lot:null});
-  for(const c of chunks){
-    if(!c.lot){out+=c.t;continue}
-    const body=c.t.replace(/[ \t\u3000]+$/,"");
-    if(!body.trim()){out+=c.lot+" ";continue}
-    out+=body.replace(/(^|[。；;\n]+)([ \t\u3000]*)(?=\S)/g,(mm,sep)=>sep+c.lot+" ");
-  }
-  return out;
+  const re=/^[ \t]*(新澳|新奥|老澳|老奥|澳|奥|香港|港)[ \t]*[:：]?[ \t]*/;
+  const can=w=>/^老/.test(w)?"老澳":/^(香|港)/.test(w)?"香港":"新澳";
+  let cur=null;
+  return text.split("\n").map(l=>{
+    const m=l.match(re);
+    if(m){cur=can(m[1]);const rest=l.slice(m[0].length);return rest.trim()?cur+" "+rest:""}
+    return cur&&l.trim()?cur+" "+l:l;
+  }).join("\n");
 }
 function parseBets0(text){
   text=String(text).replace(/[\uFF01-\uFF5E]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\u3000/g," ");
