@@ -187,6 +187,7 @@ body{padding-bottom:56px}
       <label>四连·含本命<input id="o_四连肖·含本命" type="number" step="0.01"></label>
       <label>四连·不含本命<input id="o_四连肖·不含本命" type="number" step="0.01"></label>
     </div>
+    <label>盈亏按<select id="s_view"><option value="客户">客户</option><option value="老板">老板</option></select></label>
     <h4 style="margin:14px 0 4px;font-size:14px">退点 %</h4>
     <div class="grid">
       <label>特码（含特肖）<input id="r_tema" type="number" step="0.1"></label>
@@ -941,7 +942,7 @@ function renderSlip(){
   $("wb_sum").innerHTML=B.length?
     `订单: <b>${nOrd}</b>　总额: <b>${fmt(tot)}</b>　FS: <b>${fmt(s.reb)}</b>${pend?`　<small>（${pend}笔未开）</small>`:""}<br>`+
     `中奖情况: ${winSum}<br>`+
-    `盈亏: <span class="${s.pl>=0?"pl-win":"pl-lose"}">${s.pl>0?"+":""}${fmt(s.pl)}</span>`
+    `盈亏<small class="muted">${VL()}</small>: <span class="${s.pl*PV()>=0?"pl-win":"pl-lose"}">${sg(s.pl*PV())}</span>`
     :`<span class="muted">还没有 ${dt.slice(5)} 的注单，点上面「粘贴注单」添加</span>`;
   if(!B.length){
     $("wb_cards").innerHTML=`<div class="muted" style="padding:8px">当天没有记录</div>`;
@@ -960,7 +961,7 @@ function renderSlip(){
   const cols=[0,1,2].map(i=>gk.slice(i*per,i*per+per)).filter(c=>c.length);
   let no=0;
   let html=cols.map(col=>`<table><tr><th>#</th><th>金额</th><th>内容</th></tr>`+col.map(g=>row(G[g],++no)).join("")+"</table>").join("");
-  html+=`<table style="grid-column:1/-1"><tr class="gsum"><td colspan="3">总计 下注${fmt(tot)}　返还${fmt(s.ret)}　FS${fmt(s.reb)}　<span class="${s.pl>=0?"pos":"neg"}">${s.pl>0?"+":""}${fmt(s.pl)}</span></td></tr></table>`;
+  html+=`<table style="grid-column:1/-1"><tr class="gsum"><td colspan="3">总计 下注${fmt(tot)}　返还${fmt(s.ret)}　FS${fmt(s.reb)}　盈亏${VL()} <span class="${s.pl*PV()>=0?"pos":"neg"}">${sg(s.pl*PV())}</span></td></tr></table>`;
   $("wb_cards").innerHTML=html;
   $("wb_foot").textContent=`日期: ${dt.slice(5)}`;
   $("wb_cards").querySelectorAll("[data-dg]").forEach(x=>x.onclick=()=>{
@@ -973,8 +974,8 @@ function renderHist(){
   const H={}; D.bets.forEach(b=>{const k=b.date;H[k]=H[k]||{date:b.date,a:0,p:0,pend:0,n:0};H[k].a+=b.amount;H[k].p+=pl(b);H[k].n++;if(b.res==="pend")H[k].pend++});
   const L=Object.values(H).sort((a,b)=>a.date.localeCompare(b.date));
   let run=0;
-  const rows=L.map(x=>{run+=x.p;return `<tr data-h="${x.date}"><td>${x.date.slice(5)}</td><td>${x.n}笔 / ${fmt(x.a)}</td><td class="${x.p>=0?"pos":"neg"}">${x.pend?"未开完":(x.p>=0?"+":"")+fmt(x.p)}</td><td>${(run>=0?"+":"")+fmt(run)}</td></tr>`}).reverse();
-  $("wb_hist").innerHTML=rows.length?`<table><tr><th>日期</th><th>下注</th><th>净盈亏</th><th>累计</th></tr>${rows.join("")}</table>`:`<div class="muted">还没有记录</div>`;
+  const rows=L.map(x=>{run+=x.p;return `<tr data-h="${x.date}"><td>${x.date.slice(5)}</td><td>${x.n}笔 / ${fmt(x.a)}</td><td class="${x.p*PV()>=0?"pos":"neg"}">${x.pend?"未开完":sg(x.p*PV())}</td><td>${sg(run*PV())}</td></tr>`}).reverse();
+  $("wb_hist").innerHTML=rows.length?`<table><tr><th>日期</th><th>下注</th><th>净盈亏${VL()}</th><th>累计</th></tr>${rows.join("")}</table>`:`<div class="muted">还没有记录</div>`;
   $("wb_hist").querySelectorAll("tr[data-h]").forEach(t=>t.onclick=()=>{$("wb_date").value=t.dataset.h;renderWB();scrollTo(0,0)});
 }
 
@@ -1013,6 +1014,8 @@ document.addEventListener("click",e=>{const t=e.target;
     document.querySelectorAll("#tabbar button").forEach(b=>b.classList.toggle("on",b.dataset.s===k));if(k==="rk")renderRank();scrollTo(0,0);return}
   if(t.closest&&t.closest("#wb_rtab button")){rLot=t.closest("button").dataset.l;renderRank()}
   else if(t.id==="wb_rmore"){rAll=!rAll;renderRank()}});
+const PV=()=>D.settings&&D.settings.view==="老板"?-1:1, VL=()=>PV()<0?"(老板)":"";
+const sg=v=>(v>0?"+":"")+fmt(v);
 function renderWB(){renderSlip();renderHist();renderRank()}
 
 $("wb_date").onchange=()=>{if($("m_date"))$("m_date").value=$("wb_date").value;renderWB()};
@@ -1054,6 +1057,7 @@ function openSet(){
   $("r_tema").value=D.settings.rebate.特码??4;
   $("r_ping").value=D.settings.rebate.平特??5;
   $("r_lian").value=D.settings.rebate.连肖??5;
+  $("s_view").value=D.settings.view==="老板"?"老板":"客户";
   $("s_msg").textContent="";
   $("set").classList.add("on");
 }
@@ -1065,6 +1069,7 @@ $("s_save").onclick=()=>{
   D.settings.bmOdds=parseOdds($("s_bmOdds").value,true);
   D.settings.odds=D.settings.odds||{};
   Object.keys(ODDS0).forEach(k=>{const el=$("o_"+k); if(el)D.settings.odds[k]=+el.value});
+  D.settings.view=$("s_view").value;
   D.settings.rebate={特码:+$("r_tema").value||0,平特:+$("r_ping").value||0,连肖:+$("r_lian").value||0};
   settleAll(); save();
   $("s_msg").textContent="已保存（只存在本机此账号）";
