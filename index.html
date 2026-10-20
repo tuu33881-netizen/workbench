@@ -72,6 +72,11 @@ textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;paddin
 .gsum td{background:#f4faf6;font-weight:600}
 .wdel{font-size:12px;padding:1px 6px;background:#fff;color:#c62828;border:1px solid #e0a0a0;border-radius:4px;cursor:pointer;float:right}
 .dfoot{background:#e9f3fb;text-align:right;padding:8px 14px;font-size:13px;color:#555}
+.rank{padding:6px 14px;font-size:13px}.rank summary{font-weight:700;cursor:pointer;padding:4px 0}
+.rtab{display:flex;gap:6px;margin:4px 0}.rtab button{font-size:13px;padding:4px 12px;border:1px solid #bbb;border-radius:14px;background:#fff;cursor:pointer}.rtab button.on{background:#16b55a;color:#fff;border-color:#16b55a}
+.rsec{margin:6px 0}.rsec h4{margin:4px 0;font-size:13px;color:#333}.rlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px}
+.ritem{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e3e3e3;border-radius:6px;padding:3px 6px}.ritem .ball{margin:0}.ritem small{color:#c62828;margin-left:auto}
+.rmore{font-size:12px;margin-top:4px;background:none;border:0;color:#1565c0;cursor:pointer;padding:0}
 .hist{padding:8px 14px 20px;font-size:13px}
 .hist table{width:100%;border-collapse:collapse}
 .hist td,.hist th{border-bottom:1px solid #eee;padding:5px 4px;text-align:left}
@@ -152,6 +157,7 @@ textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;paddin
   </details>
   <div class="cgrid" id="wb_cards"></div>
   <div class="dfoot" id="wb_foot"></div>
+  <details class="rank" id="wb_rank" open><summary>今晚排名</summary><div class="rtab" id="wb_rtab"></div><div id="wb_rbody"></div></details>
   <div class="hist"><b>历史</b><div id="wb_hist"></div></div>
 </div>
 
@@ -965,7 +971,40 @@ function renderHist(){
   $("wb_hist").innerHTML=rows.length?`<table><tr><th>日期</th><th>下注</th><th>净盈亏</th><th>累计</th></tr>${rows.join("")}</table>`:`<div class="muted">还没有记录</div>`;
   $("wb_hist").querySelectorAll("tr[data-h]").forEach(t=>t.onclick=()=>{$("wb_date").value=t.dataset.h;renderWB();scrollTo(0,0)});
 }
-function renderWB(){renderSlip();renderHist()}
+
+let rLot="新澳", rAll=false;
+function rankData(B,lot){
+  const N={},Z={},P={},T={};
+  B.filter(b=>(b.lot||"新澳")===lot).forEach(b=>{const a=+b.amount||0,c=String(b.content).trim();
+    if(b.type==="特码单码"){const n=+c;if(n>=1&&n<=49)N[n]=(N[n]||0)+a}
+    else if(b.type==="一肖")Z[c]=(Z[c]||0)+a;
+    else if(b.type==="平特一肖"||b.type==="平特")P[c]=(P[c]||0)+a;
+    else if(b.type==="平特尾数")T[c]=(T[c]||0)+a;});
+  const so=o=>Object.entries(o).sort((x,y)=>y[1]-x[1]);
+  return{N:so(N),Z:so(Z),P:so(P),T:so(T)};
+}
+function renderRank(){
+  const el=$("wb_rbody"); if(!el)return;
+  const B=dayBets(), LOTS3=["新澳","老澳","香港"];
+  $("wb_rtab").innerHTML=LOTS3.map(l=>`<button type="button" data-l="${l}" class="${l===rLot?"on":""}">${LN[l]||l}</button>`).join("");
+  const R=rankData(B,rLot), TOP=8;
+  const cut=a=>rAll?a:a.slice(0,TOP), sum=a=>a.reduce((x,y)=>x+y[1],0);
+  const ball=n=>`<span class="ball"><b class="${wave(+n)}">${pad(+n)}</b>${zod(+n)}</span>`;
+  let h="", more=false;
+  const sec=(title,a,fn)=>{if(!a.length)return;if(a.length>TOP)more=true;h+=`<div class="rsec"><h4>${title}　合计 ${fmt(sum(a))}</h4><div class="rlist">${cut(a).map(fn).join("")}</div></div>`};
+  const tm=odd("特码单码"), zo=odd("一肖");
+  sec("特码",R.N,([n,a])=>`<div class="ritem">${ball(n)}<b>${fmt(a)}</b><small>中赔 ${fmt(Math.round(a*tm*100)/100)}</small></div>`);
+  sec("特肖",R.Z,([z,a])=>`<div class="ritem"><b>${esc(z)}</b> ${fmt(a)}<small>中赔 ${fmt(Math.round(a*zo*100)/100)}</small></div>`);
+  sec("平特（肖）",R.P,([z,a])=>`<div class="ritem"><b>${esc(z)}</b> ${fmt(a)}</div>`);
+  sec("平特尾",R.T,([t,a])=>`<div class="ritem"><b>${esc(t)}尾</b> ${fmt(a)}</div>`);
+  if(!h)h=`<div class="muted">今天${LN[rLot]||rLot}还没有特码/平特注</div>`;
+  if(more)h+=`<button type="button" class="rmore" id="wb_rmore">${rAll?"收起":"展开全部"}</button>`;
+  el.innerHTML=h;
+}
+document.addEventListener("click",e=>{const t=e.target;
+  if(t.closest&&t.closest("#wb_rtab button")){rLot=t.closest("button").dataset.l;renderRank()}
+  else if(t.id==="wb_rmore"){rAll=!rAll;renderRank()}});
+function renderWB(){renderSlip();renderHist();renderRank()}
 
 $("wb_date").onchange=()=>{if($("m_date"))$("m_date").value=$("wb_date").value;renderWB()};
 $("m_save").onclick=saveManualDraw;
