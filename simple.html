@@ -146,7 +146,7 @@ function nightHtml(L){
     const hit=Object.entries(W2).map(([kk,v])=>{const [l,tp,o]=kk.split("|");return `<div class="red">${LS[l]||LN[l]||l} ${tp} 中:${fmt(v.s)}*${o}=${fmt(v.w)} ---(${esc([...v.m].join(""))})</div>`}).join("");
     const src=S.find(b=>b.src)?.src||linesOf(S).map(x=>x.r).join("\n");
     return `<tr><td>${k+1}</td><td>${fmt(a)}</td><td>${(()=>{const v=S[0].at||0;if(seen.has(v))return"";seen.add(v);return `<div class="mk">第${ats.indexOf(v)+1}次 ${at}</div>`})()}${hit}<div class="raw">${esc(src)}</div></td></tr>`});
-  const NC=3;
+  const NC=2;
   let cols;{const per=Math.ceil(rows.length/NC)||1;cols=[];for(let i=0;i<NC;i++){const sl=rows.slice(i*per,(i+1)*per);cols.push(sl)}}
   const wlByLot=()=>{let h="";["香港","新澳","老澳"].forEach(lot=>{const tw=L.filter(b=>b.res==="win"&&!isNet(b)&&(b.lot||"新澳")===lot),pw=L.filter(b=>b.res==="win"&&isNet(b)&&(b.lot||"新澳")===lot);
     if(tw.length){const xs=tw.map(prin),sm=xs.reduce((a,x)=>a+x,0);h+=`<div>${LN[lot]} 特码 中:${xs.map(fmt).join("+")}=${fmt(sm)} —赔:${fmt(tw.reduce((a,b)=>a+X.winAmt(b),0))}</div>`}
