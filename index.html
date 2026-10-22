@@ -61,19 +61,21 @@ textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;paddin
 .big{background:#16b55a;color:#fff;border:0!important;font-weight:700}
 .big.r{background:#c62828}
 .bad{word-break:break-all;background:#ffe5e5;color:#c00;padding:4px 6px;border-radius:4px;margin:2px 0;font-size:13px}
-.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px;align-items:start}
-@media(max-width:600px){.cgrid{grid-template-columns:1fr}}
-.cgrid table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
-.cgrid th{background:#c6f6d5;padding:3px 6px;border:1px solid #ccc;text-align:left;font-weight:600}
-.cgrid td{padding:3px 6px;border:1px solid #ccc;vertical-align:top;line-height:1.4}
-.wtd{position:relative}.wreb{font-size:11px;color:#999;white-space:nowrap;line-height:1.2}.wcu{display:inline-block;margin:0 4px 2px 0;white-space:nowrap}.wsrc{white-space:pre-wrap;word-break:break-all}
+.cgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:2px;padding:0 2px;align-items:start}
+@media(max-width:560px){.cgrid{grid-template-columns:1fr!important}}
+.cgrid table{width:100%;border-collapse:collapse;align-self:start;table-layout:fixed;font-size:11px;background:#fff}
+.cgrid th{background:#cfeedd;padding:0 2px;border:1px solid #ddd;text-align:left;font-weight:400}
+.cgrid td{padding:0 2px;border:1px solid #ddd;vertical-align:top;line-height:1.15;font-size:11px}
+.cgrid td:first-child{width:1.6em;color:#666;padding:0 1px}
+.cgrid td:nth-child(2){width:3.6em}
+.wtd{position:relative}.wreb{font-size:10px;color:#999;white-space:nowrap;line-height:1.1}.wcu{display:inline-block;margin:0 2px 1px 0;white-space:nowrap}.wsrc{white-space:pre-wrap;word-break:break-all;font-size:10px;line-height:1.15}
 .wops{position:absolute;top:1px;right:2px;display:flex;gap:2px;align-items:center}
 .wmore{border:0;background:none;color:#bbb;cursor:pointer;font-size:14px;padding:0 3px;line-height:1}
 .wmenu{display:none;gap:2px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);padding:2px;border-radius:4px}
 .wmenu .wdel{float:none}.wops.op .wmenu{display:flex}
 @media(hover:hover){.wtd .wmore{visibility:hidden}.wtd:hover .wmore{visibility:visible}.wtd:hover .wmenu{display:flex}}
 .hitrow td{background:#fff}
-.hit{color:#d0021b;font-weight:700}
+.hit{color:#d0021b;font-weight:700;font-size:11px;line-height:1.15}
 .gsum td{background:#f4faf6;font-weight:600}
 .wdel{font-size:12px;padding:1px 6px;background:#fff;color:#c62828;border:1px solid #e0a0a0;border-radius:4px;cursor:pointer;float:right}
 .dfoot{background:#e9f3fb;text-align:right;padding:8px 14px;font-size:13px;color:#555}
@@ -254,7 +256,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 &gt; 客户 &gt; 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码中奖含本×赔率，平特中奖=中本金×赔率不含本；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.0</small></p>
+    <p class="note">优先级：单上设的 &gt; 客户 &gt; 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码中奖含本×赔率，平特中奖=中本金×赔率不含本；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.1</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -1336,10 +1338,11 @@ function renderSlip(){
     const body=src?`<div class="wsrc">${esc(src)}</div>`:orderLines(L).replace(/<div class="rebl">[\s\S]*?<\/div>/g,"");
     return `<tr${hasWin?' class="hitrow"':""}><td>${no}</td><td>${fmt(orderAmt(L))}${(()=>{const ra=L.reduce((a,b)=>a+(+rebInfo(b).amt||0),0);if(!ra)return"";const od=[...new Set(L.map(rebInfo).filter(r=>r.rate!==undefined&&r.src!=="默认"&&r.amt).map(r=>r.rate+"%"))];return `<div class="wreb">退 ${fmt(Math.round(ra*100)/100)}${od.length?` (${od.join("/")})`:""}</div>`})()}</td><td class="wtd">${cu.map(c=>`<span class="cust wcu">${esc(c)}</span>`).join("")}<span class="wops"><button type="button" class="wmore" title="更多">⋯</button><span class="wmenu">${rcb}${del}</span></span>${hitSum(L)}${body}</td></tr>`;
   };
-  const NC=ncOf($("wb_cards"));$("wb_cards").style.gridTemplateColumns=`repeat(${NC},1fr)`;
-  const cols=(NC<=1?[gk]:colBlocks(gk,6,NC).flat());
-  let no=0;
-  let html=cols.map(col=>`<table><tr><th>#</th><th>金额</th><th>原文</th></tr>`+col.map(g=>row(G[g],gk.indexOf(g)+1)).join("")+"</table>").join("");
+  const NC=4, tb=r=>`<table><tr><th>#</th><th>金额</th><th>原文</th></tr>${r.join("")}</table>`;
+  const cols=colMajor(gk,NC);
+  while(cols.length<NC)cols.push([]);
+  $("wb_cards").style.gridTemplateColumns=`repeat(4,minmax(0,1fr))`;
+  let html=cols.map(c=>c.length?tb(c.map(g=>row(G[g],gk.indexOf(g)+1))):"<table></table>").join("");
   html+=`<table style="grid-column:1/-1"><tr class="gsum"><td colspan="3">总计 下注${fmt(tot)}　中奖${fmt(s.ret)}　退水合计${fmt(rbAll)}　${settleOf(B).filter(x=>x.k!=="退水").map(x=>esc(x.t)).join("　")}</td></tr></table>`;
   $("wb_cards").innerHTML=html;
   $("wb_foot").textContent=`日期: ${dt.slice(5)}`;
