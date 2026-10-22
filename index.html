@@ -254,7 +254,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 &gt; 客户 &gt; 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码中奖含本×赔率，平特中奖=中本金×赔率不含本；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.0</small></p>
+    <p class="note">优先级：单上设的 &gt; 客户 &gt; 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码中奖含本×赔率，平特中奖=中本金×赔率不含本；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.1</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -442,7 +442,7 @@ function defaultSettings(){
   return{
     bm:"马", bmOdds:0.8,
     odds:Object.assign({},ODDS0),
-    rebate:{特码:4,平特:5,连肖:5}, custReb:{}, taiCust:"",
+    rebate:{特码:4,平特:4,连肖:5}, custReb:{}, taiCust:"",
     auto:true, defNum:"特码单码", defZod:"一肖", maxBet:5000, capNum:0, capZod:0
   };
 }
@@ -462,7 +462,7 @@ function loadData(){
     if(!o)return emptyData();
     const s=Object.assign(defaultSettings(),o.settings||{});
     s.odds=Object.assign({},ODDS0,s.odds||{});
-    s.rebate=Object.assign({特码:4,平特:5,连肖:5},s.rebate||{});
+    s.rebate=Object.assign({特码:4,平特:4,连肖:5},s.rebate||{});
     s.custReb=(s.custReb&&typeof s.custReb==='object')?s.custReb:{};
     (o.bets||[]).forEach(migNet);
     return{bets:o.bets||[],settings:s,trash:Array.isArray(o.trash)?o.trash:[],unlock:o.unlock||{},learn:Array.isArray(o.learn)?o.learn:[]};
@@ -524,7 +524,7 @@ function rebFam(t){
   if(LIAN[t])return"连肖";
   return"";
 }
-const REB0={特码:4,平特:5,连肖:5};
+const REB0={特码:4,平特:4,连肖:5};
 const hasV=x=>x!==undefined&&x!==null&&x!==""&&isFinite(+x);
 function custReb(c){const m=(D.settings.custReb||{});return c&&m[c]||null}
 function rateOf(b,f){
@@ -1697,7 +1697,7 @@ function openSet(){
   $("s_bmOdds").value=D.settings.bmOdds;
   Object.keys(ODDS0).forEach(k=>{const el=$("o_"+k); if(el)el.value=odd(k)});
   $("r_tema").value=D.settings.rebate.特码??4;
-  $("r_ping").value=D.settings.rebate.平特??5;
+  $("r_ping").value=D.settings.rebate.平特??4;
   $("r_lian").value=D.settings.rebate.连肖??5;
   $("s_view").value=D.settings.view==="老板"?"老板":"客户";
   if($("s_taicust"))$("s_taicust").value=D.settings.taiCust||"";
