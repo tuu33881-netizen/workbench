@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>工作台 · 简版</title><link rel="icon" href="icon.svg">
+<style>
+*{box-sizing:border-box}body{margin:0;font:16px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:#222;background:#f4f6f5}
+#wrap{display:flex;min-height:100vh}#side{width:260px;background:#fff;border-right:1px solid #ddd;padding:14px;flex:none}
+#side h1{font-size:20px;margin:0 0 10px;color:#1f9d55}#date{font-size:17px;padding:6px;width:100%}
+.cl{margin-top:12px}.ci{padding:9px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px;border:1px solid transparent}.ci:hover{background:#f0f7f3}.ci.on{background:#e3f4ea;border-color:#1f9d55}
+.ci b{display:block;font-size:17px}.ci small{color:#555}.pos{color:#d32f2f}.neg{color:#1565c0}
+button{font-size:16px;padding:7px 14px;border-radius:7px;border:1px solid #1f9d55;background:#fff;color:#1f9d55;cursor:pointer}button.pri{background:#1f9d55;color:#fff}button:disabled{opacity:.45;cursor:default}
+#addc{width:100%;margin-top:8px}#main{flex:1;padding:16px 22px;max-width:1300px}
+.card{background:#fff;border:1px solid #cfd8d3;border-radius:10px;padding:14px 16px;margin-bottom:16px}
+.card h2{font-size:19px;margin:0 0 8px}#cname{font-size:18px;padding:6px 8px;width:220px}
+#ptext{width:100%;height:150px;font-size:16px;padding:8px;margin-top:8px;border:1px solid #bbb;border-radius:6px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+table.ck{width:100%;border-collapse:collapse;margin-top:10px;font-size:15px}.ck td,.ck th{border:1px solid #ddd;padding:5px 8px;vertical-align:top;text-align:left}.ck th{background:#e7f5ec}
+.ck tr.y td{background:#fff6c7}.ck tr.m td{color:#888}.ck td.l{width:42%;cursor:pointer;white-space:pre-wrap;word-break:break-all}.ck input{width:100%;font-size:15px}.ck td.a{width:110px;text-align:right;white-space:nowrap}
+.why{color:#b26a00;font-size:13px}.tot{font-size:17px;margin-top:8px}
+.sec{border-top:1px solid #e3e3e3;padding:8px 0}.sec:first-of-type{border-top:0}.sh{font-weight:700;color:#1f9d55;margin-bottom:4px}
+.ln{display:flex;justify-content:space-between;gap:10px;padding:2px 0;border-bottom:1px dotted #eee;font-size:15px}.ln.w{color:#d32f2f}.ln span:last-child{white-space:nowrap}
+.sum{border-top:2px solid #1f9d55;margin-top:6px;padding-top:8px;font-size:17px;line-height:1.8}.sum .pl{font-size:22px;font-weight:700;color:#d32f2f}
+.balls{display:flex;gap:16px;flex-wrap:wrap;font-size:14px;margin-bottom:8px}.ball{display:inline-flex;flex-direction:column;align-items:center;font-size:11px;color:#666;margin:0 1px}
+.ball b{width:26px;height:26px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}.bR{background:#e8463f}.bB{background:#2f8fe0}.bG{background:#22a650}
+.muted{color:#888}#gatef{position:fixed;inset:0;width:100%;height:100%;border:0;background:#fff;z-index:9}#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 16px;border-radius:6px;display:none}
+#imgout img{max-width:100%;border:1px solid #ccc;margin-top:8px}
+.sheet{padding:0;overflow:hidden}.paste{padding:10px 14px;background:#f7faf8;border-bottom:1px solid #dde}.paste #ptext{height:80px;margin-top:6px}
+.gt{background:#1f9d55;color:#fff;font-weight:700;font-size:18px;padding:7px 12px}.draws{padding:6px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;overflow-x:auto}.dl{display:flex;align-items:center;gap:3px;flex-wrap:nowrap;white-space:nowrap}.dl>b{font-size:13px;margin-right:2px}.draws .ball{font-size:10px;margin:0}.draws .ball b{width:24px;height:24px;font-size:11px}.draws .muted{font-size:11px}
+.sm{padding:4px 12px 8px;font-size:15px;line-height:1.7}.sm .pl{color:#d32f2f;font-weight:700;font-size:20px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:0 8px;align-items:start}@media(max-width:1000px){.g3{grid-template-columns:1fr}}
+.g3 table{width:100%;border-collapse:collapse;align-self:start;font-size:12px}.g3 th{background:#cfeedd;font-weight:400;text-align:left}.g3 td,.g3 th{border:1px solid #ddd;padding:2px 4px;vertical-align:top}.g3 td:first-child{width:2em;color:#666}.g3 td:nth-child(2){width:4.2em}
+.raw{white-space:pre-wrap;word-break:break-all;line-height:1.3;color:#333}.red{color:#d32f2f}.mk{color:#1f9d55;font-size:11px}.ft{padding:6px 12px;color:#666;font-size:13px}
+</style></head><body>
+<iframe id="gatef"></iframe>
+<div id="wrap"><div id="side"><h1>工作台 · 简版 <select id="tai_sel" style="font-size:14px;font-weight:700;color:#16a34a"></select></h1><input type="date" id="date"><div class="cl" id="clist"></div><button id="addc">＋ 新客户</button>
+<div class="row" style="margin-top:14px"><button id="bexp">导出备份</button><button id="bimp">导入备份</button></div><p class="muted" style="font-size:13px;margin-top:16px">和完整版用同一份本机数据。<br><a id="fullln" href="index.html">打开完整版</a></p></div>
+<div id="main"><div id="body"></div></div></div><div id="toast"></div>
+<script>
+let TAI_PICK=false;
+const TAI=(()=>{const cl=x=>String(x||"").replace(/[^\w\u4e00-\u9fa5-]/g,"").slice(0,12);
+  const q=new URLSearchParams(location.search),u=cl(q.get("t"));
+  if(u){try{sessionStorage.setItem("wb_tai",u)}catch(e){}q.delete("t");const qs=q.toString();try{history.replaceState(null,"",location.pathname+(qs?"?"+qs:"")+location.hash)}catch(e){}return u}
+  let ss="";try{ss=cl(sessionStorage.getItem("wb_tai"))}catch(e){}if(ss)return ss;
+  let L=[];try{L=JSON.parse(localStorage.getItem("wb_tai_list")||"[]")}catch(e){}
+  if(L.filter(x=>x!=="1").length)TAI_PICK=true;
+  try{sessionStorage.setItem("wb_tai","1")}catch(e){}return "1"})();
+function taiGo(t){try{sessionStorage.setItem("wb_tai",t)}catch(e){}location.replace(location.pathname)}
+const TQ="?t="+encodeURIComponent(TAI), TN=t=>t+(/^\d+$/.test(t)?"号台":"台"), SDK=TAI==="1"?"simple_date":"simple_date__t"+TAI;
+document.title=TN(TAI)+" · 工作台 · 简版";
+document.getElementById("gatef").src="index.html"+TQ;
+const F=document.getElementById("gatef");let W=null,X=null,cur=null,extra=[],chk=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=x=>(Math.round(x*100)/100).toLocaleString("zh-CN"), sg=v=>(v>0?"+":"")+fmt(v);
+const ORDER="鼠牛虎兔龙蛇马羊猴鸡狗猪";
+const RED=[1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46],BLUE=[3,4,9,10,14,15,20,25,26,31,36,37,41,42,47,48];
+const wave=n=>W.eval("wave")(n), pad=n=>String(n).padStart(2,"0");
+const LN={新澳:"澳门",香港:"香港",老澳:"老澳门"};
+const LS={香港:"港",新澳:"澳门",老澳:"老澳"};
+const toast=t=>{const e=$("toast");e.textContent=t;e.style.display="block";clearTimeout(e._t);e._t=setTimeout(()=>e.style.display="none",2200)};
+const isNet=b=>/平特/.test(b.type);
+const taiName=()=>((X&&X.D&&X.D.settings&&X.D.settings.taiCust)||"").trim()||TN(TAI)||"本台";
+const CN=b=>b.cust||taiName();
+const rawOf=b=>String(b.note||"").replace(/^工作台：|^粘贴：/,"");
+const badOf=r=>!(r.amount>0)||!String(r.content||"").trim()||!(r.odds>0)||r.type==="其他"||/没认出|没找到|没写各/.test(r.warn||"");
+const TL=t=>({特码单码:"特码",平特一肖:"平特",一肖:"特肖"}[t]||t);
+const zodOf=n=>W.eval("zod")(n);
+const prin=b=>b.res==="win"?X.winAmt(b)/(+b.odds||1):0;
+/* ---- 连接完整版（授权/账号/PIN 都在完整版里做） ---- */
+function ready(){try{W=F.contentWindow;X=W.__WB;const d=W.document;return X&&X.D&&d.getElementById("gate").style.display==="none"&&d.getElementById("app").style.display!=="none"}catch(e){return false}}
+let wasReady=false;
+setInterval(()=>{const r=ready();F.style.display=r?"none":"";if(r&&!wasReady){wasReady=true;boot()}if(!r)wasReady=false},400);
+["keydown","pointerdown","input"].forEach(ev=>addEventListener(ev,()=>{try{W&&W.dispatchEvent(new Event(ev))}catch(e){}},{capture:true}));
+function today(){const d=new Date(Date.now()+8*3600e3);return d.toISOString().slice(0,10)}
+function boot(){const d=localStorage.getItem(SDK)||today();$("date").value=d;setDate(d)}
+function setDate(d){localStorage.setItem(SDK,d);const wd=W.document.getElementById("wb_date");wd.value=d;wd.dispatchEvent(new Event("change"));X.settleAll();render()}
+$("bexp").onclick=()=>W.document.getElementById("s_export").click();
+$("bimp").onclick=()=>{const f=W.document.getElementById("s_file");f.onchange0=f.onchange;f.click();const iv=setInterval(()=>{if(!f.value){}},500);setTimeout(()=>{X.settleAll();render()},400)};
+addEventListener("focus",()=>{if(X)setTimeout(render,600)});
+$("date").onchange=e=>{cur=null;extra=[];chk=null;setDate(e.target.value)};
+$("addc").onclick=()=>{const n=(prompt("客户名字")||"").trim();if(!n)return;if(!extra.includes(n))extra.push(n);cur=n;chk=null;render()};
+function dayBets(){const d=$("date").value;return X.D.bets.filter(b=>b.date===d)}
+const STL=s=>X.settleLines(s.boss,s.reb,s.pall,s.pend);
+function custs(){const B=dayBets(),cs=[...new Set(B.map(CN))];extra.forEach(c=>{if(!cs.includes(c))cs.push(c)});return cs}
+function sumOf(L){const amt=L.reduce((a,b)=>a+(+b.amount||0),0);const tw=L.filter(b=>b.res==="win"&&!isNet(b)),pw=L.filter(b=>b.res==="win"&&isNet(b));
+  const tp=tw.map(prin),pp=pw.map(prin),tws=tw.reduce((a,b)=>a+X.winAmt(b),0),pps=pp.reduce((a,x)=>a+x,0);
+  return{amt,tp,pp,tps:tp.reduce((a,x)=>a+x,0),tws,pps,boss:amt-tws-pps,pend:L.some(b=>b.res==="pend"),pall:L.length>0&&L.every(b=>b.res==="pend"),reb:Math.round(L.reduce((a,b)=>a+(b.res!=="tie"?+(X.rebInfo(b).amt||0):0),0)*100)/100}}
+function render(){
+  const cs=custs();if(!cur||!cs.includes(cur))cur=cs[0]||null;
+  $("clist").innerHTML=cs.length?cs.map(c=>{const s=sumOf(dayBets().filter(b=>CN(b)===c));return `<div class="ci${c===cur?" on":""}" data-c="${esc(c)}"><b>${esc(c)}</b><small>总额 ${fmt(s.amt)}　结算 <span class="${s.boss-s.reb>=0?"pos":"neg"}">${!s.amt?"-":s.pall?"待开奖":sg(Math.round((s.boss-s.reb)*100)/100)}</span></small></div>`}).join(""):`<div class="muted">今晚还没有客户<br>点下面「＋ 新客户」</div>`;
+  $("clist").querySelectorAll("[data-c]").forEach(e=>e.onclick=()=>{cur=e.dataset.c;chk=null;render()});
+  if(!cur){cur=taiName();if(!extra.includes(cur))extra.push(cur);render();return}
+  const L=dayBets().filter(b=>CN(b)===cur), un=/\(未填名\)$/.test(cur);
+  $("body").innerHTML=`<div class="card sheet"><div class="paste"><div class="row">客户 <input id="cname" value="${esc(un?"":cur)}" placeholder="可不填（一台一人）"><button class="pri" id="bck">识别</button><button class="pri" id="bsv" disabled>保存</button><span id="pmsg" class="muted"></span><span style="flex:1"></span><button data-act="txt">复制文字版</button><button class="pri" data-act="img">生成对账图</button></div>
+<textarea id="ptext" placeholder="新的注单粘贴在这里，点「识别」核对，再「保存」，会加到下面这个客户的表里">${esc(chk?chk.text:"")}</textarea><div id="ckout"></div></div>
+<div id="night">${nightHtml(L)}</div></div><div id="imgout"></div>`;
+  $("bck").onclick=()=>check($("ptext").value);$("bsv").onclick=save;
+  $("body").querySelectorAll("[data-act]").forEach(b=>b.onclick=()=>b.dataset.act==="img"?makeImg(L):copyTxt(L));
+  if(chk)check(chk.text);
+}
+/* ---- 逐行核对 ---- */
+function check(text){
+  chk={text};const iw=W.document;iw.getElementById("wb_text").value=text;X.parseWB();const PV=X.wbPV;
+  const flagged={};iw.querySelectorAll("#wb_prev .bad[data-li],#wb_prev .warnY[data-li]").forEach(e=>{const i=+e.dataset.li;(flagged[i]=flagged[i]||[]).push(e.innerText.replace(/^✗\s*第\d+单：.*? — /,"").replace(/改成 \d+$/,"").trim())});
+  const lines=text.split("\n");let carry=[],rows=[];
+  const onlyNums=l=>{const t=l.replace(/[。.,，、\s]+$/,"");return /^[\d\s.,，、\-\/+]+$/.test(t)&&(t.match(/\d+/g)||[]).length>=3};
+  lines.forEach((l,i)=>{if(!l.trim()){rows.push({i,blank:1});carry=[];return}
+    if(!flagged[i]&&onlyNums(l)&&lines[i+1]&&lines[i+1].trim()){carry.push(l);rows.push({i,t:l,merge:1});return}
+    const src=carry.length?carry.join(" ")+" "+l:l;carry=[];const r=X.parseBets(src);
+    rows.push({i,t:l,r,bad:!!flagged[i]||!r.length||r.some(badOf),why:flagged[i]?flagged[i].join("；"):(!r.length?"没认出":r.filter(badOf).map(x=>x.warn||"金额/内容不对").join("；"))})});
+  const tot=PV.reduce((a,r)=>a+(+r.amount||0),0),nb=rows.filter(r=>r.bad).length;
+  const desc=r=>{const M=new Map();r.forEach(x=>{const k=[x.lot,x.type,x.amount,x.zexp||""].join("|");if(!M.has(k))M.set(k,{x,c:[]});M.get(k).c.push(x.zexp?null:x.content)});
+    return [...M.values()].map(({x,c})=>`${LN[x.lot]||x.lot} ${TL(x.type)} ${x.zexp?x.zexp+"→"+c.length+"个号":c.join(" ")}　<b>${fmt(x.amount)}×${c.length}=${fmt(x.amount*c.length)}</b>`).join("<br>")};
+  $("ckout").innerHTML=`<table class="ck"><tr><th>原文（点一下可改）</th><th>识别结果</th><th>金额</th></tr>${rows.filter(r=>!r.blank).map(r=>r.merge?`<tr class="m" data-i="${r.i}"><td class="l">${esc(r.t)}</td><td>只有号码，并到下一行一起算</td><td class="a"></td></tr>`:
+    `<tr class="${r.bad?"y":""}" data-i="${r.i}"><td class="l">${esc(r.t)}</td><td>${r.r.length?desc(r.r.filter(x=>!badOf(x))):""}${r.bad?`<div class="why">⚠ ${esc(r.why||"要核对")}</div>`:""}</td><td class="a">${fmt(r.r.reduce((a,x)=>a+(+x.amount||0),0))}</td></tr>`).join("")}</table>
+<div class="tot">共 <b>${fmt(tot)}</b>（${PV.length} 注）${nb?`　<span class="why" style="font-size:16px">⚠ ${nb} 行要核对，改好才能保存</span>`:"　✓ 全部认出"}</div>`;
+  $("bsv").disabled=!!nb||!PV.length;
+  $("ckout").querySelectorAll("td.l").forEach(td=>td.onclick=()=>{if(td.querySelector("input"))return;const i=+td.parentNode.dataset.i,ls=$("ptext").value.split("\n");
+    td.innerHTML=`<input value="${esc(ls[i])}">`;const inp=td.querySelector("input");inp.focus();
+    const done=()=>{ls[i]=inp.value;$("ptext").value=ls.join("\n");check($("ptext").value)};inp.onkeydown=e=>{if(e.key==="Enter")done();if(e.key==="Escape")check($("ptext").value)};inp.onblur=done});
+}
+function save(){
+  const name=($("cname").value||"").trim(),iw=W.document,before=new Set(X.D.bets.map(b=>b.id));
+  iw.getElementById("wb_text").value=$("ptext").value;iw.getElementById("wb_cust").value=name;
+  const to=iw.getElementById("wb_to");to.value="new";delete to.dataset.user;
+  iw.getElementById("wb_save").click();
+  const nw=X.D.bets.filter(b=>!before.has(b.id));if(!nw.length){toast("没保存");return}
+  const at=Date.now();nw.forEach(b=>b.at=at);X.saveUser();
+  if(name){cur=name;extra=extra.filter(x=>x!==name)}else{const tc=taiName();if(tc&&nw.length){nw.forEach(b=>{if(!b.cust)b.cust=tc});try{X.saveUser()}catch(e){}}cur=CN(nw[0])||tc}
+  chk=null;toast(`已保存 ${fmt(nw.reduce((a,b)=>a+b.amount,0))}`);render();
+}
+/* ---- 一个客户一整晚：一个框 ---- */
+function drawsOf(L){const dt=$("date").value;return["香港","新澳","老澳"].map(l=>{
+  let d=Object.values(X.DRAWS||{}).filter(x=>x.lot===l&&x.date===dt&&x.nums&&x.nums.length===7).sort((a,b)=>String(b.issue).localeCompare(String(a.issue)))[0];
+  if(!d){const is=[...new Set(L.filter(b=>(b.lot||"新澳")===l).map(b=>b.issue))];d=is.map(i=>X.DRAWS[l+"|"+i]).find(x=>x&&x.nums&&x.nums.length===7)}
+  return{l,d}})}
+function sections(L){const G={};L.forEach(b=>{const g=b.grp||1;(G[g]=G[g]||[]).push(b)});return Object.keys(G).map(Number).sort((a,b)=>a-b).map(g=>G[g])}
+function linesOf(S){const M=new Map();S.forEach(b=>{const k=rawOf(b)+"\0"+(b.lot||"新澳");if(!M.has(k))M.set(k,{r:rawOf(b),lot:b.lot||"新澳",a:0,w:[]});const x=M.get(k);x.a+=+b.amount||0;if(b.res==="win")x.w.push(b)});return[...M.values()]}
+const winTxt=x=>x.w.map(b=>`${TL(b.type)} 中 ${fmt(prin(b))}×${b.odds}=${fmt(X.winAmt(b))}`).join("，");
+function nightHtml(L){
+  const dt=$("date").value.slice(5),s=sumOf(L),ball=n=>`<span class="ball"><b class="${wave(n)}">${pad(n)}</b>${zodOf(n)}</span>`;
+  const dr=drawsOf(L).map(({l,d})=>`<div class="dl"><b>${LN[l]}</b>${d?d.nums.slice(0,6).map(ball).join("")+`<span style="margin:0 3px;color:#999">+</span>`+ball(d.nums[6])+` <span class="muted">${String(d.issue).replace(/^20\d\d/,"")}期 ${(d.date||dt||"").slice(5)}</span>`:'<span class="muted">未开奖</span>'}</div>`).join("");
+  const secs=sections(L);
+  const ats=[];secs.forEach(S=>{const v=S[0].at||0;if(!ats.includes(v))ats.push(v)});const seen=new Set();
+  const rows=secs.map((S,k)=>{const at=S[0].at?new Date(S[0].at+8*3600e3).toISOString().slice(11,16):"",a=S.reduce((x,b)=>x+(+b.amount||0),0);
+    const W2={};S.filter(b=>b.res==="win").forEach(b=>{const kk=(b.lot||"新澳")+"|"+TL(b.type)+"|"+b.odds;(W2[kk]=W2[kk]||{s:0,w:0,m:new Set()}).s+=prin(b);W2[kk].w+=X.winAmt(b);W2[kk].m.add(String(b.content).trim())});
+    const hit=Object.entries(W2).map(([kk,v])=>{const [l,tp,o]=kk.split("|");return `<div class="red">${LS[l]||LN[l]||l} ${tp} 中:${fmt(v.s)}*${o}=${fmt(v.w)} ---(${esc([...v.m].join(""))})</div>`}).join("");
+    const src=S.find(b=>b.src)?.src||linesOf(S).map(x=>x.r).join("\n");
+    return `<tr><td>${k+1}</td><td>${fmt(a)}</td><td>${(()=>{const v=S[0].at||0;if(seen.has(v))return"";seen.add(v);return `<div class="mk">第${ats.indexOf(v)+1}次 ${at}</div>`})()}${hit}<div class="raw">${esc(src)}</div></td></tr>`});
+  const cw=($("main")||document.body).clientWidth-30,NC=cw<560?1:cw<880?2:3,cols=Array.from({length:NC},()=>[]);rows.forEach((r,i)=>cols[i%NC].push(r));
+  const wlByLot=()=>{let h="";["香港","新澳","老澳"].forEach(lot=>{const tw=L.filter(b=>b.res==="win"&&!isNet(b)&&(b.lot||"新澳")===lot),pw=L.filter(b=>b.res==="win"&&isNet(b)&&(b.lot||"新澳")===lot);
+    if(tw.length){const xs=tw.map(prin),sm=xs.reduce((a,x)=>a+x,0);h+=`<div>${LN[lot]} 特码 中:${xs.map(fmt).join("+")}=${fmt(sm)} —赔:${fmt(tw.reduce((a,b)=>a+X.winAmt(b),0))}</div>`}
+    if(pw.length){const xs=pw.map(prin),sm=xs.reduce((a,x)=>a+x,0);h+=`<div>${LN[lot]} 平特 中:${xs.map(fmt).join("+")}=${fmt(sm)} —赔:${fmt(sm)}</div>`}});return h};
+  const wl=wlByLot();
+  return `<div class="gt">${dt} 兑奖明细 — 申报人：${esc(cur)}</div><div class="draws">${dr||'<span class="muted">还没有注单</span>'}</div>
+<div class="sm">申报人：${esc(cur)}　订单：${secs.length}　总额：<b>${fmt(s.amt)}</b>　退水合计：<b>${fmt(s.reb)}</b><div>中奖情况：</div>${wl||"<div>无</div>"}${STL(s).map(x=>`<div${x.k==="最终"?' class="pl"':x.k==="客户"?' style="color:#1565c0"':""}>${esc(x.t)}</div>`).join("")}<div class="muted" style="font-size:12px">（输赢=下注−特码中×47−平特中本金；最终结算=输赢−退水）</div></div>
+${rows.length?`<div class="g3" style="grid-template-columns:repeat(${NC},1fr)">${cols.filter(c=>c.length).map(c=>`<table><tr><th>#</th><th>金额</th><th>详情</th></tr>${c.join("")}</table>`).join("")}</div>`:""}<div class="ft">日期: ${dt}　申报人: ${esc(cur)}</div>`}
+function copyTxt(L){const s=sumOf(L),o=[`${$("date").value.slice(5)} 对账 — ${cur}`];
+  sections(L).forEach((S,k)=>{o.push(`【第${k+1}单】`);linesOf(S).forEach(x=>o.push(`${x.r}  ${fmt(x.a)}${x.w.length?"  ★"+winTxt(x):""}`))});
+  o.push(`总下注 ${fmt(s.amt)}`);
+  ["香港","新澳","老澳"].forEach(lot=>{const tw=L.filter(b=>b.res==="win"&&!isNet(b)&&(b.lot||"新澳")===lot),pw=L.filter(b=>b.res==="win"&&isNet(b)&&(b.lot||"新澳")===lot);
+    if(tw.length){const xs=tw.map(prin),sm=xs.reduce((a,x)=>a+x,0);o.push(`${LN[lot]} 特码中 ${xs.map(fmt).join("+")}=${fmt(sm)} 赔${fmt(tw.reduce((a,b)=>a+X.winAmt(b),0))}`)}
+    if(pw.length){const xs=pw.map(prin),sm=xs.reduce((a,x)=>a+x,0);o.push(`${LN[lot]} 平特中 ${xs.map(fmt).join("+")}=${fmt(sm)}`)}});
+  STL(s).forEach(x=>o.push(x.t));const t=o.join("\n");window.__lastTxt=t;
+  (navigator.clipboard&&isSecureContext?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast("已复制文字版"),()=>{prompt("复制下面文字",t)})}
+/* ---- 对账图（canvas 画，参考图样式，一张合并表） ---- */
+function makeImg(L){
+  const s=sumOf(L),Wd=1100,P=14,cv=document.createElement("canvas"),g=cv.getContext("2d"),FONT='"PingFang SC","Microsoft YaHei",sans-serif';
+  const wrap=(t,w,f)=>{g.font=f;const out=[];String(t).split("\n").forEach(par=>{let line="";for(const ch of par){if(g.measureText(line+ch).width>w){out.push(line);line=ch}else line+=ch}out.push(line)});return out};
+  const secs=sections(L), ops=[];let y=0;const add=(h,fn)=>{const y0=y;ops.push(()=>fn(y0));y+=h};
+  add(40,y0=>{g.fillStyle="#1f9d55";g.fillRect(0,y0,Wd,40);g.fillStyle="#fff";g.font="bold 20px "+FONT;g.fillText(`${$("date").value.slice(5)} 兑奖明细 — 申报人：${cur}`,P,y0+27)});
+  (()=>{const Ds=drawsOf(L);const bw=28,gap=4,lab=48,block=lab+7*bw+gap*6+18+70;add(48,y0=>{
+    Ds.forEach(({l,d},di)=>{const x0=P+di*Math.min(block,(Wd-2*P)/3);
+      g.fillStyle="#222";g.font="bold 13px "+FONT;g.fillText(LN[l],x0,y0+22);
+      if(!d){g.fillStyle="#888";g.font="12px "+FONT;g.fillText("未开奖",x0+lab,y0+22);return}
+      d.nums.forEach((n,i)=>{const x=x0+lab+i*(bw+gap)+(i===6?10:0);g.fillStyle={bR:"#e8463f",bB:"#2f8fe0",bG:"#22a650"}[wave(n)];g.beginPath();g.arc(x,y0+16,11,0,7);g.fill();g.fillStyle="#fff";g.font="bold 11px "+FONT;g.textAlign="center";g.fillText(pad(n),x,y0+20);g.fillStyle="#666";g.font="10px "+FONT;g.fillText(zodOf(n),x,y0+38);g.textAlign="left"});
+      g.fillStyle="#888";g.font="11px "+FONT;g.fillText(String(d.issue).replace(/^20\d\d/,"")+"期 "+(d.date||"").slice(5),x0+lab+7*(bw+gap)+14,y0+22)})})})();
+  const sl=[`申报人：${cur}　订单：${secs.length}　总额：${fmt(s.amt)}`,"中奖情况："];
+  ["香港","新澳","老澳"].forEach(lot=>{const tw=L.filter(b=>b.res==="win"&&!isNet(b)&&(b.lot||"新澳")===lot),pw=L.filter(b=>b.res==="win"&&isNet(b)&&(b.lot||"新澳")===lot);
+    if(tw.length){const xs=tw.map(prin),sm=xs.reduce((a,x)=>a+x,0);sl.push(`${LN[lot]} 特码 中:${xs.map(fmt).join("+")}=${fmt(sm)} —赔:${fmt(tw.reduce((a,b)=>a+X.winAmt(b),0))}`)}
+    if(pw.length){const xs=pw.map(prin),sm=xs.reduce((a,x)=>a+x,0);sl.push(`${LN[lot]} 平特 中:${xs.map(fmt).join("+")}=${fmt(sm)} —赔:${fmt(sm)}`)}});
+  if(!L.some(b=>b.res==="win"))sl.push("无");
+  sl.flatMap(t=>wrap(t,Wd-2*P,"16px "+FONT)).forEach(t=>add(24,y0=>{g.fillStyle="#222";g.font="16px "+FONT;g.fillText(t,P,y0+18)}));
+  STL(s).forEach(x=>add(x.k==="最终"?30:24,y0=>{g.font=(x.k==="最终"?"bold 18px ":"16px ")+FONT;g.fillStyle=x.k==="最终"?"#d32f2f":x.k==="客户"?"#1565c0":"#222";g.fillText(x.t,P,y0+20)}));
+  y+=6;const C1=50,C2=110,TX=P+C1+C2+8,TW=Wd-TX-P;
+  add(26,y0=>{g.fillStyle="#cfeedd";g.fillRect(P,y0,Wd-2*P,26);g.fillStyle="#333";g.font="14px "+FONT;g.fillText("#",P+8,y0+18);g.fillText("金额",P+C1+8,y0+18);g.fillText("详情",TX,y0+18)});
+  secs.forEach((S,k)=>{const a=S.reduce((x,b)=>x+(+b.amount||0),0),ls=linesOf(S),hits=[];
+    const W2={};S.filter(b=>b.res==="win").forEach(b=>{const kk=(b.lot||"新澳")+"|"+TL(b.type)+"|"+b.odds;(W2[kk]=W2[kk]||{s:0,w:0,m:new Set()}).s+=prin(b);W2[kk].w+=X.winAmt(b);W2[kk].m.add(String(b.content).trim())});
+    Object.entries(W2).forEach(([kk,v])=>{const [l,tp,o]=kk.split("|");hits.push(`${LS[l]||LN[l]||l} ${tp} 中:${fmt(v.s)}*${o}=${fmt(v.w)} ---(${[...v.m].join("")})`)});
+    const src=S.find(b=>b.src)?.src||ls.map(x=>x.r).join("\n");
+    const HL=hits.flatMap(h=>wrap(h,TW,"bold 13px "+FONT)),RL=wrap(src,TW,"13px "+FONT),h=(HL.length+RL.length)*18+8;
+    add(h,y0=>{g.strokeStyle="#ddd";g.strokeRect(P,y0,Wd-2*P,h);g.beginPath();g.moveTo(P+C1,y0);g.lineTo(P+C1,y0+h);g.moveTo(P+C1+C2,y0);g.lineTo(P+C1+C2,y0+h);g.stroke();
+      g.fillStyle="#666";g.font="13px "+FONT;g.fillText(String(k+1),P+8,y0+17);g.fillStyle="#222";g.fillText(fmt(a),P+C1+8,y0+17);
+      let yy=y0+17;HL.forEach(t=>{g.fillStyle="#d32f2f";g.font="bold 13px "+FONT;g.fillText(t,TX,yy);yy+=18});RL.forEach(t=>{g.fillStyle="#333";g.font="13px "+FONT;g.fillText(t,TX,yy);yy+=18})})});
+  add(30,y0=>{g.fillStyle="#666";g.font="13px "+FONT;g.fillText(`日期: ${$("date").value.slice(5)}　申报人: ${cur}`,P,y0+20)});
+  const sc=2;cv.width=Wd*sc;cv.height=y*sc;g.scale(sc,sc);g.fillStyle="#fff";g.fillRect(0,0,Wd,y);ops.forEach(f=>f());
+  const url=cv.toDataURL("image/png");window.__lastImg=url;
+  $("imgout").innerHTML=`<div class="card"><div class="row"><h2 style="margin:0">对账图</h2><a download="${esc(cur)}_${$("date").value}.png" href="${url}"><button class="pri">下载图片</button></a><button id="cpimg">复制图片</button><span class="muted">下载后发微信；或复制后直接粘贴到微信</span></div><img src="${url}"></div>`;
+  $("cpimg").onclick=()=>cv.toBlob(b=>{try{navigator.clipboard.write([new ClipboardItem({"image/png":b})]).then(()=>toast("已复制图片"),()=>toast("浏览器不让复制，请用下载"))}catch(e){toast("浏览器不让复制，请用下载")}});
+  $("imgout").scrollIntoView({behavior:"smooth"});
+}
+function taiL(){let L=[];try{L=JSON.parse(localStorage.getItem("wb_tai_list")||"[]")}catch(e){}if(!L.includes("1"))L.unshift("1");if(!L.includes(TAI))L.push(TAI);return L}
+function taiFill(){$("tai_sel").innerHTML=taiL().map(t=>`<option value="${esc(t)}"${t===TAI?" selected":""}>${esc(TN(t))}</option>`).join("")+'<option value="__new">＋ 新建台</option>'}
+taiFill();$("fullln").href="index.html";
+$("tai_sel").onchange=e=>{const v=e.target.value;e.target.value=TAI;const p=location.pathname;
+  if(v==="__new")taiNew();else if(v!==TAI)taiGo(v)};
+function taiNew(){const L=taiL(),n=String(Math.max(0,...L.filter(x=>/^\d+$/.test(x)).map(Number))+1);L.push(n);localStorage.setItem("wb_tai_list",JSON.stringify(L));taiGo(n)}
+if(TAI_PICK){const o=document.createElement("div");o.style.cssText="position:fixed;inset:0;background:rgba(240,246,242,.97);z-index:1000;display:flex;align-items:center;justify-content:center";o.id="taipick";
+  o.innerHTML=`<div style="background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.1);padding:22px;min-width:280px;text-align:center"><div style="font-size:20px;font-weight:700;color:#16a34a;margin-bottom:12px">选择工作台</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px">${taiL().map(t=>`<button data-tp="${esc(t)}" style="font-size:17px;padding:14px 8px;border:1px solid #bfe3cc;background:#f2faf4;border-radius:10px;font-weight:700">${esc(TN(t))}</button>`).join("")}</div><button data-tp="__new" style="margin-top:10px;width:100%;font-size:15px;padding:10px;border:1px dashed #16a34a;background:#fff;color:#16a34a;border-radius:10px">＋ 新建台</button><div style="font-size:12px;color:#888;margin-top:10px">每个台的数据分开；这个标签页会记住你选的台</div></div>`;
+  document.body.appendChild(o);o.onclick=e=>{const b=e.target.closest("[data-tp]");if(!b)return;const v=b.dataset.tp;if(v==="__new")taiNew();else if(v===TAI)o.remove();else taiGo(v)}}
+addEventListener("storage",e=>{if(e.key==="wb_tai_list")taiFill();if(e.key&&e.key.startsWith("wb_data_v2")&&wasReady)setTimeout(()=>{try{render()}catch(x){}},50)});
+</script></body></html>
