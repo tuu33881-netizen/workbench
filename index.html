@@ -189,7 +189,7 @@ body{padding-bottom:56px}
   </details>
   <div class="sumbox" id="wb_sum"><span class="muted">还没有本期注单</span></div>
   <details class="paste" id="wb_paste_box">
-    <summary>＋ 粘贴注单（同一次粘贴＝一张单；空行不拆单；行尾/行首可写 新澳/老奥/香港）</summary>
+    <summary>＋ 粘贴注单（同一次粘贴＝一张单；空行不拆单；行尾/行首可写 新澳/新/老奥/香港）</summary>
     <textarea id="wb_text" placeholder="例：&#10;香港平龙200&#10;鸡猴兔各数15&#10;&#10;新澳&#10;平猪200&#10;&#10;老奥&#10;03.09各350&#10;（空行仍是同一张单；换客户或点保存才是新单）"></textarea>
     <div class="bar">
       <span>加到</span><select id="wb_to"><option value="new">新单</option></select>
@@ -254,7 +254,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 &gt; 客户 &gt; 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码中奖含本×赔率，平特中奖=中本金×赔率不含本；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v20.9</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码中奖含本×赔率，平特中奖=中本金×赔率不含本；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.0</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -296,7 +296,7 @@ const doyDate=(y,n)=>{const d=new Date(Date.UTC(+y,0,+n));return d.getUTCFullYea
 const nums=s=>(String(s).match(/\d+/g)||[]).map(Number).filter(n=>n>=1&&n<=49);
 const zods=s=>[...new Set(String(s).split("").filter(c=>ORDER.includes(c)))];
 const fmt=x=>(Math.round(x*100)/100).toLocaleString("zh-CN");
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&","<":"<",">":">",'"':"""}[c]));
 const TL=t=>t==="一肖"?"特肖":t;
 
 const ODDS0={
@@ -832,7 +832,7 @@ function tokenize(line){
   const T=[]; let x=line.replace(/[龍馬雞豬號連碼萬塊]/g,c=>TRAD[c]); let m;
   const R=[
     [/^[\s,，、.。;；:：+＋\-－—_~～·]+/,()=>null],
-    [/^(?:老[澳奥]门?|新?[澳奥]门?|香港|香|港)\s*[:：]?/,m=>{const t=m[0];let lot=null;if(/香港|香|港/.test(t))lot="香港";else if(/老/.test(t))lot="老澳";else if(/澳|奥/.test(t))lot="新澳";return lot?{k:"lot",v:lot}:null}],
+    [/^(?:老[澳奥]门?|新?[澳奥]门?|香港|香|港|新)\s*[:：]?/,m=>{const t=m[0];let lot=null;if(/香港|香|港/.test(t))lot="香港";else if(/老/.test(t))lot="老澳";else if(/澳|奥|新/.test(t))lot="新澳";return lot?{k:"lot",v:lot}:null}],
     [/^(\d{1,2}(?:\s*[.．、,，\s]\s*\d{1,2})*)\s*号/,m=>({k:"nums",v:m[1].split(/[^\d]+/).filter(Boolean).map(Number)})],
     [/^(平特一肖|平特|平(?!码)|特码单码|特码|特肖|([二三四五])连肖?|特(?=\s*\d|尾|[羊猪兔蛇虎狗牛龙马猴鼠鸡]))/,m=>({k:"play",v:m[1],n:m[2]})],
     [/^本命/,()=>({k:"zod",v:BM()})],
@@ -919,7 +919,7 @@ function flush0(g,out){
   g.items.forEach(it=>mk(typeFor(it),[it],g.amount==null?null:(each?g.amount:Math.round(g.amount/g.items.length*100)/100),each?[]:["已平分金额"]));
 }
 function normalizeLots(text){
-  const W="(新澳门|老澳门|澳门|新澳|新奥|老澳|老奥|澳|奥|香港|香|港)";
+  const W="(新澳门|老澳门|澳门|新澳|新奥|老澳|老奥|澳|奥|香港|香|港|新)";
   const re=new RegExp("^[ \\t]*"+W+"[ \\t]*[:：]?[ \\t]*"), te=new RegExp("[ \\t]*[:：]?[ \\t]*"+W+"[ \\t]*[:：]?[ \\t]*$");
   const can=w=>/^老/.test(w)?"老澳":/^(香|港)/.test(w)?"香港":"新澳";
   const L=text.split("\n").map(l=>{let m=l.match(re);if(m)return{lot:can(m[1]),t:l.slice(m[0].length),own:1};
@@ -975,7 +975,7 @@ function talkLine(l){
 }
 function talkNorm(text){
   const L=String(text).split("\n"); let prev=null;
-  const LW="(?:新澳门|老澳门|澳门|新澳|新奥|老澳|老奥|澳|奥|香港|香|港)";
+  const LW="(?:新澳门|老澳门|澳门|新澳|新奥|老澳|老奥|澳|奥|香港|香|港|新)";
   const AMT=/((?:\d+(?:\.\d+)?\s*[kK千万]?|[一二两三四五六七八九十百千万]+)\s*(?:元|块)?)\s*$/;
   return L.map(l=>{
     const m=l.match(/^\s*(?:同上面?|跟上面一样|和上面一样|跟上面|同上一样)\s*(.*)$/);
@@ -996,7 +996,7 @@ function talkNorm(text){
 function smartNorm(text){
   const CN="[一二两三四五六七八九十]";
   return text.split("\n").map(l=>{
-    l=l.replace(/[／|｜\/]/g," ").replace(/^(\s*(?:新澳|新奥|老澳|老奥|澳门|澳|奥|香港|香|港)?\s*[:：]?\s*)(?:买|下|押)\s*/,"$1").replace(/(^|\s)码(?=\s*\d)/g,"$1特码")
+    l=l.replace(/[／|｜\/]/g," ").replace(/^(\s*(?:新澳|新奥|老澳|老奥|澳门|澳|奥|香港|香|港|新)?\s*[:：]?\s*)(?:买|下|押)\s*/,"$1").replace(/(^|\s)码(?=\s*\d)/g,"$1特码")
      .replace(/老鼠/g,"鼠").replace(/老虎/g,"虎").replace(/兔子/g,"兔").replace(/猴子/g,"猴").replace(/牛牛/g,"牛")
      .replace(/特一码|单码(?!各)|特码单码/g,"特码")
      .replace(/平一肖|平肖/g,"平特")
@@ -1017,8 +1017,9 @@ function slipFix(text){
     .replace(/格\s*数/g,"各数").replace(/(?<!每)个\s*(?=\d)/g,"各").replace(/特\s*各\s*数/g,"各数").replace(/各\s*[#＃]\s*(?=\d)/g,"各")
     .replace(/(\d)\s*[.。,，、]?\s*[#＃]\s*(?=\d)/g,"$1各")
     .replace(/(连肖?[\s,，、.。]*[鼠牛虎兔龙蛇马羊猴鸡狗猪](?:[\s、，,.]*[鼠牛虎兔龙蛇马羊猴鸡狗猪])*)\s*[。.，,]\s*(\d+)\s*$/,"$1 $2")
-    .replace(/^(\s*(?:新澳|新奥|老澳|老奥|澳门|澳|奥|香港|香|港)?\s*)([鼠牛虎兔龙蛇马羊猴鸡狗猪]+)\s*各\s*(?=\d)/,"$1$2各数")
-    .replace(/^(.*\d\s*(?:斤|元|块|米)?)\s*[，,。.\s]*老\s*[。.]?\s*$/,(m,a)=>/老澳|老奥/.test(a)?m:"老澳 "+a));
+    .replace(/^(\s*(?:新澳|新奥|老澳|老奥|澳门|澳|奥|香港|香|港|新)?\s*)([鼠牛虎兔龙蛇马羊猴鸡狗猪]+)\s*各\s*(?=\d)/,"$1$2各数")
+    .replace(/^(.*\d\s*(?:斤|元|块|米)?)\s*[，,。.\s]*老\s*[。.]?\s*$/,(m,a)=>/老澳|老奥/.test(a)?m:"老澳 "+a)
+    .replace(/^(.*\d\s*(?:斤|元|块|米)?)\s*[，,。.\s]*新\s*[。.]?\s*$/,(m,a)=>/新澳|新奥/.test(a)?m:"新澳 "+a));
   const NO=l=>{const t=l.replace(/[。.,，、\s]+$/,"");return /^[\d\s.,，、\-\/+＋]+$/.test(t)&&(t.match(/\d+/g)||[]).length>=3&&(t.match(/\d+/g)||[]).every(n=>+n>=1&&+n<=49)};
   for(let i=0;i<L.length-1;i++){
     if(/(?:^|[\s.,，、\-\/+])\d\s*$/.test(L[i])&&/^\s*\d(?!\d)/.test(L[i+1])&&!/各|斤|元|块|x/.test(L[i])){L[i+1]=L[i].trimEnd()+L[i+1].trimStart();L[i]="";continue}
