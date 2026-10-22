@@ -26,7 +26,7 @@ table.ck{width:100%;border-collapse:collapse;margin-top:10px;font-size:15px}.ck 
 .sheet{padding:0;overflow:hidden}.paste{padding:10px 14px;background:#f7faf8;border-bottom:1px solid #dde}.paste #ptext{height:80px;margin-top:6px}
 .gt{background:#1f9d55;color:#fff;font-weight:700;font-size:18px;padding:7px 12px}.draws{padding:6px 12px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;overflow-x:auto}.dl{display:flex;align-items:center;gap:3px;flex-wrap:nowrap;white-space:nowrap}.dl>b{font-size:13px;margin-right:2px}.draws .ball{font-size:10px;margin:0}.draws .ball b{width:24px;height:24px;font-size:11px}.draws .muted{font-size:11px}
 .sm{padding:4px 12px 8px;font-size:15px;line-height:1.7}.sm .pl{color:#d32f2f;font-weight:700;font-size:20px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:0 8px;align-items:start}@media(max-width:1000px){.g3{grid-template-columns:1fr}}
+.g3{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 8px;align-items:start}@media(max-width:560px){.g3{grid-template-columns:1fr}}
 .g3 table{width:100%;border-collapse:collapse;align-self:start;font-size:12px}.g3 th{background:#cfeedd;font-weight:400;text-align:left}.g3 td,.g3 th{border:1px solid #ddd;padding:2px 4px;vertical-align:top}.g3 td:first-child{width:2em;color:#666}.g3 td:nth-child(2){width:4.2em}
 .raw{white-space:pre-wrap;word-break:break-all;line-height:1.3;color:#333}.red{color:#d32f2f}.mk{color:#1f9d55;font-size:11px}.ft{padding:6px 12px;color:#666;font-size:13px}
 </style></head><body>
@@ -146,7 +146,8 @@ function nightHtml(L){
     const hit=Object.entries(W2).map(([kk,v])=>{const [l,tp,o]=kk.split("|");return `<div class="red">${LS[l]||LN[l]||l} ${tp} 中:${fmt(v.s)}*${o}=${fmt(v.w)} ---(${esc([...v.m].join(""))})</div>`}).join("");
     const src=S.find(b=>b.src)?.src||linesOf(S).map(x=>x.r).join("\n");
     return `<tr><td>${k+1}</td><td>${fmt(a)}</td><td>${(()=>{const v=S[0].at||0;if(seen.has(v))return"";seen.add(v);return `<div class="mk">第${ats.indexOf(v)+1}次 ${at}</div>`})()}${hit}<div class="raw">${esc(src)}</div></td></tr>`});
-  const cw=($("main")||document.body).clientWidth-30,NC=cw<560?1:cw<880?2:3,cols=Array.from({length:NC},()=>[]);rows.forEach((r,i)=>cols[i%NC].push(r));
+  const cw=($("main")||document.body).clientWidth-30,NC=cw<560?1:2;
+  let cols;if(NC<=1)cols=[rows];else{cols=[];const per=6,size=per*NC;for(let i=0;i<rows.length;i+=size){const chunk=rows.slice(i,i+size);for(let c=0;c<NC;c++){const sl=chunk.slice(c*per,(c+1)*per);if(sl.length)cols.push(sl)}}}
   const wlByLot=()=>{let h="";["香港","新澳","老澳"].forEach(lot=>{const tw=L.filter(b=>b.res==="win"&&!isNet(b)&&(b.lot||"新澳")===lot),pw=L.filter(b=>b.res==="win"&&isNet(b)&&(b.lot||"新澳")===lot);
     if(tw.length){const xs=tw.map(prin),sm=xs.reduce((a,x)=>a+x,0);h+=`<div>${LN[lot]} 特码 中:${xs.map(fmt).join("+")}=${fmt(sm)} —赔:${fmt(tw.reduce((a,b)=>a+X.winAmt(b),0))}</div>`}
     if(pw.length){const xs=pw.map(prin),sm=xs.reduce((a,x)=>a+x,0);h+=`<div>${LN[lot]} 平特 中:${xs.map(fmt).join("+")}=${fmt(sm)} —赔:${fmt(sm)}</div>`}});return h};
