@@ -1,2 +1,2 @@
 # workbench
-工作台 v20.9 · fill-desk2-20261023
+工作台 v21.0 · alias 新=新澳
