@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#16b55a">
+<title>工作台</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1f9d55">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="工作台">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg">
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f4f6fa;color:#222;font-size:14px}
+button,input,select,textarea{font:inherit}
+.hidden{display:none!important}
+
+/* ===== 登录 ===== */
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#e8f8ee,#f4f6fa)}
+#auth .box{background:#fff;border-radius:14px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 8px 28px #0002}
+#auth h1{margin:0 0 4px;font-size:22px;color:#16b55a;text-align:center}
+#auth .sub{text-align:center;color:#888;font-size:12px;margin-bottom:18px}
+#auth label{display:block;font-size:13px;color:#555;margin:10px 0 4px}
+#auth input{width:100%;padding:10px 12px;border:1px solid #ccc;border-radius:8px;font-size:15px}
+#auth .row{display:flex;gap:8px;margin-top:16px}
+#auth .row button{flex:1;padding:11px;border:0;border-radius:8px;font-weight:700;cursor:pointer;font-size:15px}
+#auth .ok{background:#16b55a;color:#fff}
+#auth .alt{background:#eef1f6;color:#333}
+#auth .msg{min-height:20px;margin-top:10px;font-size:13px;color:#c62828;text-align:center}
+#auth .hint{margin-top:14px;font-size:11px;color:#999;line-height:1.5;text-align:center}
+
+/* ===== 主界面 ===== */
+#app{max-width:1100px;margin:auto;background:#fff;min-height:100vh}
+.dh{background:#16b55a;color:#fff;font-weight:bold;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.dh input,.dh select{border:0;border-radius:4px;padding:4px 8px;font-size:14px}
+.dh .who{font-size:13px;opacity:.95}
+.gear,.out{background:none;border:0;font-size:20px;cursor:pointer;color:#fff;padding:2px 6px}
+.out{font-size:13px;opacity:.9;margin-left:auto}
+.tip{background:#e8f8ee;color:#1a5c35;padding:8px 14px;font-size:12px;border-bottom:1px solid #c6ecd4}
+.balls{display:flex;flex-direction:column;gap:8px;padding:12px 14px;border-bottom:1px solid #e8e8e8;background:#fafcfa}
+.lot{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lot>b{min-width:52px;font-size:13px}
+.ball{display:inline-flex;flex-direction:column;align-items:center;font-size:11px;color:#666;margin:0 1px}
+.ball b{width:28px;height:28px;border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.bR{background:#e8463f}.bB{background:#2f8fe0}.bG{background:#22a650}
+.meta{font-size:12px;color:#888;margin-left:6px}
+.sumbox{padding:10px 14px;border-bottom:1px solid #eee;line-height:1.8}
+.pl-win{color:#0a8a3a;font-weight:800;font-size:22px}
+.pl-lose{color:#d0021b;font-weight:800;font-size:22px}
+.muted{color:#888}
+.paste{margin:8px 14px;border:1px dashed #bbb;border-radius:8px;padding:8px 10px;background:#f9fafb}
+.paste summary{cursor:pointer;font-weight:600;color:#1f3b63;list-style:none}
+.paste summary::-webkit-details-marker{display:none}
+.paste[open] summary{margin-bottom:8px}
+textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;padding:8px;border-radius:6px;border:1px solid #ccc;resize:vertical}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}
+.bar button,.bar select{font-size:14px;padding:7px 12px;border-radius:6px;border:1px solid #bbb;cursor:pointer}
+.big{background:#16b55a;color:#fff;border:0!important;font-weight:700}
+.big.r{background:#c62828}
+.bad{word-break:break-all;background:#ffe5e5;color:#c00;padding:4px 6px;border-radius:4px;margin:2px 0;font-size:13px}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 14px;align-items:start}
+@media(max-width:600px){.cgrid{grid-template-columns:1fr}}
+.cgrid table{width:100%;border-collapse:collapse;font-size:13px;background:#fff}
+.cgrid th{background:#c6f6d5;padding:3px 6px;border:1px solid #ccc;text-align:left;font-weight:600}
+.cgrid td{padding:3px 6px;border:1px solid #ccc;vertical-align:top;line-height:1.4}
+.wtd{position:relative}.wreb{font-size:11px;color:#999;white-space:nowrap;line-height:1.2}.wcu{display:inline-block;margin:0 4px 2px 0;white-space:nowrap}.wsrc{white-space:pre-wrap;word-break:break-all}
+.wops{position:absolute;top:1px;right:2px;display:flex;gap:2px;align-items:center}
+.wmore{border:0;background:none;color:#bbb;cursor:pointer;font-size:14px;padding:0 3px;line-height:1}
+.wmenu{display:none;gap:2px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);padding:2px;border-radius:4px}
+.wmenu .wdel{float:none}.wops.op .wmenu{display:flex}
+@media(hover:hover){.wtd .wmore{visibility:hidden}.wtd:hover .wmore{visibility:visible}.wtd:hover .wmenu{display:flex}}
+.hitrow td{background:#fff}
+.hit{color:#d0021b;font-weight:700}
+.gsum td{background:#f4faf6;font-weight:600}
+.wdel{font-size:12px;padding:1px 6px;background:#fff;color:#c62828;border:1px solid #e0a0a0;border-radius:4px;cursor:pointer;float:right}
+.dfoot{background:#e9f3fb;text-align:right;padding:8px 14px;font-size:13px;color:#555}
+.rank{padding:6px 14px;font-size:13px}.rank summary{font-weight:700;cursor:pointer;padding:4px 0}
+.rtab{display:flex;gap:6px;margin:4px 0}.rtab button{font-size:13px;padding:4px 12px;border:1px solid #bbb;border-radius:14px;background:#fff;cursor:pointer}.rtab button.on{background:#16b55a;color:#fff;border-color:#16b55a}
+.rsec{margin:6px 0}.rsec h4{margin:4px 0;font-size:13px;color:#333}.rlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px}
+.ritem{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #e3e3e3;border-radius:6px;padding:3px 6px}.ritem .ball{margin:0}.ritem small{color:#c62828;margin-left:auto}
+.rmore{font-size:12px;margin-top:4px;background:none;border:0;color:#1565c0;cursor:pointer;padding:0}
+#rk,#an{max-width:1100px;margin:auto;background:#fff;min-height:100vh}
+#tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid #cfe9d8;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+#tabbar button{flex:1;border:0;background:none;padding:12px 0;font-size:15px;color:#777;cursor:pointer}#tabbar button.on{color:#16b55a;font-weight:700;box-shadow:inset 0 3px 0 #16b55a}
+body{padding-bottom:56px}
+#taipick{position:fixed;inset:0;background:rgba(240,246,242,.97);z-index:1000;display:flex;align-items:center;justify-content:center}.tpc{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.1);padding:22px;min-width:280px;max-width:90vw;text-align:center}.tpt{font-size:20px;font-weight:700;color:#16a34a;margin-bottom:12px}.tpl{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.tpl button{font-size:17px;padding:14px 8px;border:1px solid #bfe3cc;background:#f2faf4;border-radius:10px;cursor:pointer;font-weight:700}.tpn{margin-top:10px;width:100%;font-size:15px;padding:10px;border:1px dashed #16a34a;background:#fff;color:#16a34a;border-radius:10px;cursor:pointer}.tps{font-size:12px;color:#888;margin-top:10px}.stl{line-height:1.6}.stl_最终{font-weight:700;font-size:15px}.stl_客户{color:#1565c0}.taisel{font-size:13px;padding:2px 4px;border-radius:4px;border:1px solid #9ad;background:#fff;font-weight:700;color:#16a34a}.rebl{font-size:11px;color:#aaa;margin:0 0 2px;line-height:1.2}.rebl .rsrc.r_d{display:none}
+#gate{position:fixed;inset:0;background:#f4f6f5;z-index:999;align-items:center;justify-content:center;padding:16px}
+.gcard{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.08);padding:24px 20px;width:100%;max-width:340px;display:flex;flex-direction:column;gap:10px}
+.gtitle{font-size:20px;font-weight:700;color:#16a34a;text-align:center}.gsub{margin:0;text-align:center;color:#444}
+.gcard input{font-size:17px;padding:10px;border:1px solid #ccc;border-radius:8px}.gcard .big{padding:11px;font-size:16px}
+.glist{display:flex;flex-direction:column;gap:6px}.gacc{padding:12px;font-size:16px;border:1px solid #d6e9dc;background:#f2faf4;border-radius:8px}
+.glink{background:none;border:none;color:#16a34a;font-size:14px;padding:4px}.gerr{color:#c62828;min-height:1em;margin:0;text-align:center;font-size:14px}
+.gnote{color:#888;font-size:12px;margin:0;text-align:center}.accn{font-size:13px;opacity:.9;margin-right:4px}
+.miss{color:#999}
+.rsrc{font-size:11px;border-radius:3px;padding:0 3px;margin-right:4px;background:#eee;color:#666}.rsrc.r_o{background:#fff3d6;color:#a46b00}
+.ah{font-size:14px;margin:14px 0 4px;color:#16794a;border-left:3px solid #16b55a;padding-left:6px}
+.ritem.over{border-color:#d0021b;background:#fff0f0}.ritem.over b{color:#d0021b}
+.pvl{font-size:12.5px;background:#f6fbf8;border:1px solid #e0efe6;border-radius:6px;padding:4px 6px;margin:4px 0;max-height:220px;overflow:auto}.pvl div{padding:1px 0}
+.sug{font-size:13px;margin:2px 0 6px 10px}.sug button,.lrn button{font-size:12.5px;margin:2px 4px 2px 0;padding:2px 8px;border:1px solid #16b55a;background:#fff;color:#16794a;border-radius:12px;cursor:pointer}
+.lrn{font-size:12.5px;color:#16794a;background:#eefaf3;border-radius:4px;padding:3px 6px;margin:2px 0}
+.rc{font-size:12px;padding:1px 6px;background:#fff;color:#1565c0;border:1px solid #9cc0e8;border-radius:4px;cursor:pointer;float:right;margin-left:4px}
+.warnY{background:#fff7d6;color:#7a5b00;padding:4px 6px;border-radius:4px;margin:2px 0;font-size:13px}
+#toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;display:none;z-index:200}
+#toast button{margin-left:10px;background:#16b55a;color:#fff;border:0;border-radius:12px;padding:3px 10px}
+.atbl{width:100%;border-collapse:collapse;font-size:12.5px}.atbl td,.atbl th{border-bottom:1px solid #eee;padding:4px 3px;text-align:left}
+.bars{display:flex;align-items:center;gap:2px;height:120px;border-bottom:1px solid #ddd;position:relative}
+.bars .c{flex:1;display:flex;flex-direction:column;justify-content:center;height:100%}
+.bars .u{display:flex;flex-direction:column;justify-content:flex-end;height:50%}.bars .d{height:50%}
+.bars i{display:block;background:#16b55a;min-height:0}.bars .d i{background:#d0021b}
+.lk{font-size:12px;padding:1px 6px;background:#fff;color:#777;border:1px solid #ccc;border-radius:4px;cursor:pointer;float:right}
+.cust{display:inline-block;font-size:11px;background:#e8f6ee;color:#16794a;border-radius:8px;padding:0 6px;margin-left:2px}
+.hist{padding:8px 14px 20px;font-size:13px}
+.hist table{width:100%;border-collapse:collapse}
+.hist td,.hist th{border-bottom:1px solid #eee;padding:5px 4px;text-align:left}
+.hist tr[data-h]{cursor:pointer}.hist tr[data-h]:hover{background:#f0faf3}
+.pos{color:#0a8a3a;font-weight:700}.neg{color:#d0021b;font-weight:700}
+
+/* 设置抽屉 */
+#set{position:fixed;inset:0;background:#0006;z-index:100;display:none;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto}
+#set.on{display:flex}
+#set .panel{background:#fff;border-radius:12px;padding:16px;width:100%;max-width:520px;margin:auto}
+#set h3{margin:0 0 10px;font-size:17px}
+#set label{display:block;margin:8px 0 3px;font-size:13px;color:#555}
+#set input,#set select{width:100%;padding:8px;border:1px solid #ccc;border-radius:6px}
+#set .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#set table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+#set td,#set th{border:1px solid #eee;padding:4px 6px}
+#set .btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+#set .btns button{padding:9px 14px;border:0;border-radius:6px;cursor:pointer;font-weight:600}
+#set .ok{background:#16b55a;color:#fff}
+#set .g{background:#eef1f6}
+#set .r{background:#c62828;color:#fff}
+#set .note{font-size:11px;color:#888;margin-top:8px;line-height:1.5}
+
+.ballstat{padding:6px 14px;font-size:12px;color:#666;background:#f0f4f8;border-bottom:1px solid #e0e6ee}
+.ballstat.ok{color:#1a5c35}.ballstat.err{color:#c62828}
+.man{padding:10px 14px;border-bottom:1px solid #e8e8e8;background:#fffef5}
+.man summary{cursor:pointer;font-weight:600;color:#1f3b63;list-style:none;font-size:13px}
+.man summary::-webkit-details-marker{display:none}
+.man[open] summary{margin-bottom:8px}
+.man .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:6px}
+.man input,.man select{padding:7px 10px;border:1px solid #ccc;border-radius:6px;font-size:14px}
+.man input[type=text]{flex:1;min-width:180px}
+.man .hint{font-size:11px;color:#888;margin-top:4px}
+
+#mx{padding-bottom:140px;font-size:13px}.mxbar{display:flex;gap:6px;align-items:center;padding:6px 8px;position:sticky;top:0;background:#fff;z-index:2;border-bottom:1px solid #ddd}
+#mx_tabs{display:flex;gap:4px;flex-wrap:wrap;flex:1}#mx_tabs button{white-space:nowrap;border:1px solid #1f9d55;background:#fff;color:#1f9d55;border-radius:14px;padding:3px 10px}#mx_tabs button.on{background:#1f9d55;color:#fff}
+.mxh{background:#1f9d55;color:#fff;font-weight:700;padding:4px 8px;font-size:14px}.mxd{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;padding:4px 6px;line-height:1.2;overflow-x:auto}.mxd .lot{display:flex;align-items:center;gap:2px;flex-wrap:nowrap;margin:0;white-space:nowrap}.mxd .lot>b{min-width:0;font-size:12px;margin-right:2px}.mxd .ball{font-size:9px;margin:0}.mxd .ball b{width:20px;height:20px;font-size:10px}.mxd .muted{font-size:10px;margin-left:2px}
+.mxred{color:#d32f2f;font-weight:700;font-size:11px;line-height:1.15}.mxg{display:grid;gap:2px;padding:0 2px;align-items:start}.mxfoot{padding:2px 6px;color:#666;font-size:11px}.mxwl{word-break:break-all;font-size:12px;line-height:1.25}
+.mxg table{width:100%;border-collapse:collapse;align-self:start;table-layout:fixed}.mxg th{background:#cfeedd;font-weight:400}.mxg td,.mxg th{border:1px solid #ddd;padding:0 2px;font-size:11px;vertical-align:top;text-align:left;line-height:1.15}.mxg td:first-child{width:1.6em;color:#666;padding:0 1px}.mxg td:nth-child(2){width:3.6em}.mxf{display:flex;justify-content:space-between;gap:2px;border-bottom:1px dotted #e3e3e3;line-height:1.15;font-size:11px}.mxf span:last-child{white-space:nowrap}.mxraw{white-space:pre-wrap;color:#444;word-break:break-all;font-size:10px;line-height:1.15;margin-top:1px;background:#fafafa}.mxr{cursor:pointer}.mxr .muted{font-size:10px;line-height:1.1}.mxtg{float:right;color:#999;font-size:10px}.mxtag{color:#d32f2f;font-weight:700;margin-right:2px;font-size:11px}.mxsum{position:sticky;top:40px;z-index:1;background:#f3fbf6;border-bottom:1px solid #cde;padding:2px 6px;line-height:1.25;font-size:12px}.mxbtn{display:flex;gap:8px;align-items:center;margin-top:2px}.mxbtn button{padding:1px 8px;font-size:12px}
+</style>
+</head>
+<body>
+<div id="gate" style="display:none"></div>
+
+<!-- 主界面 -->
+<div id="app">
+  <div class="dh">
+    <input type="date" id="wb_date">
+    <span>工作台</span> <select id="tai_sel" class="taisel" title="切换台（每个台数据分开）"></select>
+    <span id="acc_name" class="accn" style="margin-left:auto"></span>
+    <button type="button" class="gear" id="wb_lock" title="锁定">🔒</button>
+    <button type="button" class="gear" id="wb_gear" title="设置">⚙</button>
+  </div>
+  <div class="tip" id="stor_banner" style="display:none;color:#c62828;font-weight:600"></div>
+  <div class="tip">同一次粘贴＝一张单（空行不拆单，彩种可中途切换）。上方自动显示开奖；拉不到可点「手动输入开奖」。数据只存在本机，不同步。</div>
+  <div class="balls" id="wb_balls"></div>
+  <div class="ballstat" id="wb_ballstat">开奖加载中…</div>
+  <div id="wb_dwarn" class="bad" style="display:none;margin:4px 14px"></div>
+  <details class="man" id="wb_man">
+    <summary>✎ 手动输入开奖（自动拉不到时用）</summary>
+    <div class="row">
+      <select id="m_lot">
+        <option value="香港">香港</option>
+        <option value="新澳">澳门</option>
+        <option value="老澳" selected>老澳门</option>
+      </select>
+      <input type="date" id="m_date">
+      <input type="text" id="m_issue" placeholder="期号 如 2026293" style="width:120px">
+      <input type="text" id="m_nums" placeholder="7个号，如 35 14 09 22 28 23 17 或粘贴">
+      <button type="button" class="big" id="m_save">保存开奖</button>
+    </div>
+    <div class="hint">特码是第7个号。保存后立刻出现在上方彩球，并按此结算当天注单。开奖约 21:40 自动拉取（166开奖网）；拉不到可对照下面预览抄号，或把同目录 draws_lao.json 更新后点设置里「立即拉开奖」。</div>
+    <div id="m_msg" class="hint"></div>
+    <iframe id="m_lao_preview" title="老澳开奖预览" src="https://166w2.com/" style="width:100%;height:120px;border:1px solid #ddd;border-radius:6px;margin-top:8px;background:#fff" sandbox="allow-scripts allow-same-origin"></iframe>
+  </details>
+  <div class="sumbox" id="wb_sum"><span class="muted">还没有本期注单</span></div>
+  <details class="paste" id="wb_paste_box">
+    <summary>＋ 粘贴注单（同一次粘贴＝一张单；空行不拆单；行尾/行首可写 新澳/老奥/香港）</summary>
+    <textarea id="wb_text" placeholder="例：&#10;香港平龙200&#10;鸡猴兔各数15&#10;&#10;新澳&#10;平猪200&#10;&#10;老奥&#10;03.09各350&#10;（空行仍是同一张单；换客户或点保存才是新单）"></textarea>
+    <div class="bar">
+      <span>加到</span><select id="wb_to"><option value="new">新单</option></select>
+      <input id="wb_taicust" placeholder="本台客户" title="本台默认客户名，空着保存时用这个；也可每单改" style="width:90px;padding:6px;border:1px solid #9ad;border-radius:6px;color:#16a34a">
+      <input id="wb_cust" placeholder="可不填（一台一人）" style="width:120px;padding:6px;border:1px solid #bbb;border-radius:6px">
+      <button type="button" class="big" id="wb_check">识别</button>
+      <button type="button" id="wb_ocr" title="从截图识别文字">📷 图片</button><input type="file" id="wb_ocrf" accept="image/*" multiple style="display:none">
+      <button type="button" class="big r" id="wb_save">保存</button>
+      <span id="wb_msg"></span>
+    </div>
+    <div id="wb_prev"></div>
+  </details>
+  <div class="cgrid" id="wb_cards"></div>
+  <div class="dfoot" id="wb_foot"></div>
+  <div class="hist"><b>历史</b><div id="wb_hist"></div></div>
+</div>
+
+<!-- 设置 -->
+<div id="rk" style="display:none"><div class="dh"><span>排名</span><span id="rk_date" style="margin-left:auto;font-size:13px;color:#fff;opacity:.9"></span></div>
+<div class="rank"><div class="rtab" id="wb_rtab"></div>
+<h3 class="ah">今晚排名</h3><div id="wb_rbody"></div>
+<h3 class="ah">风险分布（开奖前）</h3><div id="an_risk"></div>
+</div></div>
+<div id="an" style="display:none"><div class="dh"><span>分析</span><span id="an_date" style="margin-left:auto;font-size:13px;color:#fff;opacity:.9"></span></div>
+<div class="rank"><div class="rtab" id="an_per"></div><div id="an_body"></div></div></div>
+<div id="toast"></div>
+<div id="mx" style="display:none"><div class="mxbar"><input type="date" id="mx_date"><div id="mx_tabs"></div></div><div id="mx_body"></div></div>
+<nav id="tabbar"><button type="button" data-s="app" class="on">工作台</button><button type="button" data-s="rk">排名</button><button type="button" data-s="an">分析</button><button type="button" data-s="mx">兑奖明细</button></nav>
+<div id="set">
+  <div class="panel">
+    <h3>设置</h3>
+    <div class="grid">
+      <label>本命生肖<select id="s_bm"></select></label>
+      <label>本命平特赔率（不含本，可写100赔80）<input id="s_bmOdds"></label>
+    </div>
+    <h4 style="margin:14px 0 4px;font-size:14px">默认赔率</h4>
+    <div class="grid">
+      <label>特码<input id="o_特码单码" type="number" step="0.01"></label>
+      <label>平特（普通，不含本）<input id="o_平特一肖" type="number" step="0.01"></label>
+      <label>平特尾（不含本）<input id="o_平特尾数" type="number" step="0.01"></label>
+      <label>二连·含本命<input id="o_二连肖·含本命" type="number" step="0.01"></label>
+      <label>二连·不含本命<input id="o_二连肖·不含本命" type="number" step="0.01"></label>
+      <label>三连·含本命<input id="o_三连肖·含本命" type="number" step="0.01"></label>
+      <label>三连·不含本命<input id="o_三连肖·不含本命" type="number" step="0.01"></label>
+      <label>四连·含本命<input id="o_四连肖·含本命" type="number" step="0.01"></label>
+      <label>四连·不含本命<input id="o_四连肖·不含本命" type="number" step="0.01"></label>
+    </div>
+    <div class="grid">
+      <label>单注上限（0=不提醒）<input id="s_maxBet" type="number" step="1"></label>
+      <label>特码单号上限（0=不限）<input id="s_capNum" type="number" step="1"></label>
+      <label>平特单肖上限（0=不限）<input id="s_capZod" type="number" step="1"></label>
+    </div>
+    <label style="display:none">没操作自动锁定<input id="s_lockMin" type="number" step="1" min="0"></label>
+    <label>本台客户 <input id="s_taicust" placeholder="一台一人时可填" style="width:8em"></label>
+    <label>盈亏按<select id="s_view"><option value="客户">客户</option><option value="老板">老板</option></select></label>
+    <h4 style="margin:14px 0 4px;font-size:14px">退点 %</h4>
+    <div class="grid">
+      <label>特码（含特肖）<input id="r_tema" type="number" step="0.1"></label>
+      <label>普通平特<input id="r_ping" type="number" step="0.1"></label>
+      <label>连肖<input id="r_lian" type="number" step="0.1"></label>
+    </div>
+    <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
+    <div id="s_creb" style="font-size:13px"></div>
+    <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
+    <p class="note">优先级：单上设的 &gt; 客户 &gt; 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码中奖含本×赔率，平特中奖=中本金×赔率不含本；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v20.9</small></p>
+    <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
+    <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
+    <div class="btns">
+      <button type="button" class="ok" id="s_save">保存</button>
+      <button type="button" class="g" id="s_close">关闭</button>
+      <button type="button" class="g" id="s_fetch">立即拉开奖</button>
+      <button type="button" class="g" id="s_eexp">加密备份</button>
+      <button type="button" class="g" id="s_eimp">导入加密备份</button><input type="file" id="s_efile" accept=".json,application/json" style="display:none">
+      <button type="button" class="g" id="s_switch">切换账号</button>
+      <button type="button" class="g" id="s_export">导出备份</button>
+      <button type="button" class="g" id="s_import">导入备份</button>
+      <input type="file" id="s_file" accept=".json" class="hidden">
+      <button type="button" class="r" id="s_clr">清空我的注单</button>
+    </div>
+    <div id="s_msg" class="note"></div>
+  </div>
+</div>
+
+<script>
+/* ========== 常量 / 工具 ========== */
+const ORDER="马蛇龙兔虎牛鼠猪狗鸡猴羊".split("");
+const zod=n=>ORDER[(n-1)%12];
+const LOTS={新澳:"澳门",香港:"香港",老澳:"老澳门"};
+const LN={新澳:"澳门",香港:"香港",老澳:"老澳门"};
+const LS={香港:"港",新澳:"澳门",老澳:"老澳"};
+const lotOf=b=>b.lot||"新澳", dkey=(l,i)=>l+"|"+i;
+const RED=[1,2,7,8,12,13,18,19,23,24,29,30,34,35,40,45,46];
+const BLUE=[3,4,9,10,14,15,20,25,26,31,36,37,41,42,47,48];
+const GREEN=[5,6,11,16,17,21,22,27,28,32,33,38,39,43,44,49];
+const WAVE_MAP={红:RED,蓝:BLUE,绿:GREEN};
+const wave=n=>RED.includes(n)?"bR":BLUE.includes(n)?"bB":"bG";
+const pad=n=>String(n).padStart(2,"0");
+const LIAN={二连肖:2,三连肖:3,四连肖:4,五连肖:5};
+const MAIN=["特码单码","一肖","平特一肖","平特","二连肖","三连肖","四连肖"];
+const $=id=>document.getElementById(id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const today=()=>new Date(Date.now()+8*3600e3).toISOString().slice(0,10); // 固定北京时间
+const doyDate=(y,n)=>{const d=new Date(Date.UTC(+y,0,+n));return d.getUTCFullYear()==+y?d.toISOString().slice(0,10):""}; // 老澳期号=当年第N天
+const nums=s=>(String(s).match(/\d+/g)||[]).map(Number).filter(n=>n>=1&&n<=49);
+const zods=s=>[...new Set(String(s).split("").filter(c=>ORDER.includes(c)))];
+const fmt=x=>(Math.round(x*100)/100).toLocaleString("zh-CN");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const TL=t=>t==="一肖"?"特肖":t;
+
+const ODDS0={
+  特码单码:47,一肖:10.85,平特一肖:1,平特:1,平特尾数:0.8,
+  "二连肖·含本命":3.5,"二连肖·不含本命":4,
+  "三连肖·含本命":8.5,"三连肖·不含本命":10,
+  "四连肖·含本命":27,"四连肖·不含本命":30,五连肖:80
+};
+
+/* ========== 本机存储（不上传、不同步） ========== */
+let TAI_PICK=false;
+const TAI=(()=>{const cl=x=>String(x||"").replace(/[^\w\u4e00-\u9fa5-]/g,"").slice(0,12);
+  const q=new URLSearchParams(location.search),u=cl(q.get("t"));
+  if(u){try{sessionStorage.setItem("wb_tai",u)}catch(e){}if(top===self){q.delete("t");const qs=q.toString();try{history.replaceState(null,"",location.pathname+(qs?"?"+qs:"")+location.hash)}catch(e){}}return u}
+  let ss="";try{ss=cl(sessionStorage.getItem("wb_tai"))}catch(e){}if(ss)return ss;
+  let L=[];try{L=JSON.parse(localStorage.getItem("wb_tai_list")||"[]")}catch(e){}
+  if(L.filter(x=>x!=="1").length&&top===self)TAI_PICK=true;
+  try{sessionStorage.setItem("wb_tai","1")}catch(e){}return "1"})();
+function taiGo(t){try{sessionStorage.setItem("wb_tai",t)}catch(e){}location.replace(location.pathname)}
+const TAIN=TAI+(/^\d+$/.test(TAI)?"号台":"台");
+function taiList(){let L=[];try{L=JSON.parse(localStorage.getItem("wb_tai_list")||"[]")}catch(e){}if(!L.includes("1"))L.unshift("1");return L}
+function taiAdd(t){const L=taiList();if(!L.includes(t)){L.push(t);try{localStorage.setItem("wb_tai_list",JSON.stringify(L))}catch(e){}}}
+taiAdd(TAI);
+let DATA_KEY="wb_data_v1_local",LOADREV=0;
+const DRAWS_KEY="wb_draws_cache_v1";
+
+/* 存储降级：localStorage → IndexedDB → sessionStorage → 内存 */
+const Store=(function(){
+  let mode="memory"; // local | idb | session | memory
+  let backend=null;
+  let idb=null;
+  const mem=new Map();
+  let warn="";
+  function probe(storage){
+    try{
+      const k="__wb_probe__";
+      storage.setItem(k,"1");
+      if(storage.getItem(k)!=="1")throw new Error("mismatch");
+      storage.removeItem(k);
+      return true;
+    }catch(e){return false}
+  }
+  function openIDB(){
+    return new Promise(resolve=>{
+      if(!globalThis.indexedDB){resolve(null);return}
+      try{
+        const req=indexedDB.open("wb_store_v1",1);
+        req.onupgradeneeded=()=>{
+          const db=req.result;
+          if(!db.objectStoreNames.contains("kv")) db.createObjectStore("kv");
+        };
+        req.onsuccess=()=>resolve(req.result);
+        req.onerror=()=>resolve(null);
+        req.onblocked=()=>resolve(null);
+      }catch(e){resolve(null)}
+    });
+  }
+  function idbLoadAll(db){
+    return new Promise(resolve=>{
+      try{
+        const tx=db.transaction("kv","readonly");
+        const os=tx.objectStore("kv");
+        const req=os.openCursor();
+        req.onsuccess=()=>{
+          const c=req.result;
+          if(c){ mem.set(String(c.key), c.value); c.continue(); }
+        };
+        tx.oncomplete=()=>resolve();
+        tx.onerror=()=>resolve();
+      }catch(e){resolve()}
+    });
+  }
+  function idbPut(k,v){
+    if(!idb)return;
+    try{
+      const tx=idb.transaction("kv","readwrite");
+      tx.objectStore("kv").put(v,k);
+    }catch(e){}
+  }
+  function idbDel(k){
+    if(!idb)return;
+    try{
+      const tx=idb.transaction("kv","readwrite");
+      tx.objectStore("kv").delete(k);
+    }catch(e){}
+  }
+  async function init(){
+    if(probe(globalThis.localStorage)){
+      mode="local"; backend=localStorage; warn=""; return;
+    }
+    idb=await openIDB();
+    if(idb){
+      mode="idb";
+      await idbLoadAll(idb);
+      warn="当前环境禁用了本地存储，已改用 IndexedDB 保存。";
+      return;
+    }
+    if(probe(globalThis.sessionStorage)){
+      mode="session"; backend=sessionStorage;
+      warn="⚠ 预览/受限窗口：数据只保存在本次会话，关掉标签页会丢失。请用 Chrome/Safari 直接打开此文件。";
+      return;
+    }
+    mode="memory"; backend=null;
+    warn="⚠ 无法持久保存：关掉标签页数据会丢失。请用 Chrome/Safari 打开此文件，不要用预览窗口。";
+  }
+  function getItem(k){
+    if(mode==="local"||mode==="session"){
+      try{return backend.getItem(k)}catch(e){return mem.has(k)?mem.get(k):null}
+    }
+    return mem.has(k)?mem.get(k):null;
+  }
+  function setItem(k,v){
+    if(mode==="local"||mode==="session"){
+      try{backend.setItem(k,v); mem.set(k,v); return}
+      catch(e){
+        // 写入失败则退到内存，并尽量挂到 IDB
+        mem.set(k,v);
+        if(idb) idbPut(k,v);
+        else throw e;
+        return;
+      }
+    }
+    mem.set(k,v);
+    if(mode==="idb") idbPut(k,v);
+  }
+  function removeItem(k){
+    mem.delete(k);
+    if(mode==="local"||mode==="session"){
+      try{backend.removeItem(k)}catch(e){}
+    }
+    if(mode==="idb") idbDel(k);
+  }
+  function banner(){
+    const el=$("stor_banner");
+    if(!el)return;
+    if(warn){el.style.display="block"; el.textContent=warn}
+    else{el.style.display="none"; el.textContent=""}
+  }
+  return{init,getItem,setItem,removeItem,banner,get mode(){return mode},get warn(){return warn},_mem:mem,_forceMode(m){mode=m}};
+})();
+
+function defaultSettings(){
+  return{
+    bm:"马", bmOdds:0.8,
+    odds:Object.assign({},ODDS0),
+    rebate:{特码:4,平特:5,连肖:5}, custReb:{}, taiCust:"",
+    auto:true, defNum:"特码单码", defZod:"一肖", maxBet:5000, capNum:0, capZod:0
+  };
+}
+function emptyData(){return{bets:[],settings:defaultSettings(),trash:[],unlock:{},learn:[]}}
+
+let D=emptyData();
+let DRAWS={};
+
+function loadDraws(){try{DRAWS=JSON.parse(Store.getItem(DRAWS_KEY)||"{}")}catch(e){DRAWS={}}
+  Object.values(DRAWS).forEach(d=>{if(d.lot==="老澳"&&!d.manual&&/^20\d{5}$/.test(d.issue)){const x=doyDate(d.issue.slice(0,4),+d.issue.slice(4));if(x)d.date=x}})}
+function saveDraws(){try{Store.setItem(DRAWS_KEY,JSON.stringify(DRAWS))}catch(e){}}
+
+function loadData(){
+  try{
+    const o=JSON.parse(Store.getItem(DATA_KEY)||"null");
+    LOADREV=(o&&o.rev)||0;
+    if(!o)return emptyData();
+    const s=Object.assign(defaultSettings(),o.settings||{});
+    s.odds=Object.assign({},ODDS0,s.odds||{});
+    s.rebate=Object.assign({特码:4,平特:5,连肖:5},s.rebate||{});
+    s.custReb=(s.custReb&&typeof s.custReb==='object')?s.custReb:{};
+    (o.bets||[]).forEach(migNet);
+    return{bets:o.bets||[],settings:s,trash:Array.isArray(o.trash)?o.trash:[],unlock:o.unlock||{},learn:Array.isArray(o.learn)?o.learn:[]};
+  }catch(e){return emptyData()}
+}
+let dataReady=false; // 只有真正读进了账号数据才允许写回，防止空数据盖掉注单
+function autoBak(){try{if(!D.bets.length)return;const k=DATA_KEY+"_bak_"+today();Store.setItem(k,JSON.stringify({bets:D.bets,settings:D.settings,at:Date.now()}));
+  const pre=DATA_KEY+"_bak_",ks=[];for(let i=0;i<localStorage.length;i++){const x=localStorage.key(i);if(x&&x.startsWith(pre))ks.push(x)}ks.sort().slice(0,-7).forEach(x=>Store.removeItem(x))}catch(e){}}
+function saveUser(){
+  if(!dataReady&&!window.__WBTEST)return;
+  try{const old=JSON.parse(Store.getItem(DATA_KEY)||"null");if(old&&(old.bets||[]).length>20&&!D.bets.length&&!D._clear){console.warn("拒绝用空数据覆盖");return}
+    if(old&&old.rev&&old.rev!==LOADREV){D=loadData();try{settleAll();renderWB()}catch(e){}try{toast("这个台在另一个标签页刚改过，已载入最新数据，请重做刚才的操作")}catch(e){alert("这个台在另一个标签页刚改过，已载入最新数据，请重做刚才的操作")}return}}catch(e){}
+  delete D._clear;
+  LOADREV=Date.now()+Math.random();
+  try{Store.setItem(DATA_KEY,JSON.stringify({rev:LOADREV,bets:D.bets,settings:D.settings,trash:D.trash||[],unlock:D.unlock||{},learn:D.learn||[]}));autoBak()}catch(e){console.error(e)}
+}
+function migNet(b){
+  if(b.net===undefined||b.net===null){
+    if((b.type==="平特一肖"||b.type==="平特")&&(+b.odds===2||+b.odds===1.8)){
+      b.odds=Math.round((b.odds-1)*100)/100;b.net=true;
+    }else b.net=false;
+  }
+}
+
+function showApp(){
+  $("wb_date").value=today();
+  if($("m_date")) $("m_date").value=today();
+  settleAll();
+  pickBestDate();
+  renderWB();
+  if(!$("wb_ballstat").textContent) setBallStat("正在拉取开奖…","");
+  if(D.settings.auto!==false) fetchDraws().catch(e=>{setBallStat("自动拉取失败："+(e&&e.message||e)+"，请手动输入","err"); renderBalls()});
+  else setBallStat("已关闭自动拉取，可用手动输入","");
+}
+
+/* ========== 赔率 / 退点 ========== */
+const BM=()=>D.settings.bm||"马";
+const BMODDS=()=>+(D.settings.bmOdds??0.8);
+const odd=k=>+((D.settings.odds||{})[k]??ODDS0[k]??2);
+const hasBM=c=>zods(c).includes(BM());
+function oddsOf(t,c){
+  if((t==="平特一肖"||t==="平特")&&String(c).trim()===BM())return BMODDS();
+  if(LIAN[t]&&t!=="五连肖")return odd(t+(hasBM(c)?"·含本命":"·不含本命"));
+  return odd(t==="平特"?"平特一肖":t);
+}
+const isNet=t=>t==="平特一肖"||t==="平特"||t==="平特尾数";
+const netOf=b=>b.net??isNet(b.type);
+const M=b=>netOf(b)?1+ +b.odds:+b.odds;
+function parseOdds(v,net){
+  const m=String(v).match(/(\d+(?:\.\d+)?)\s*赔\s*(\d+(?:\.\d+)?)/);
+  return m?Math.round(((net?0:+m[1])+ +m[2])/ +m[1]*10000)/10000:+v;
+}
+function canReb(t){
+  return t==="特码单码"||t==="一肖"||t==="平特一肖"||t==="平特"||!!LIAN[t];
+}
+function rebFam(t){
+  if(t==="特码单码"||t==="一肖")return"特码";
+  if(t==="平特一肖"||t==="平特")return"平特";
+  if(LIAN[t])return"连肖";
+  return"";
+}
+const REB0={特码:4,平特:5,连肖:5};
+const hasV=x=>x!==undefined&&x!==null&&x!==""&&isFinite(+x);
+function custReb(c){const m=(D.settings.custReb||{});return c&&m[c]||null}
+function rateOf(b,f){
+  // 优先级：本单 > 客户 > 默认；0 表示不退，不会回落
+  if(b.rebO&&hasV(b.rebO[f]))return{v:+b.rebO[f],src:"本单"};
+  const c=custReb(b.cust); if(c&&hasV(c[f]))return{v:+c[f],src:"客户"};
+  const R=D.settings.rebate||{}; return{v:hasV(R[f])?+R[f]:REB0[f],src:"默认"};
+}
+function rebInfo(b){
+  if(!canReb(b.type))return{amt:0,src:"无"};
+  // 平特马、平特尾数不退
+  if((b.type==="平特一肖"||b.type==="平特")&&String(b.content).trim()===BM())return{amt:0,src:"平特马无退"};
+  if(b.type==="平特尾数")return{amt:0,src:"平特尾无退"};
+  const f=rebFam(b.type); if(!f)return{amt:0,src:"无"};
+  const r=rateOf(b,f);
+  return{amt:b.amount*r.v/100,src:r.src,rate:r.v};
+}
+const reb=b=>b.res==="tie"?0:Math.round(rebInfo(b).amt*100)/100;
+/* 中奖（进盈亏）：特码等含本用整笔 ret；平特净赔只计奖金部分（amount×odds），不含本 */
+const winAmt=b=>b.res!=="win"?0:(netOf(b)?(b.ret||0)/M(b)* +b.odds:(b.ret||0));
+const pl=b=>b.res==="pend"?0:winAmt(b)-b.amount;
+function fml(b){
+  const st=b.ret/M(b);
+  return netOf(b)?`${fmt(st)}+${fmt(st)}×${b.odds}=${fmt(b.ret)}`:`${fmt(st)}×${b.odds}=${fmt(b.ret)}`;
+}
+function typeName(b){return TL(b.type)}
+function agg(list){
+  const s={n:list.length,amt:0,ret:0,win:0,reb:0};
+  list.forEach(b=>{s.amt+=b.amount;s.ret+=winAmt(b);s.reb+=reb(b);if(b.res==="win")s.win++});
+  s.reb=Math.round(s.reb*100)/100; s.pl=s.ret-s.amt; return s;
+}
+
+/* ========== 结算 ========== */
+function judge(b,d){
+  const sp=d[6], t=b.type; let N=nums(b.content), Z=zods(b.content);
+  if(t==="特码单码"){if(!N.length)return null;const k=N.filter(n=>n===sp).length;return{res:k?"win":"lose",ret:k*b.amount/N.length*M(b)}}
+  if(t==="一肖"){if(!Z.length)return null;const w=Z.includes(zod(sp));return{res:w?"win":"lose",ret:w?b.amount*M(b):0}}
+  if(t==="平特尾数"){
+    const T=(String(b.content).match(/\d/g)||[]).map(Number); if(!T.length)return null;
+    const hit=T.filter(x=>d.some(n=>n%10===x)).length;
+    return{res:hit?"win":"lose",ret:hit*b.amount/T.length*M(b)};
+  }
+  if(LIAN[t]){if(Z.length!==LIAN[t])return null;const dz=d.map(zod),w=Z.every(z=>dz.includes(z));return{res:w?"win":"lose",ret:w?b.amount*M(b):0}}
+  if(t==="平特"||t==="平特一肖"){if(Z.length!==1)return null;const w=d.some(n=>zod(n)===Z[0]);return{res:w?"win":"lose",ret:w?b.amount*M(b):0}}
+  return null;
+}
+function settleAll(){
+  let c=0;
+  D.bets.forEach(b=>{
+    if(!b.manual&&LIAN[b.type]&&b.type!=="五连肖")b.odds=oddsOf(b.type,b.content);
+    if(b.manual)return;
+    let d=DRAWS[dkey(lotOf(b),b.issue)];
+    if(d&&d.date&&b.date&&d.date<b.date){ // 旧版把前一天期号记到今天的单上：改回当天期号，重新待开
+      const t=drawOnDate(lotOf(b),b.date); b.issue=t?t.issue:String(+d.issue+1); d=t; b.res="pend";b.ret=0;
+    }
+    if(!d&&b.date){const t=drawOnDate(lotOf(b),b.date);if(t&&+b.issue<+t.issue){b.issue=t.issue;d=t}} // 旧期号且本地没有那期：用当天这期
+    if(!d){b.res="pend";b.ret=0;return}
+    const r=judge(b,d.nums);
+    if(r){b.res=r.res;b.ret=r.ret;c++}
+    else if(!["win","lose","tie"].includes(b.res)){b.res="pend";b.ret=0}
+  });
+  return c;
+}
+function save(){saveUser(); renderWB()}
+
+/* ========== 开奖拉取（只缓存公开开奖号，不上传注单） ========== */
+const SRC={新澳:"XOMLHC",香港:"HK6",老澳:"OMLHC"}; // 166w2 / data.kai8.us
+const KAI8_BASE="https://data.kai8.us/api";
+const KAI8_CO="kai166";
+const DRAW_HH=21, DRAW_MM=40; // 约 21:40 开奖；此前不把「今晚未出」当失败
+function bjNow(){return new Date(Date.now()+8*3600e3)}
+function bjMinutes(){const d=bjNow();return d.getUTCHours()*60+d.getUTCMinutes()}
+function pastDrawWindow(){return bjMinutes()>=DRAW_HH*60+DRAW_MM}
+function tonightDrawn(lot){const dt=today();return Object.values(DRAWS).some(d=>d.lot===lot&&d.date===dt&&d.nums&&d.nums.length===7)}
+const LAO_BASE="https://38.11.67.161:60003";
+const LAO_SEED={"k": "294,20,48,04,38,43,16,41,295", "date": "2026-10-21", "issue": "2026294", "nums": [20, 48, 4, 38, 43, 16, 41]};
+const LAO_BMJG=[
+  "https://104.233.144.245/lambm/bmjg.js",
+  LAO_BASE+"/lambm/bmjg.js"
+];
+function setBallStat(msg,cls){
+  const el=$("wb_ballstat"); if(!el)return;
+  el.textContent=msg||"";
+  el.className="ballstat"+(cls?" "+cls:"");
+}
+function ingest(lot,rows){
+  let n=0;(rows||[]).forEach(r=>{
+    const nm=nums(r.openCode); if(nm.length!==7||!r.expect)return;
+    const k=dkey(lot,r.expect);
+    if(DRAWS[k]&&DRAWS[k].nums.join()===nm.join()&&DRAWS[k].date)return;
+    const [dt,tm]=String(r.openTime||"").split(" ");
+    putAuto(k,{lot,issue:String(r.expect),date:dt||today(),time:tm||"",nums:nm,auto:true}); n++;
+  }); return n;
+}
+function ingestLao(kcsv,dateHint){
+  // k: "293,35,14,09,22,28,23,17,294" → issue,6平+特,next
+  const p=String(kcsv||"").split(",").map(s=>s.trim()).filter(Boolean);
+  if(p.length<8)return 0;
+  const issueNum=+p[0];
+  const balls=p.slice(1,8).map(Number);
+  if(balls.length!==7||balls.some(n=>!(n>=1&&n<=49)))return 0;
+  const y=+today().slice(0,4);
+  const expect=String(y)+String(issueNum).padStart(3,"0");
+  const k=dkey("老澳",expect);
+  const dt=doyDate(y,issueNum)||dateHint||today();
+  if(DRAWS[k]&&DRAWS[k].nums.join()===balls.join()&&DRAWS[k].date===dt)return 0;
+  putAuto(k,{lot:"老澳",issue:expect,date:dt,time:"",nums:balls,auto:true,src:LAO_BASE}); return 1;
+}
+async function fetchJson(url,opts){
+  const r=await fetch(url,Object.assign({cache:"no-store",mode:"cors"},opts||{}));
+  if(!r.ok)throw Error("HTTP "+r.status);
+  const ct=(r.headers.get("content-type")||"").toLowerCase();
+  const txt=await r.text();
+  try{return JSON.parse(txt)}catch(e){
+    // bmjg.js 有时标成 javascript，内容仍是 JSON
+    const m=txt.match(/\{[\s\S]*\}/);
+    if(m)return JSON.parse(m[0]);
+    throw e;
+  }
+}
+async function fetchLaoFromSite(){
+  // 用户指定站：先从 /tb/ 找嵌入源，再拉 bmjg.js（开奖号）
+  let widgetOrigin="";
+  try{
+    const tb=await fetch(LAO_BASE+"/tb/",{cache:"no-store",mode:"cors"});
+    const html=await tb.text();
+    const m=html.match(/src=["'](https?:\/\/[^"']*lambm\/[^"']+)["']/i) || html.match(/src=["'](https?:\/\/[^"']+)["']/i);
+    if(m){
+      const u=new URL(m[1], LAO_BASE+"/");
+      widgetOrigin=u.origin;
+    }
+  }catch(e){}
+  const candidates=[];
+  if(widgetOrigin) candidates.push(widgetOrigin+"/lambm/bmjg.js");
+  LAO_BMJG.forEach(u=>{if(!candidates.includes(u))candidates.push(u)});
+  let lastErr=null;
+  for(const url of candidates){
+    try{
+      const j=await fetchJson(url);
+      if(!j||!j.k)throw Error("无开奖字段");
+      // 期号旁若有 qs.js 可对齐日期；默认用今天（跨日后手动可改）
+      let dt=today();
+      try{
+        const q=await (await fetch(LAO_BASE+"/qs.js",{cache:"no-store",mode:"cors"})).text();
+        // qs 只有期号；老澳晚开，若本地已过 0 点但仍是同一期，沿用已有同号日期
+        const exist=Object.values(DRAWS).find(d=>d.lot==="老澳"&&d.issue.endsWith(String(j.k).split(",")[0].padStart(3,"0")));
+        if(exist&&exist.date) dt=exist.date;
+      }catch(e){}
+      return ingestLao(j.k,dt);
+    }catch(e){lastErr=e}
+  }
+  // 浏览器跨域常失败：再试同目录缓存 draws_lao.json（可离线）
+  for(const path of ["./draws_lao.json","draws_lao.json"]){
+    try{
+      const j=await fetchJson(path);
+      if(j&&j.k) return ingestLao(j.k, j.date||today());
+      if(j&&j.nums&&j.issue){
+        const k=dkey("老澳",String(j.issue));
+        const balls=j.nums.map(Number);
+        if(balls.length===7){
+          if(!(DRAWS[k]&&DRAWS[k].nums.join()===balls.join())){
+            putAuto(k,{lot:"老澳",issue:String(j.issue),date:j.date||today(),time:"",nums:balls,auto:true,src:j.src||"draws_lao.json"});
+            return 1;
+          }
+          return 0;
+        }
+      }
+    }catch(e){lastErr=e}
+  }
+  if(LAO_SEED&&(LAO_SEED.k||LAO_SEED.nums)){
+    try{
+      if(LAO_SEED.k) return ingestLao(LAO_SEED.k, LAO_SEED.date||today());
+      const k=dkey("老澳",String(LAO_SEED.issue));
+      const balls=(LAO_SEED.nums||[]).map(Number);
+      if(balls.length===7){
+        putAuto(k,{lot:"老澳",issue:String(LAO_SEED.issue),date:LAO_SEED.date||today(),time:"",nums:balls,auto:true,src:"seed"});
+        return 1;
+      }
+    }catch(e){lastErr=e}
+  }
+  throw lastErr||Error("老澳开奖拉取失败（跨域），请手动输入");
+}
+function rowsFromKai8(list){
+  return (list||[]).filter(r=>r&&(r.draw_code||r.openCode)&&r.issue).map(r=>({
+    expect:String(r.issue), openTime:r.draw_time||r.openTime||"", openCode:r.draw_code||r.openCode||""
+  }));
+}
+async function fetchLotKai8(lot){
+  const code=SRC[lot]; if(!code)throw Error("无彩种");
+  let j=null, last=null;
+  // 同站代理（绕过浏览器 CORS）→ 直连 kai8 → 抛错给上层走旧站/缓存
+  for(const url of [`api/draws?code=${encodeURIComponent(code)}`,`/api/draws?code=${encodeURIComponent(code)}`,`${KAI8_BASE}/lottery/history/${KAI8_CO}/${code}`]){
+    try{j=await fetchJson(url); if(j&&!j.status)break; last=Error((j&&j.msg)||"开奖接口失败"); j=null}catch(e){last=e;j=null}
+  }
+  if(!j)throw last||Error("开奖拉取失败");
+  const list=(j.data&&j.data.list)||j.list||[];
+  return ingest(lot, rowsFromKai8(list));
+}
+async function fetchLotLegacy(lot){
+  // 旧站兜底（新澳/香港）；老澳仍走站点/缓存
+  if(lot==="老澳")return fetchLaoFromSite();
+  const map={新澳:"macaujc2",香港:"hkjc"}, y=+today().slice(0,4); let add=0;
+  for(const yr of [y,y-1]){
+    if(yr<y&&today().slice(5,7)!=="01")continue;
+    const j=await fetchJson(`https://history.macaumarksix.com/history/${map[lot]}/y/${yr}`);
+    add+=ingest(lot,j.data||j);
+  }
+  return add;
+}
+async function fetchDraws(){
+  const online=typeof navigator==="undefined"||navigator.onLine!==false;
+  if(!online){setBallStat("当前离线，显示本机缓存开奖","err"); renderBalls(); return ["离线"]}
+  const out=[], ok=[], bad=[], wait=[];
+  setBallStat("正在拉取开奖…","");
+  for(const lot of Object.keys(SRC)){
+    try{
+      let add=0;
+      try{add=await fetchLotKai8(lot)}catch(e1){
+        try{add=await fetchLotLegacy(lot)}catch(e2){throw e2||e1}
+      }
+      out.push(`${LOTS[lot]}+${add}`); ok.push(LOTS[lot]);
+      if(!tonightDrawn(lot)&&!pastDrawWindow())wait.push(LOTS[lot]);
+    }catch(e){
+      // 开奖前缺今晚数据不当失败；有缓存就继续
+      if(!pastDrawWindow()&&Object.values(DRAWS).some(d=>d.lot===lot)){out.push(`${LOTS[lot]}待`); wait.push(LOTS[lot]); ok.push(LOTS[lot])}
+      else {out.push(`${LOTS[lot]}✗`); bad.push(LOTS[lot])}
+    }
+  }
+  saveDraws(); settleAll(); saveUser();
+  pickBestDate();
+  renderWB();
+  const t=new Date().toLocaleTimeString("zh-CN",{hour12:false});
+  let msg=t+" 开奖："+out.join(" ");
+  if(wait.length&&!pastDrawWindow()) msg+="（今晚约 21:40 开，此前保持待开奖）";
+  else if(bad.length) msg+="（失败的可点下方手动输入）";
+  setBallStat(msg, bad.length&&!ok.length?"err":"");
+  if($("s_msg")) $("s_msg").textContent=msg;
+  return out;
+}
+function latestDrawDate(){
+  const ds=Object.values(DRAWS);
+  if(!ds.length)return today();
+  return ds.map(d=>d.date).filter(Boolean).sort().reverse()[0]||today();
+}
+function pickBestDate(){
+  // v19.4：不再自动跳到最近开奖日；空着时只填今天（北京时间）
+  const el=$("wb_date"); if(el&&!el.value)el.value=today(); return;
+  const cur=el.value||today();
+  const has=Object.values(DRAWS).some(d=>d.date===cur);
+  if(!has){
+    const best=latestDrawDate();
+    if(best && best!==cur) el.value=best;
+  }
+}
+function putAuto(k,o){const x=DRAWS[k];if(x&&x.manual){x.autoNums=o.nums;return}DRAWS[k]=o}
+function drawWarn(){
+  const el=$("wb_dwarn"); if(!el)return; const dt=$("wb_date").value||today();
+  const L=Object.values(DRAWS).filter(d=>d.date===dt&&d.manual&&Array.isArray(d.autoNums)&&d.autoNums.join()!==d.nums.join());
+  if(!L.length){el.style.display="none";el.innerHTML="";return}
+  el.style.display="block";
+  el.innerHTML=L.map(d=>`⚠ ${LN[d.lot]||d.lot} ${esc(d.issue)}期：手动开奖 ${d.nums.map(pad).join(" ")} 和自动抓到的 ${d.autoNums.map(pad).join(" ")} 不一样，请核对`).join("<br>");
+}
+function saveManualDraw(){
+  const lot=$("m_lot").value;
+  const dt=$("m_date").value||$("wb_date").value||today();
+  let issue=($("m_issue").value||"").trim();
+  const raw=$("m_nums").value||"";
+  const nm=nums(raw);
+  if(nm.length!==7){$("m_msg").textContent="需要正好 7 个号码（1–49），现在 "+nm.length+" 个";return}
+  if(nm.some(n=>n<1||n>49)){$("m_msg").textContent="号码必须在 1–49";return}
+  if(!issue){
+    // 猜期号：同年最近一期 +1，或日期拼
+    const last=Object.values(DRAWS).filter(d=>d.lot===lot).sort((a,b)=>b.issue.localeCompare(a.issue))[0];
+    issue=last?String(+last.issue+1):(dt.replace(/-/g,"")+"01");
+  }
+  if(!/^\d{7}$/.test(issue)&&!/^\d{6,8}$/.test(issue)){
+    // 允许 293 → 2026293
+    if(/^\d{1,3}$/.test(issue)) issue=String(+today().slice(0,4))+issue.padStart(3,"0");
+  }
+  const k=dkey(lot,issue);
+  const prev=DRAWS[k], an=prev?(prev.manual?prev.autoNums:prev.nums):undefined;
+  DRAWS[k]={lot,issue:String(issue),date:dt,time:"",nums:nm,auto:false,manual:true,...(an?{autoNums:an}:{})};
+  saveDraws(); settleAll(); saveUser();
+  $("wb_date").value=dt;
+  renderWB();
+  $("m_msg").textContent=`已保存 ${LOTS[lot]} ${issue}：`+nm.map(pad).join(" ")+` 特${pad(nm[6])}${zod(nm[6])}`;
+  $("m_nums").value="";
+}
+
+/* ========== 粘贴识别 ========== */
+const TRAD={龍:"龙",馬:"马",雞:"鸡",豬:"猪",號:"号",連:"连",碼:"码",各:"各",萬:"万",塊:"块"};
+const MULT={百:100,千:1000,万:10000};
+const MULTI=["一肖","二连肖","三连肖","四连肖","五连肖"];
+const NEED={一肖:1,二连肖:2,三连肖:3,四连肖:4,五连肖:5};
+const CD={零:0,一:1,壹:1,二:2,两:2,俩:2,贰:2,三:3,叁:3,四:4,肆:4,五:5,伍:5,六:6,陆:6,七:7,柒:7,八:8,捌:8,九:9,玖:9};
+const CU={十:10,拾:10,百:100,佰:100,千:1000,仟:1000};
+function cnSec(t,ctx){let tot=0,cur=0,last=ctx||0,zero=false;
+  for(const c of t){if(/\d/.test(c)){cur=cur*10+ +c;continue}if(c in CD){if(c==="零"){zero=true;continue}cur=CD[c];continue}
+    if(c in CU){tot+=(cur||1)*CU[c];last=CU[c];cur=0;zero=false;continue}return NaN}
+  if(cur)tot+=(!zero&&last>=100&&cur<10)?cur*last/10:cur; return tot}
+function cnNum(t){t=t.replace(/[拾]/g,"十").replace(/[佰]/g,"百").replace(/[仟]/g,"千").replace(/萬/g,"万");
+  const i=t.indexOf("万");if(i<0)return cnSec(t);const hi=cnSec(t.slice(0,i))||1,lo=t.slice(i+1);return hi*10000+(lo?cnSec(lo,10000):0)}
+
+function tokenize(line){
+  const T=[]; let x=line.replace(/[龍馬雞豬號連碼萬塊]/g,c=>TRAD[c]); let m;
+  const R=[
+    [/^[\s,，、.。;；:：+＋\-－—_~～·]+/,()=>null],
+    [/^(?:老[澳奥]门?|新?[澳奥]门?|香港|香|港)\s*[:：]?/,m=>{const t=m[0];let lot=null;if(/香港|香|港/.test(t))lot="香港";else if(/老/.test(t))lot="老澳";else if(/澳|奥/.test(t))lot="新澳";return lot?{k:"lot",v:lot}:null}],
+    [/^(\d{1,2}(?:\s*[.．、,，\s]\s*\d{1,2})*)\s*号/,m=>({k:"nums",v:m[1].split(/[^\d]+/).filter(Boolean).map(Number)})],
+    [/^(平特一肖|平特|平(?!码)|特码单码|特码|特肖|([二三四五])连肖?|特(?=\s*\d|尾|[羊猪兔蛇虎狗牛龙马猴鼠鸡]))/,m=>({k:"play",v:m[1],n:m[2]})],
+    [/^本命/,()=>({k:"zod",v:BM()})],
+    [/^共/,()=>({k:"total"})],
+    [/^复式/,()=>({k:"fs"})],
+    [/^(?:每[个一]?[数码号](?:\s*各数?)?|各数?|每[个码号]?|[xX×*＊])/,m=>({k:"each",zx:/^每[个一]?[数码号]|^各数/.test(m[0])})],
+    [/^尾\s*(\d)/,m=>({k:"tail",v:m[1]})],
+    [/^(\d(?:\s*[.．,，、]\s*\d)*)\s*尾/,m=>({k:"tails",v:m[1].match(/\d/g)})],
+    [/^(?:[红蓝绿]波)/,m=>({k:"opt",v:m[0].replace(/波/,"")})],
+    [/^[羊猪兔蛇虎狗牛龙马猴鼠鸡]/,m=>({k:"zod",v:m[0]})],
+    [/^(?:\d+(?=[百千万佰仟]))?[零一二两俩三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾佰仟][\d零一二两俩三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾佰仟]*\s*(元|块|米|斤)?/,m=>{const v=cnNum(m[0].replace(/[元块米斤\s]/g,""));return v>0?{k:"num",v,unit:true}:{k:"junk",v:m[0]}}],
+    [/^(\d+)\s*(?:([百千万])\s*(\d)?)?\s*(元|块|米|斤)?/,m=>{let v=+m[1];if(m[2]){v*=MULT[m[2]];if(m[3])v+=+m[3]*MULT[m[2]]/10}return{k:"num",v,raw:+m[1],unit:!!(m[2]||m[4])}}],
+    [/^./,m=>({k:"junk",v:m[0]})]
+  ];
+  while(x.length){for(const [re,f] of R){if((m=x.match(re))){const t=f(m);if(t){t.src=m[0];T.push(t)}x=x.slice(m[0].length);break}}}
+  return T;
+}
+function playOf(kw,n){
+  if(!kw)return null;
+  if(n)return["","","二","三","四","五"].indexOf(n)>0?n+"连肖":null;
+  return{平特一肖:"平特",平特:"平特",平:"平特",特码单码:"特码",特码:"特码",特:"特码",特肖:"一肖"}[kw]??null;
+}
+function flush(g,out){
+  const s0=out.length; if(g.total)g.each=true;
+  flush0(g,out);
+  if(g.total&&g.amount>0&&out.length>s0){const n=out.length-s0,per=Math.round(g.amount/n*100)/100;for(let i=s0;i<out.length;i++)out[i].amount=per}
+}
+function flush0(g,out){
+  if(!g.items.length&&g.amount==null&&!g.junk)return;
+  const raw=g.raw.trim(), warn=[];
+  if(g.junk)warn.push("没认出："+g.junk);
+  if(g.amount==null)warn.push("没找到金额");
+  else if(!(g.amount>0))warn.push("金额必须大于0");
+  if(!g.items.length)warn.push("没找到内容");
+  const P=g.play;
+  const typeFor=it=>{
+    if(it.k==="tail")return P==="特码"?"特码尾数":"平特尾数";
+    if(it.k==="nums")return"特码单码";
+    if(it.k==="zod")return P==="平特"?"平特一肖":P==="特码"?"一肖":(MULTI.includes(P)?P:"一肖");
+    if(it.k==="opt")return"特码单码"; // wave expand elsewhere
+    return"其他";
+  };
+  const cont=it=>it.k==="nums"?String(it.v).padStart(2,"0"):it.v;
+  const mk=(type,items,amt,w,extra)=>out.push({
+    lot:g.lot||"新澳", type, content:items.map(cont).join(" "), amount:amt,
+    odds:oddsOf(type,items.map(cont).join(" ")), raw, warn:[...warn,...(w||[])].join("；"), ...(extra||{})
+  });
+  if(!g.items.length){mk("其他",[],g.amount);return}
+  // 波色拆特码
+  const waveOnly=[], rest=[];
+  g.items.forEach(it=>{const w=it.k==="opt"&&WAVE_MAP[String(it.v).replace(/波$/,"")];if(w)waveOnly.push(String(it.v).replace(/波$/,""));else rest.push(it)});
+  if(waveOnly.length){
+    waveOnly.forEach(w=>WAVE_MAP[w].forEach(n=>mk("特码单码",[{k:"nums",v:n}],g.amount,[],{wave:w})));
+    if(!rest.length)return; g.items=rest;
+  }
+  // 每个数 → 生肖展开成特码号码
+  if(g.zx&&g.items.every(i=>i.k==="zod")){
+    const zs=g.items.map(i=>i.v);
+    for(let n=1;n<=49;n++)if(zs.includes(zod(n)))mk("特码单码",[{k:"nums",v:n}],g.amount,[],{zexp:zs.join("")});
+    return;
+  }
+  const t0=typeFor(g.items[0]);
+  if(P==="平特"&&g.items.every(i=>i.k==="zod"))g.each=true;
+  if(!LIAN[t0]&&!g.each&&!g.total&&g.items.length>1&&g.amount!=null){g.items.forEach(it=>mk(typeFor(it),[it],g.amount,["没写各：请写各"+fmt(g.amount)+"或共"+fmt(g.amount)]));return}
+  if(g.fs&&LIAN[t0]&&NEED[t0]){
+    const n=NEED[t0],zs=g.items.filter(i=>i.k==="zod");
+    if(zs.length<=n||zs.length!==g.items.length){mk(t0,g.items,g.amount,["复式没认出：要比"+n+"个肖多"]);return}
+    const C=[],rec=(st,acc)=>{if(acc.length===n){C.push(acc);return}for(let i=st;i<zs.length;i++)rec(i+1,[...acc,zs[i]])};rec(0,[]);
+    C.forEach(c=>mk(t0,c,g.amount,[],{fs:1}));return;
+  }
+  if(LIAN[t0]&&NEED[t0]&&g.items.length>NEED[t0]&&g.items.length%NEED[t0]===0&&g.items.every(i=>i.k==="zod")){
+    const n=NEED[t0]; for(let i=0;i<g.items.length;i+=n)mk(t0,g.items.slice(i,i+n),g.amount,[]); return;
+  }
+  if(MULTI.includes(t0)&&t0!=="一肖"){
+    const w=[]; if(NEED[t0]&&g.items.length!==NEED[t0])w.push(`${t0}应选${NEED[t0]}个，现在${g.items.length}个`);
+    mk(t0,g.items,g.amount,w); return;
+  }
+  if(t0==="特码单码"&&!g.each&&g.items.length>1){
+    // 多个号一笔：拆成各号（各金额）
+    const each=g.each||true;
+    g.items.forEach(it=>mk("特码单码",[it],g.amount,[])); return;
+  }
+  const each=g.each||g.items.length===1;
+  g.items.forEach(it=>mk(typeFor(it),[it],g.amount==null?null:(each?g.amount:Math.round(g.amount/g.items.length*100)/100),each?[]:["已平分金额"]));
+}
+function normalizeLots(text){
+  const W="(新澳门|老澳门|澳门|新澳|新奥|老澳|老奥|澳|奥|香港|香|港)";
+  const re=new RegExp("^[ \\t]*"+W+"[ \\t]*[:：]?[ \\t]*"), te=new RegExp("[ \\t]*[:：]?[ \\t]*"+W+"[ \\t]*[:：]?[ \\t]*$");
+  const can=w=>/^老/.test(w)?"老澳":/^(香|港)/.test(w)?"香港":"新澳";
+  const L=text.split("\n").map(l=>{let m=l.match(re);if(m)return{lot:can(m[1]),t:l.slice(m[0].length),own:1};
+    m=l.match(te);if(m)return{lot:can(m[1]),t:l.slice(0,m.index),own:1};return{lot:null,t:l}});
+  // 单独一行的彩种：管后面的行；同行粘贴（香06…）也更新 cur；若在最后（后面没有注），管前面没写彩种的行
+  let cur=null;
+  L.forEach((x,k)=>{if(x.own&&!x.t.trim()){cur=x.lot;if(!L.slice(k+1).some(y=>y.t.trim()))L.slice(0,k).forEach(y=>{if(!y.own&&!y.hl&&y.t.trim())y.lot=x.lot})}
+    else if(x.own){cur=x.lot} else if(!x.own&&x.t.trim()&&cur){x.lot=cur;x.hl=1}});
+  return L.map(x=>x.t.trim()?(x.lot?x.t.split(/[。；;]+/).filter(s=>s.trim()).map(s=>x.lot+" "+s).join("。"):x.t):"").join("\n");
+}
+/* 常见写法统一（只做有把握的替换，其余交给识别器；认不出的会标红） */
+/* 口语录入：同上、排除、分类、生肖分组、口语金额（只改写成标准写法，认不出的照常标红） */
+const ZALL="鼠牛虎兔龙蛇马羊猴鸡狗猪";
+const ZGRP={家禽:"牛马羊鸡狗猪",家肖:"牛马羊鸡狗猪",家畜:"牛马羊鸡狗猪",野兽:"鼠虎兔龙蛇猴",野肖:"鼠虎兔龙蛇猴"};
+function numSet(w){
+  w=String(w).trim(); let m; const A=[];for(let i=1;i<=49;i++)A.push(i);
+  if(/^(单数|单号)$/.test(w))return A.filter(n=>n%2);
+  if(/^(双数|双号)$/.test(w))return A.filter(n=>n%2===0);
+  if(/^(大号|大数)$/.test(w))return A.filter(n=>n>=25);
+  if(/^(小号|小数)$/.test(w))return A.filter(n=>n<=24);
+  if((m=w.match(/^头([0-4])$/)))return A.filter(n=>Math.floor(n/10)===+m[1]);
+  if((m=w.match(/^(?:特尾|尾数)(\d)$/)))return A.filter(n=>n%10===+m[1]);
+  if((m=w.match(/^([红蓝绿])波$/))&&typeof WAVE_MAP!=="undefined"&&WAVE_MAP[m[1]])return WAVE_MAP[m[1]].slice();
+  if((m=w.match(/^(\d{1,2})\s*(?:到|至)\s*(\d{1,2})$/))){const a=+m[1],b=+m[2];if(a>=1&&b<=49&&a<b)return A.filter(n=>n>=a&&n<=b)}
+  if(/^\d{1,2}(?:[\s,，、.]+\d{1,2})*$/.test(w)){const L=w.split(/[^\d]+/).filter(Boolean).map(Number);if(L.every(n=>n>=1&&n<=49))return L}
+  return null;
+}
+const SETW="(?:单数|单号|双数|双号|大号|大数|小号|小数|头[0-4]|(?<!平)特尾\\d|(?<!平特?)尾数\\d|[红蓝绿]波|\\d{1,2}\\s*(?:到|至)\\s*\\d{1,2})";
+const NUMW="(?:"+SETW+"|\\d{1,2}(?:[\\s,，、.]+\\d{1,2})*)";
+const ns=L=>" "+L.map(pad).join(" ")+"号 ";
+function talkLine(l){
+  // 口语金额
+  l=l.replace(/给我(?:打|来|买|下|押)?|各来|每个都来?|每个来|都来|(?<=[\d羊猪兔蛇虎狗牛龙马猴鼠鸡尾肖号码波])\s*(?:来|打)(?=\s*(?:\d|[一二两三四五六七八九十]))/g,"各");
+  l=l.replace(/各\s*各/g,"各");
+  l=l.replace(/各组/g,"各");
+  // 复式多连：龙虎马复式2-3连各10 / 二三连
+  l=l.replace(/([鼠牛虎兔龙蛇马羊猴鸡狗猪](?:[\s、，,.]*[鼠牛虎兔龙蛇马羊猴鸡狗猪])*)\s*复式\s*([2-5二三四五])\s*(?:-|－|—|~|～|到|至)?\s*([2-5二三四五])\s*连肖?\s*(.*)$/,(m,z,a,b,rest)=>{
+    const cn=c=>"二三四五".includes(c)?"二三四五".indexOf(c)+2:+c, Z=z.match(/[鼠牛虎兔龙蛇马羊猴鸡狗猪]/g);
+    let lo=cn(a),hi=cn(b); if(lo>hi)[lo,hi]=[hi,lo];
+    if(Z.length<hi||new Set(Z).size!==Z.length)return `肖数不够 ${rest}`;
+    const out=[];for(let k=lo;k<=hi;k++)out.push("二三四五"[k-2]+"连肖"+(Z.length>k?"复式 ":" ")+Z.join("")+" "+rest.trim());
+    return out.join("\n");
+  });
+  // 生肖分组
+  l=l.replace(/家禽|家肖|家畜|野兽|野肖/g,w=>ZGRP[w]);
+  // 生肖排除：除了马(其他/其余)(肖)
+  l=l.replace(/(?:除了|除去|去掉|除)\s*([鼠牛虎兔龙蛇马羊猴鸡狗猪](?:[\s、，,.]*[鼠牛虎兔龙蛇马羊猴鸡狗猪])*)\s*(?:以外|之外)?\s*(?:的)?\s*(?:其他|其余|其它)?\s*(?:的)?\s*(?:生?肖)?/g,(m,z)=>{const ex=z.match(/[鼠牛虎兔龙蛇马羊猴鸡狗猪]/g);const r=[...ZALL].filter(c=>!ex.includes(c));return r.length?" "+r.join("")+" ":m});
+  // 号码排除：A 不要/除了 B
+  l=l.replace(new RegExp("("+NUMW+")\\s*(?:不要|除了|除去|去掉|除)\\s*("+NUMW+")","g"),(m,a,b)=>{const A=numSet(a),B=numSet(b);if(!A||!B)return m;const r=A.filter(n=>!B.includes(n));return r.length?ns(r):m});
+  // 分类词
+  l=l.replace(/单数|单号|双数|双号|大号|大数|小号|小数|头[0-4]|(?<!平)特尾\d|(?<!平特?)尾数\d/g,w=>{const r=numSet(w);return r?ns(r):w});
+  return l;
+}
+function talkNorm(text){
+  const L=String(text).split("\n"); let prev=null;
+  const LW="(?:新澳门|老澳门|澳门|新澳|新奥|老澳|老奥|澳|奥|香港|香|港)";
+  const AMT=/((?:\d+(?:\.\d+)?\s*[kK千万]?|[一二两三四五六七八九十百千万]+)\s*(?:元|块)?)\s*$/;
+  return L.map(l=>{
+    const m=l.match(/^\s*(?:同上面?|跟上面一样|和上面一样|跟上面|同上一样)\s*(.*)$/);
+    if(m&&prev!=null){
+      let tail=m[1].trim(), base=prev, lot="";
+      const lm=tail.match(new RegExp("^[:：]?\\s*("+LW+")\\s*[:：]?\\s*|\\s*[:：]?\\s*("+LW+")\\s*[:：]?\\s*$"));
+      if(lm){lot=lm[1]||lm[2];tail=tail.replace(lm[0],"").trim();
+        base=base.replace(new RegExp("^\\s*"+LW+"\\s*[:：]?\\s*"),"").replace(new RegExp("\\s*[:：]?\\s*"+LW+"\\s*[:：]?\\s*$"),"")}
+      if(tail){const na=tail.match(AMT);
+        if(na&&/^(各数?|每个数各|[xX×*=])?\s*$/.test(tail.slice(0,na.index))&&AMT.test(base))base=base.replace(AMT,na[1]);
+        else return l+" 同上没认出";}
+      return (lot?lot+" ":"")+base;
+    }
+    if(l.trim()&&!/^\s*(?:同上|跟上面)/.test(l))prev=l;
+    return l;
+  }).map(talkLine).join("\n");
+}
+function smartNorm(text){
+  const CN="[一二两三四五六七八九十]";
+  return text.split("\n").map(l=>{
+    l=l.replace(/[／|｜\/]/g," ").replace(/^(\s*(?:新澳|新奥|老澳|老奥|澳门|澳|奥|香港|香|港)?\s*[:：]?\s*)(?:买|下|押)\s*/,"$1").replace(/(^|\s)码(?=\s*\d)/g,"$1特码")
+     .replace(/老鼠/g,"鼠").replace(/老虎/g,"虎").replace(/兔子/g,"兔").replace(/猴子/g,"猴").replace(/牛牛/g,"牛")
+     .replace(/特一码|单码(?!各)|特码单码/g,"特码")
+     .replace(/平一肖|平肖/g,"平特")
+     .replace(/(?<!\d)([2-5])\s*连肖?/g,(m,d)=>"二三四五"[d-2]+"连肖")
+     .replace(/([二三四五])肖连/g,"$1连肖")
+     .replace(/(\d+(?:\.\d+)?)\s*[kK千]/g,(m,v)=>/\./.test(v)||/k/i.test(m)?String(Math.round(+v*1000)):m)
+     .replace(/(\d+\.\d+)\s*万/g,(m,v)=>String(Math.round(+v*10000)))
+     .replace(/(?<!\d)(\d{1,2})\s*(?:到|至)\s*(\d{1,2})(?!\d)/g,(m,a,b)=>{a=+a;b=+b;if(a<1||b>49||a>=b)return m;const r=[];for(let i=a;i<=b;i++)r.push(i);return r.join(" ")+"号 "})
+     .replace(/(?:买|下|押|每注|每号|每码|=)\s*(?=\d|[一二两三四五六七八九十])/g,"各")
+     .replace(/共\s*(?=\d|[一二两三四五六七八九十])/g," 共");
+    return l;
+  }).join("\n");
+}
+function slipFix(text){
+  // v19.4 写法统一 + 跨行合并（只在同一单内）
+  let L=String(text).split("\n").map(l=>l
+    .replace(/(平特尾数?|平尾)\s*([\d.．,，、]+)(?=\s*各|\s*$)/g,(m,p,d)=>{const ds=String(d).match(/\d/g)||[];return ds.length?("平特"+ds.map(x=>x+"尾").join("")+" "):m})
+    .replace(/格\s*数/g,"各数").replace(/(?<!每)个\s*(?=\d)/g,"各").replace(/特\s*各\s*数/g,"各数").replace(/各\s*[#＃]\s*(?=\d)/g,"各")
+    .replace(/(\d)\s*[.。,，、]?\s*[#＃]\s*(?=\d)/g,"$1各")
+    .replace(/(连肖?[\s,，、.。]*[鼠牛虎兔龙蛇马羊猴鸡狗猪](?:[\s、，,.]*[鼠牛虎兔龙蛇马羊猴鸡狗猪])*)\s*[。.，,]\s*(\d+)\s*$/,"$1 $2")
+    .replace(/^(\s*(?:新澳|新奥|老澳|老奥|澳门|澳|奥|香港|香|港)?\s*)([鼠牛虎兔龙蛇马羊猴鸡狗猪]+)\s*各\s*(?=\d)/,"$1$2各数")
+    .replace(/^(.*\d\s*(?:斤|元|块|米)?)\s*[，,。.\s]*老\s*[。.]?\s*$/,(m,a)=>/老澳|老奥/.test(a)?m:"老澳 "+a));
+  const NO=l=>{const t=l.replace(/[。.,，、\s]+$/,"");return /^[\d\s.,，、\-\/+＋]+$/.test(t)&&(t.match(/\d+/g)||[]).length>=3&&(t.match(/\d+/g)||[]).every(n=>+n>=1&&+n<=49)};
+  for(let i=0;i<L.length-1;i++){
+    if(/(?:^|[\s.,，、\-\/+])\d\s*$/.test(L[i])&&/^\s*\d(?!\d)/.test(L[i+1])&&!/各|斤|元|块|x/.test(L[i])){L[i+1]=L[i].trimEnd()+L[i+1].trimStart();L[i]="";continue}
+    if(/各\s*$/.test(L[i])&&/^\s*\d/.test(L[i+1])){L[i+1]=L[i].trimEnd()+L[i+1].trimStart();L[i]="";continue}
+    if(NO(L[i])&&L[i+1].trim()){L[i+1]=L[i].replace(/[。.,，、\s]+$/,"")+" "+L[i+1];L[i]=""}
+  }
+  return L.filter(l=>l.trim()).join("\n");
+}
+function parseBets0(text){
+  text=slipFix(text);
+  text=String(text).replace(/[\uFF01-\uFF5E]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\u3000/g," ");
+  text=talkNorm(text);
+  text=smartNorm(text);
+  text=normalizeLots(text);
+  // 龙平100 / 龙羊平特100 → 平特龙… ；50各 → 各50
+  text=text.replace(/([羊猪兔蛇虎狗牛龙马猴鼠鸡龍馬雞豬](?:[\s、，,.]*[羊猪兔蛇虎狗牛龙马猴鼠鸡龍馬雞豬])*)\s*(平特一肖|平特|平)(?![码碼])/g,"$2$1 ");
+  text=text.replace(/(\d+(?:\s*[百千万])?|[一二两三四五六七八九十百千万]+)\s*(?:元|块)?\s*各(?=\s*(?:$|[\n。；;]))/gm,"各$1");
+  text=text.replace(/(平特一肖|平特|平|特肖|特码)\s*[。；;\n]+/g,"$1 ").replace(/(平特?)?本命(平特?)?/g," 平"+BM()+" ");
+  const out=[]; let curLot=null;
+  text.split(/[\n。；;]+/).forEach(line=>{
+    if(!line.trim())return;
+    const T=tokenize(line); let lp=null;
+    let g={play:lp,items:[],each:false,amount:null,junk:"",raw:"",lot:curLot};
+    T.forEach((t,i)=>{
+      const nx=T[i+1];
+      if(t.k==="lot"){curLot=t.v;g.lot=t.v;g.raw+=t.src;return}
+      if(t.k==="play"){
+        const np=playOf(t.v,t.n);
+        if(np&&LIAN[np]&&g.items.length&&g.amount==null&&!g.junk&&g.items.every(i=>i.k==="zod")){g.play=np;lp=np;g.raw+=t.src;return}
+        if(g.items.length||g.junk||g.amount!=null){flush(g,out);g={play:lp,items:[],each:false,amount:null,junk:"",raw:"",lot:curLot}}
+        lp=np||lp; g.play=lp; g.raw+=t.src; return;
+      }
+      g.raw+=t.src+" "; if(g.play===undefined)g.play=lp; if(!g.lot&&curLot)g.lot=curLot;
+      if(t.k==="nums")t.v.forEach(v=>v>=1&&v<=49?g.items.push({k:"nums",v}):g.junk+=v+"号 ");
+      else if(t.k==="zod"||t.k==="opt"||t.k==="tail")g.items.push(t);
+      else if(t.k==="tails")t.v.forEach(v=>g.items.push({k:"tail",v}));
+      else if(t.k==="each"){g.each=true;if(t.zx)g.zx=true}
+      else if(t.k==="total")g.total=true;
+      else if(t.k==="fs")g.fs=true;
+      else if(t.k==="junk")g.junk+=t.v;
+      else if(t.k==="num"){
+        const isAmt=t.unit||g.each||!nx||(nx.k!=="num"&&nx.k!=="each"&&nx.k!=="total")||(g.play&&g.play!=="特码"&&!MULTI.includes(g.play));
+        if(isAmt){g.amount=t.v;if(!g.lot&&curLot)g.lot=curLot;flush(g,out);g={play:lp,items:[],each:false,amount:null,junk:"",raw:"",lot:curLot}}
+        else if(Number.isInteger(t.v)&&t.v>=1&&t.v<=49)g.items.push({k:"nums",v:t.v});
+        else g.junk+=t.v+" ";
+      }
+    });
+    flush(g,out);
+  });
+  return out;
+}
+function custOf(b){const m=b.match(/^[ \t]*客户[ \t]*[:：][ \t]*(\S+)[ \t]*$/m);return m?{c:m[1],t:b.replace(m[0],"")}:{c:"",t:b}}
+function parseBets(text){
+  /* 同一次粘贴＝一张单；空行不拆单。仅「客户：」分段算新单；彩种标签中途仍可切换 */
+  text=String(text||"");
+  if(/客户[ \t]*[:：]/.test(text)){
+    const parts=text.split(/(?=^[ \t]*客户[ \t]*[:：])/m).filter(b=>b.trim()), out=[];
+    parts.forEach((b,i)=>{const x=custOf(b);parseBets0(x.t).forEach(r=>{r.grp=i+1;if(x.c)r.cust=x.c;out.push(r)})});
+    return out;
+  }
+  return parseBets0(text).map(r=>(r.grp=1,r));
+}
+
+/* ========== 渲染绿头兑奖 ========== */
+let wbPV=[];
+function drawOnDate(lot,dt){
+  const ds=Object.values(DRAWS).filter(d=>d.lot===lot&&d.date===dt);
+  return ds.length?ds.sort((a,b)=>b.issue.localeCompare(a.issue))[0]:null; // 只认当天，绝不拿旧一期顶替
+}
+function lastDrawBefore(lot,dt){
+  return Object.values(DRAWS).filter(d=>d.lot===lot&&d.date&&d.date<dt).sort((a,b)=>(b.date+b.issue).localeCompare(a.date+a.issue))[0]||null;
+}
+function issueFor(lot,dt){const d=drawOnDate(lot,dt);return d?d.issue:""}
+function renderBalls(){
+  const dt=$("wb_date").value||today();
+  const el=$("wb_balls"); if(!el)return;
+  el.innerHTML=["香港","新澳","老澳"].map(l=>{
+    // 优先精确日期；否则取该日及之前最近一期（跨夜不空白）
+    let d=Object.values(DRAWS).filter(x=>x.lot===l&&x.date===dt).sort((a,b)=>b.issue.localeCompare(a.issue))[0];
+    const ball=n=>`<span class="ball"><b class="${wave(n)}">${pad(n)}</b>${zod(n)}</span>`;
+    if(!d||!d.nums||d.nums.length!==7){
+      const pv=lastDrawBefore(l,dt);
+      const st=dt>today()?"未到开奖日":l==="香港"?"今日未开奖（香港不是每天开）":"今日未开奖（约 21:30 开）";
+      return `<div class="lot"><b>${LOTS[l]}</b><span class="meta">${dt.slice(5)} ${st}${pv?` · 上期 ${esc(String(pv.issue).replace(/^20\d\d/,""))}期（${esc(pv.date.slice(5))}）`:""}</span></div>`;
+    }
+    const mark=d.manual?"手动":"";
+    return `<div class="lot"><b>${LOTS[l]}</b>`+d.nums.slice(0,6).map(ball).join("")+`<span style="margin:0 4px;color:#999">+</span>`+ball(d.nums[6])+`<span class="meta">${esc(String(d.issue).replace(/^20\d\d/,"")||d.issue)}期 ${esc((d.date||"").slice(5))} ${esc(d.time||"")} ${mark}</span></div>`;
+  }).join("");
+}
+function badOf(r){return !(r.amount>0)||!String(r.content||"").trim()||!(r.odds>0)||r.type==="其他"||/没认出|没找到|没写各/.test(r.warn||"")}
+const reEsc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+function ruleFrom(a,b){
+  a=a.trim();b=b.trim(); const na=a.match(/\d+/g)||[], nb=b.match(/\d+/g)||[];
+  if(na.length&&na.length<=6&&na.join()===nb.join()){
+    const pat="^"+a.split(/(\d+)/).map(x=>/^\d+$/.test(x)?"(\\d+)":reEsc(x)).join("")+"$"; let k=0;
+    return{pat,tpl:b.replace(/\d+/g,()=>"$"+(++k)),a,b,gen:1};
+  }
+  return{pat:"^"+reEsc(a)+"$",tpl:b.replace(/\$/g,"$$$$"),a,b,gen:0};
+}
+function remember(a,b){D.learn=D.learn||[];const r=ruleFrom(a,b);D.learn=D.learn.filter(x=>x.pat!==r.pat);D.learn.unshift(r);saveUser();renderLearn();toast("记住了，下次自动按你的写法")}
+function renderLearn(){const el=$("s_learn");if(!el)return;const L=D.learn||[];$("s_ln").textContent=L.length?`（${L.length}）`:"";
+  el.innerHTML=L.length?L.map((r,i)=>`<div style="padding:4px 0;border-bottom:1px solid #eee">${esc(r.a)} → ${esc(r.b)}${r.gen?' <small class="muted">（数字可变）</small>':""}<button type="button" data-ld="${i}" style="float:right;color:#c62828">删</button></div>`).join(""):`<div class="muted">还没有</div>`;
+  el.querySelectorAll("[data-ld]").forEach(b=>b.onclick=()=>{D.learn.splice(+b.dataset.ld,1);saveUser();renderLearn()})}
+function lineBad(l){const r=parseBets(l);return !r.length||r.some(badOf)}
+function suggest(l){
+  const t=l.trim(), out=[], AM=/((?:\d+(?:\.\d+)?\s*[kK]?)|[一二两三四五六七八九十百千万]+)\s*(?:元|块)?\s*$/;
+  const r=parseBets(t), w=r.map(x=>x.warn||"").join("；");
+  if(/没写各/.test(w)&&AM.test(t)){out.push(t.replace(AM,"各$1"));out.push(t.replace(AM,"共$1"))}
+  const jm=w.match(/没认出：([^；]+)/); if(jm){const j=jm[1].trim();if(j&&t.includes(j))out.push(t.replace(j,"").trim())}
+  return [...new Set(out)].filter(x=>x&&x!==t&&!lineBad(x)).slice(0,2);
+}
+let wbLastBad=[], wbOffer=[];
+function parseWB(){
+  const raw0=$("wb_text").value, lines=raw0.split("\n"), conv=[];
+  // 1) 按记住的写法改
+  const txt1=lines.map(l=>{const t=l.trim();if(!t)return l;for(const r of (D.learn||[])){let re;try{re=new RegExp(r.pat)}catch(e){continue}
+    if(re.test(t)){const n=t.replace(re,r.tpl);if(n!==t){conv.push([t,n]);return n}}}return l}).join("\n");
+  // 2) 单独一行的 共/合计 N
+  const stated={}; let bi=0;
+  const txt=txt1.split(/\n[ \t\u3000]*\n/).map(b=>{if(!b.trim())return "";let st=null;
+    const kept=b.split("\n").filter(l=>{const m=l.match(/^\s*(?:共|合计|总共|总计)\s*[:：]?\s*(\d+(?:\.\d+)?|[一二两三四五六七八九十百千万]+)\s*(?:元|块)?\s*$/);if(m){st=/\d/.test(m[1])?+m[1]:cnNum(m[1]);return false}return true}).join("\n");
+    if(kept.trim()){bi++;if(st!=null)stated[bi]=st}else if(st!=null&&bi)stated[bi]=st;return kept}).filter(b=>b.trim()).join("\n\n");
+  const blocks=txt.split(/\n[ \t\u3000]*\n/).filter(b=>b.trim());
+  wbPV=parseBets(txt);
+  if(blocks.length<=1)wbPV.forEach(r=>{if(!r.grp)r.grp=1});
+  const bad=wbPV.filter(badOf);
+  const tot=wbPV.reduce((a,r)=>a+(+r.amount||0),0);
+  let h="";
+  if(conv.length)h+=conv.map(([a,b])=>`<div class="lrn">已按你的写法：${esc(a)} → ${esc(b)}</div>`).join("");
+  // 用户自己改好的行 → 可记住
+  const curL=txt1.split("\n"); wbOffer=[];
+  if(!bad.length||true)wbLastBad.forEach(x=>{const c=(curL[x.i]||"").trim();if(c&&c!==x.t&&!lineBad(c)&&!wbOffer.some(o=>o[0]===x.t))wbOffer.push([x.t,c])});
+  if(wbOffer.length)h+=wbOffer.map(([a,b],i)=>`<div class="lrn">改好了：${esc(a)} → ${esc(b)} <button type="button" data-rm="${i}">记住</button></div>`).join("");
+  // v19.4 出错定位：每条错注 → 原文第几行（第几单）；>49 三位数 → 黄色提示
+  const lg=[];{const byCust=/客户[ \t]*[:：]/.test(txt1);let g=0,prevCust="";curL.forEach((l,i)=>{if(!l.trim()){lg.push(0);return}const m=l.match(/^[ \t]*客户[ \t]*[:：][ \t]*(\S+)/);if(byCust&&m){g++;prevCust=m[1]}else if(!g)g=1;lg.push(g)})}
+  const nums=x=>(String(x).match(/\d+/g)||[]).map(Number);
+  const BIG=[];curL.forEach((l,i)=>{const re=/(?<!\d)(\d{3})(?!\d)/g;let m;while((m=re.exec(l))){const v=+m[1],f=+m[1].slice(0,2),pre=l.slice(0,m.index),post=l.slice(m.index+3);
+    if(v>49&&f>=1&&f<=49&&/\d[\s.\-,，、\/+]+$/.test(pre)&&!/各\s*数?\s*$/.test(pre)&&/^(?:[\s.\-,，、\/+]+\d|\s*各)/.test(post))BIG.push({i,g:lg[i],tok:m[1],fix:m[1].slice(0,2),at:m.index})}});
+  const LOC=[];bad.forEach(r=>{const g=r.grp||1,rn=nums(r.raw);let best=-1,bs=-1;
+    curL.forEach((l,i)=>{if(lg[i]!==g||!l.trim())return;const ln=nums(l);let sc=ln.filter(n=>rn.includes(n)).length+(lineBad(l.trim())?0.5:0);if(sc>bs){bs=sc;best=i}});
+    if(best<0)best=curL.findIndex((l,i)=>lg[i]===g);
+    const k=LOC.find(x=>x.i===best);if(k){if(!k.w.includes(r.warn||""))k.w.push(r.warn||"金额/内容不对")}else LOC.push({i:best,g,raw:r.raw,w:[r.warn||"金额/内容不对"]})});
+  const nChk=LOC.length+BIG.filter(b=>!LOC.some(x=>x.i===b.i)).length;
+  if(nChk)h=`<div class="bad" style="font-weight:bold">⚠ ${nChk} 处要核对（点一下跳到原文）</div>`+h;
+  LOC.forEach(x=>{const bg=BIG.filter(b=>b.i===x.i);
+    h+=`<div class="bad" data-li="${x.i}" style="cursor:pointer">✗ 第${x.g}单：${esc((curL[x.i]||"").trim())} — ${esc(x.w.join("；"))}</div>`;
+    if(!bg.length){const sg=suggest((curL[x.i]||"").trim());if(sg.length)h+=`<div class="sug" data-li="${x.i}">可能是：${sg.map(v=>`<button type="button" data-sgi="${x.i}" data-sgv="${esc(v)}">${esc(v)}</button>`).join("")}</div>`}});
+  BIG.forEach((b,k)=>{h+=`<div class="warnY" data-li="${b.i}" style="cursor:pointer">第${b.g}单「${b.tok}」可能是 ${b.fix}？ <button type="button" data-fx="${k}">改成 ${b.fix}</button></div>`});
+  wbLastBad=LOC.map(x=>({i:x.i,t:(curL[x.i]||"").trim()}));
+  const G={}; wbPV.forEach(r=>{const g=r.grp||1;G[g]=G[g]||{n:0,a:0,lots:{}};G[g].n++;G[g].a+=+r.amount||0;G[g].lots[r.lot||"新澳"]=1});
+  const nOrd=Object.keys(G).length;
+  const mb=+D.settings.maxBet||0, big=mb?wbPV.filter(r=>+r.amount>mb):[];
+  if(big.length)h+=big.map(r=>`<div class="warnY">大额：${esc(LN[r.lot]||r.lot)} ${esc(TL(r.type))} ${esc(r.content)} ${fmt(r.amount)}（超过单注上限 ${fmt(mb)}）</div>`).join("");
+  {const M={},O=[];wbPV.filter(r=>!badOf(r)).forEach(r=>{const k=[r.grp,r.lot,r.type,r.amount,r.raw].join("\0");if(!M[k]){M[k]={r,c:[]};O.push(M[k])}M[k].c.push(r.content)});
+   if(O.length)h+=`<div class="pvl">`+O.map(({r,c})=>`<div>${esc(LN[r.lot]||r.lot)} ${esc(TL(r.type))} ${c.map(x=>esc(x)).join(c[0].includes(" ")?"／":" ")} <b>各${fmt(r.amount)}</b>${c.length>1?` ×${c.length} = ${fmt(r.amount*c.length)}`:""}</div>`).join("")+`</div>`;}
+  const rtot=Math.round(wbPV.reduce((a,r)=>a+(+rebInfo(r).amt||0),0)*100)/100;
+  h+=`<div style="margin-top:4px">识别 <b>${nOrd}</b> 单（${wbPV.length} 注），共 <b>${fmt(tot)}</b>，退水 <b>${fmt(rtot)}</b>　`+Object.keys(G).map(g=>`第${g}单 ${fmt(G[g].a)}（${Object.keys(G[g].lots).map(l=>LN[l]||l).join("+")}）`).join("　")+`</div>`;
+  const Gs={};wbPV.forEach(r=>{const g=r.grp||1;Gs[g]=(Gs[g]||0)+(+r.amount||0)});
+  const mism=Object.keys(stated).filter(g=>Math.abs((Gs[g]||0)-stated[g])>0.005);
+  if(Object.keys(stated).length)h=Object.keys(stated).map(g=>mism.includes(g)?`<div class="bad">✗ 第${g}单写的合计 ${fmt(stated[g])}，算出来是 ${fmt(Gs[g]||0)}，对不上</div>`:`<div class="lrn">第${g}单合计 ${fmt(stated[g])} 对上了 ✓</div>`).join("")+h;
+  $("wb_prev").innerHTML=h;
+  $("wb_prev").querySelectorAll("[data-sgi]").forEach(b=>b.onclick=()=>{const L=$("wb_text").value.split("\n"),i=+b.dataset.sgi,old=(L[i]||"").trim();
+    L[i]=b.dataset.sgv;$("wb_text").value=L.join("\n");wbLastBad=[];parseWB();toast("已改成："+b.dataset.sgv,"记住",()=>remember(old,b.dataset.sgv))});
+  $("wb_prev").querySelectorAll("[data-fx]").forEach(bt=>bt.onclick=e=>{e.stopPropagation();const b=BIG[+bt.dataset.fx];const L=$("wb_text").value.split("\n");const l=L[b.i]||"";
+    if(l.substr(b.at,3)===b.tok)L[b.i]=l.slice(0,b.at)+b.fix+l.slice(b.at+3);$("wb_text").value=L.join("\n");wbLastBad=[];parseWB();toast(`已把 ${b.tok} 改成 ${b.fix}`)});
+  $("wb_prev").querySelectorAll("[data-li]").forEach(el=>el.onclick=e=>{if(e.target.closest("button"))return;wbJump(+el.dataset.li)});
+  $("wb_prev").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{const o=wbOffer[+b.dataset.rm];if(o){remember(o[0],o[1]);b.remove()}});
+  return{bad:bad.length,mism:mism.length,stated,Gs,chk:nChk,big:BIG.length};
+}
+function wbJump(i){
+  // 粘贴框滚到第 i 行并选中（手机可用）
+  const ta=$("wb_text"),L=ta.value.split("\n");if(i<0||i>=L.length)return;$("wb_paste_box").open=true;
+  let st=0;for(let k=0;k<i;k++)st+=L[k].length+1;const en=st+L[i].length;
+  const cs=getComputedStyle(ta),m=document.createElement("div");
+  ["fontSize","fontFamily","lineHeight","letterSpacing","paddingLeft","paddingRight","paddingTop","borderLeftWidth","borderRightWidth","boxSizing"].forEach(p=>m.style[p]=cs[p]);
+  m.style.cssText+=";position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;left:-9999px;top:0";m.style.width=ta.clientWidth+"px";
+  m.textContent=ta.value.slice(0,st)+"\u200b";document.body.appendChild(m);const y=m.scrollHeight;m.remove();
+  ta.scrollIntoView({block:"center",behavior:"auto"});
+  try{ta.focus({preventScroll:true})}catch(e){ta.focus()}
+  ta.setSelectionRange(st,en);ta.scrollTop=Math.max(0,y-ta.clientHeight/2);
+  setTimeout(()=>{ta.scrollTop=Math.max(0,y-ta.clientHeight/2)},60);
+}
+function contentLine(b){
+  const lot=LN[lotOf(b)]||"", t=TL(b.type);
+  if(b.type==="特码单码")return `${lot} 特码 ${esc(b.content)} 各${fmt(b.amount)}`;
+  if(b.type==="平特一肖"||b.type==="平特")return `${lot} 平特${esc(b.content)} ${fmt(b.amount)}`;
+  if(LIAN[b.type])return `${lot} ${t} ${esc(b.content)} ${fmt(b.amount)}`;
+  if(b.type==="平特尾数")return `${lot} 平特${esc(b.content)}尾 ${fmt(b.amount)}`;
+  if(b.type==="一肖")return `${lot} 特肖 ${esc(b.content)} ${fmt(b.amount)}`;
+  return `${lot} ${t} ${esc(b.content)} ${fmt(b.amount)}`;
+}
+function hitLine(b){
+  const lot=LN[lotOf(b)]||"";
+  const d=DRAWS[dkey(lotOf(b),b.issue)];
+  const sp=d?d.nums[6]:"";
+  const f=fml(b).replace(/×/g,"*");
+  let mark=esc(b.content);
+  if(b.type==="特码单码"&&sp)mark=String(sp).padStart(2,"0");
+  else if((b.type==="平特一肖"||b.type==="平特")&&d){
+    const z=zods(b.content)[0];
+    const hits=d.nums.filter(n=>zod(n)===z).map(n=>pad(n)+zod(n));
+    mark=z+(hits.length?hits.join(","):"");
+  }else if(b.type==="平特尾数"&&d){
+    const t=+(String(b.content).match(/\d/)||[])[0];
+    mark=d.nums.filter(n=>n%10===t).map(pad).join(",")||String(t);
+  }
+  return `<div class="hit">${lot} ${esc(TL(b.type))} 中:${f} ---${mark}</div>`;
+}
+function hitSum(S){const st=b=>(b.ret||0)/M(b),W={};S.filter(b=>b.res==="win").forEach(b=>{const k=lotOf(b)+"|"+TL(b.type)+"|"+b.odds;const w=W[k]=W[k]||{s:0,w:0,m:new Set()};w.s+=st(b);w.w+=winAmt(b);w.m.add(String(b.content).trim())});
+  return Object.entries(W).map(([k,v])=>{const [l,tp,o]=k.split("|");return `<div class="hit">${LN[l]} ${esc(tp.replace("特码单码","特码").replace("平特一肖","平特"))} 中:${fmt(v.s)}*${o}=${fmt(v.w)} ---(${esc([...v.m].join(""))})</div>`}).join("")}
+function ncOf(el){const w=(el&&el.clientWidth)||innerWidth;return w<560?1:2}
+function rowMajor(a,n){const c=Array.from({length:n},()=>[]);a.forEach((x,i)=>c[i%n].push(x));return c.filter(x=>x.length)}
+function colMajor(a,n){n=Math.max(1,+n||1);const per=Math.ceil(a.length/n)||1,c=[];for(let i=0;i<n;i++){const sl=a.slice(i*per,(i+1)*per);if(sl.length)c.push(sl)}return c}
+function colBlocks(a,perCol,nCols){perCol=Math.max(1,+perCol||6);nCols=Math.max(1,+nCols||2);const size=perCol*nCols,blocks=[];for(let i=0;i<a.length;i+=size){const chunk=a.slice(i,i+size),cols=[];for(let c=0;c<nCols;c++){const sl=chunk.slice(c*perCol,(c+1)*perCol);if(sl.length)cols.push(sl)}if(cols.length)blocks.push(cols)}return blocks}
+const lotTag=l=>LS[l]||LN[l]||l||""
+let _nc=0;addEventListener("resize",()=>{const n=ncOf($("wb_cards"))+"|"+ncOf($("mx_body"));if(n!==_nc){_nc=n;try{renderSlip()}catch(e){}try{if($("mx_body").offsetParent)renderMX()}catch(e){}}});
+function settleLines(boss,rb,pall,pany){const r2=x=>Math.round(x*100)/100;boss=r2(boss);rb=r2(rb);const f=r2(boss-rb);
+  const o=[{k:"输赢",t:`输赢(不含退水)：${pall?"待开奖":sg(boss)}${pany&&!pall?"（有未开奖）":""}`},{k:"退水",t:`退水合计：${fmt(rb)}`},{k:"最终",t:`最终结算(老板)：${pall?"待开奖":sg(f)}`,v:pall?null:f}];
+  if(!pall)o.push({k:"客户",t:boss>=0?`客户输 ${fmt(boss)} − 退水 ${fmt(rb)} = ${f>=0?"应收 "+fmt(f):"应付 "+fmt(-f)}`:`客户赢 ${fmt(-boss)} + 退水 ${fmt(rb)} = 应付 ${fmt(-f)}`});
+  return o}
+function settleOf(L){const sd=L.filter(b=>b.res!=="pend");return settleLines(-agg(sd).pl,L.reduce((a,b)=>a+reb(b),0),L.length>0&&!sd.length,sd.length<L.length)}
+function settleHtml(L){return settleOf(L).map(x=>`<div class="stl stl_${x.k}">${x.k==="最终"&&x.v!=null?x.t.replace(/[-+]?[\d,.]+$/,m=>`<b class="${x.v>=0?"pos":"neg"}">${m}</b>`):esc(x.t)}</div>`).join("")}
+function rawOf(b){return String(b.note||"").replace(/^工作台：|^粘贴：/,"")}
+function orderAmt(L){return L.reduce((a,b)=>a+(+b.amount||0),0)}
+function rebTag(bs,h){
+  let a=0; const F={}, Z={}, S={};
+  bs.forEach(b=>{const r=rebInfo(b),v=+r.amt||0,st=+b.amount||0;a+=v;
+    if(r.rate!==undefined&&st>0){const f=rebFam(b.type)||TL(b.type);(F[f]=F[f]||new Set()).add(r.rate);S[r.src]=1}
+    else if(/平特马/.test(r.src||""))Z["平特马不退"]=1; else if(b.type==="平特尾数")Z["平特尾不退"]=1;});
+  const fs=Object.keys(F), rates=[...new Set(fs.flatMap(f=>[...F[f]]))];
+  const parts=fs.length>1||rates.length>1?fs.map(f=>f+[...F[f]].join("/")+"%"):rates.map(x=>x+"%");
+  parts.push(...Object.keys(Z));
+  const sl=Object.keys(S).join("/");
+  return h+`<div class="rebl">${sl?`<span class="rsrc r_${sl==="默认"?"d":"o"}">${sl}</span>`:""}退水 ${fmt(Math.round(a*100)/100)}${parts.length?`（${parts.join("，")}）`:""}</div>`;
+}
+function orderLines(L){
+  const buckets=[], map={};
+  L.forEach(b=>{
+    const k=[rawOf(b),b.type,b.amount,lotOf(b)].join("\0");
+    if(map[k]==null){map[k]=buckets.length;buckets.push([])}
+    buckets[map[k]].push(b);
+  });
+  return buckets.map(bs=>rebTag(bs,(()=>{
+    const wins=bs.filter(b=>b.res==="win");
+    if(bs[0].zexp){
+      const b0=bs[0],lot=LN[lotOf(b0)]||"",tot=orderAmt(bs);
+      const line=`${lot} ${esc(b0.zexp)} 各数${fmt(b0.amount)}（${bs.length}个号，共${fmt(tot)}）`;
+      if(wins.length)return `<div class="muted">${line}</div>`+wins.map(hitLine).join("");
+      if(bs.every(b=>b.res==="pend"))return `<div class="muted">${line}（未开）</div>`;
+      return `<div>${line}（未中）</div>`;
+    }
+    const pends=bs.filter(b=>b.res==="pend");
+    if(wins.length){
+      let h=wins.map(hitLine).join("");
+      const rest=bs.filter(b=>b.res!=="win");
+      if(rest.length){
+        const nms=rest.filter(b=>b.type==="特码单码").map(b=>pad(+b.content||b.content)).filter(Boolean);
+        if(nms.length)h+=`<div class="muted">其余 ${nms.join(" ")} 未中</div>`;
+        else rest.forEach(b=>{h+=`<div class="muted">${contentLine(b)}（${b.res==="pend"?"未开":"未中"}）</div>`});
+      }
+      return h;
+    }
+    const b0=bs[0]; const lot=LN[lotOf(b0)]||"";
+    let line;
+    if(b0.type==="特码单码"){
+      const nms=bs.map(b=>pad(+b.content||b.content)).join(" ");
+      line=`${lot} 特码 ${nms} 各${fmt(b0.amount)}`;
+    }else if(bs.length===1) line=contentLine(b0);
+    else line=bs.map(contentLine).join("<br>");
+    if(pends.length===bs.length)return `<div class="muted">${line}（未开）</div>`;
+    if(pends.length)return `<div>${line}（${bs.length-pends.length}个未中，${pends.length}个未开）</div>`;
+    return `<div>${line}<span class="miss">（未中）</span></div>`;
+  })())).join("");
+}
+function dayBets(){const dt=$("wb_date").value||today();return D.bets.filter(b=>b.date===dt)}
+function refreshToSelect(){
+  const B=dayBets();
+  const gs=[...new Set(B.map(b=>b.grp||1))].sort((a,b)=>a-b);
+  const cur=$("wb_to").value;
+  $("wb_to").innerHTML='<option value="new">新单</option>'+gs.map(g=>`<option value="${g}">第${g}单</option>`).join("");
+  $("wb_to").value=$("wb_to").dataset.user&&gs.map(String).includes(cur)?cur:"new";
+}
+function renderSlip(){
+  const dt=$("wb_date").value||today();
+  renderBalls(); refreshToSelect();
+  const B=dayBets();
+  const settled=B.filter(b=>b.res!=="pend");
+  const s=agg(settled);
+  const tot=B.reduce((a,b)=>a+b.amount,0), rbAll=Math.round(B.reduce((a,b)=>a+reb(b),0)*100)/100;
+  const wins=B.filter(b=>b.res==="win");
+  const pend=B.filter(b=>b.res==="pend").length;
+  const Wg={}; wins.forEach(b=>{const k=TL(b.type);(Wg[k]=Wg[k]||{a:0,r:0}).a+=b.amount;Wg[k].r+=winAmt(b)});
+  const winSum=Object.keys(Wg).length?Object.entries(Wg).map(([k,v])=>`${k} 中:${fmt(v.a)}——赔: ${fmt(v.r)}`).join("；"):"无";
+  const G0={}; B.forEach(b=>{(G0[b.grp||1]=G0[b.grp||1]||[]).push(b)});
+  const nOrd=Object.keys(G0).length;
+  $("wb_sum").innerHTML=B.length?
+    `订单: <b>${nOrd}</b>　总额: <b>${fmt(tot)}</b>　退水合计: <b>${fmt(rbAll)}</b>${pend?`　<small>（${pend}笔未开）</small>`:""}<br>`+
+    `中奖情况: ${winSum}`+settleHtml(B)
+    :`<span class="muted">还没有 ${dt.slice(5)} 的注单，点上面「粘贴注单」添加</span>`+(()=>{const ds=[...new Set(D.bets.map(b=>b.date))].filter(x=>x!==dt).sort().reverse().slice(0,5);return ds.length?`<div>其他日期有注单：${ds.map(x=>`<button type="button" class="rc" onclick="wb_date.value='${x}';wb_date.dispatchEvent(new Event('change'))">${x.slice(5)}</button>`).join(" ")}</div>`:""})();
+  if(!B.length){
+    $("wb_cards").innerHTML=`<div class="muted" style="padding:8px">当天没有记录</div>`;
+    $("wb_foot").textContent=`日期: ${dt.slice(5)}`;
+    return;
+  }
+  const G={}; B.forEach(b=>{(G[b.grp||1]=G[b.grp||1]||[]).push(b)});
+  const gk=Object.keys(G).map(Number).sort((a,b)=>a-b);
+  const row=(L,no)=>{
+    const g=L[0].grp||1;
+    const dtx=$("wb_date").value||today(), lk=slipLocked(L)&&!D.unlock[dtx+"|"+g];
+    const del=lk?`<button type="button" class="lk" data-ul="${g}" title="已开奖，锁定">🔒</button>`:`<button type="button" class="wdel" data-dg="${g}">删</button>`;
+    const cu=[...new Set(L.map(b=>b.cust).filter(Boolean))];
+    const rcb=`<button type="button" class="rc" data-rc="${g}">对账</button>`+(L.some(b=>rebFam(b.type))?`<button type="button" class="rc" data-rbg="${g}" title="这张单单独设退水">退水</button>`:"");
+    const hasWin=L.some(b=>b.res==="win");
+    const src=L.find(b=>b.src)?.src||[...new Set(L.map(rawOf).filter(Boolean))].join("\n");
+    const body=src?`<div class="wsrc">${esc(src)}</div>`:orderLines(L).replace(/<div class="rebl">[\s\S]*?<\/div>/g,"");
+    return `<tr${hasWin?' class="hitrow"':""}><td>${no}</td><td>${fmt(orderAmt(L))}${(()=>{const ra=L.reduce((a,b)=>a+(+rebInfo(b).amt||0),0);if(!ra)return"";const od=[...new Set(L.map(rebInfo).filter(r=>r.rate!==undefined&&r.src!=="默认"&&r.amt).map(r=>r.rate+"%"))];return `<div class="wreb">退 ${fmt(Math.round(ra*100)/100)}${od.length?` (${od.join("/")})`:""}</div>`})()}</td><td class="wtd">${cu.map(c=>`<span class="cust wcu">${esc(c)}</span>`).join("")}<span class="wops"><button type="button" class="wmore" title="更多">⋯</button><span class="wmenu">${rcb}${del}</span></span>${hitSum(L)}${body}</td></tr>`;
+  };
+  const NC=ncOf($("wb_cards"));$("wb_cards").style.gridTemplateColumns=`repeat(${NC},1fr)`;
+  const cols=(NC<=1?[gk]:colBlocks(gk,6,NC).flat());
+  let no=0;
+  let html=cols.map(col=>`<table><tr><th>#</th><th>金额</th><th>原文</th></tr>`+col.map(g=>row(G[g],gk.indexOf(g)+1)).join("")+"</table>").join("");
+  html+=`<table style="grid-column:1/-1"><tr class="gsum"><td colspan="3">总计 下注${fmt(tot)}　中奖${fmt(s.ret)}　退水合计${fmt(rbAll)}　${settleOf(B).filter(x=>x.k!=="退水").map(x=>esc(x.t)).join("　")}</td></tr></table>`;
+  $("wb_cards").innerHTML=html;
+  $("wb_foot").textContent=`日期: ${dt.slice(5)}`;
+  $("wb_cards").querySelectorAll("[data-dg]").forEach(x=>x.onclick=()=>{
+    const g=+x.dataset.dg, dt2=$("wb_date").value||today();
+    const L=D.bets.filter(y=>y.date===dt2&&(y.grp||1)===g);
+    if(confirm(`删掉这张单（金额 ${fmt(orderAmt(L))}）？可在 ⚙ 回收站恢复`)){
+      const it={id:uid(),at:Date.now(),date:dt2,grp:g,bets:L};D.trash=(D.trash||[]);D.trash.unshift(it);if(D.trash.length>200)D.trash.length=200;
+      D.bets=D.bets.filter(y=>!(y.date===dt2&&(y.grp||1)===g));D._clear=true;save();
+      toast(`已删除第${g}单`,"撤回",()=>restoreTrash(it.id));
+    }
+  });
+  $("wb_cards").querySelectorAll(".wmore").forEach(x=>x.onclick=e=>{e.stopPropagation();const o=x.parentNode.classList.contains("op");$("wb_cards").querySelectorAll(".wops.op").forEach(y=>y.classList.remove("op"));if(!o)x.parentNode.classList.add("op")});
+  $("wb_cards").querySelectorAll("[data-ul]").forEach(x=>x.onclick=()=>{
+    const g=x.dataset.ul, dt2=$("wb_date").value||today();
+    if(confirm("这张单已开奖，确定解锁？解锁后可以删除或往里加注。")){D.unlock[dt2+"|"+g]=1;save()}
+  });
+}
+function renderHist(){
+  const H={}; D.bets.forEach(b=>{const k=b.date;H[k]=H[k]||{date:b.date,a:0,p:0,pend:0,n:0};H[k].a+=b.amount;H[k].p+=pl(b);H[k].n++;if(b.res==="pend")H[k].pend++});
+  const L=Object.values(H).sort((a,b)=>a.date.localeCompare(b.date));
+  let run=0;
+  const rows=L.map(x=>{run+=x.p;return `<tr data-h="${x.date}"><td>${x.date.slice(5)}</td><td>${x.n}笔 / ${fmt(x.a)}</td><td class="${x.p*PV()>=0?"pos":"neg"}">${x.pend?"未开完":sg(x.p*PV())}</td><td>${sg(run*PV())}</td></tr>`}).reverse();
+  $("wb_hist").innerHTML=rows.length?`<table><tr><th>日期</th><th>下注</th><th>净盈亏${VL()}</th><th>累计</th></tr>${rows.join("")}</table>`:`<div class="muted">还没有记录</div>`;
+  $("wb_hist").querySelectorAll("tr[data-h]").forEach(t=>t.onclick=()=>{$("wb_date").value=t.dataset.h;renderWB();scrollTo(0,0)});
+}
+
+let rLot="新澳", rAll=false;
+function rankData(B,lot){
+  const N={},Z={},P={},T={};
+  B.filter(b=>(b.lot||"新澳")===lot).forEach(b=>{const a=+b.amount||0,c=String(b.content).trim();
+    if(b.type==="特码单码"){const n=+c;if(n>=1&&n<=49)N[n]=(N[n]||0)+a}
+    else if(b.type==="一肖")Z[c]=(Z[c]||0)+a;
+    else if(b.type==="平特一肖"||b.type==="平特")P[c]=(P[c]||0)+a;
+    else if(b.type==="平特尾数")T[c]=(T[c]||0)+a;});
+  const so=o=>Object.entries(o).sort((x,y)=>y[1]-x[1]);
+  return{N:so(N),Z:so(Z),P:so(P),T:so(T)};
+}
+function renderRank(){
+  const el=$("wb_rbody"); if(!el)return;
+  if($("rk_date"))$("rk_date").textContent=$("wb_date").value||today();
+  const B=dayBets(), LOTS3=["新澳","老澳","香港"];
+  $("wb_rtab").innerHTML=LOTS3.map(l=>`<button type="button" data-l="${l}" class="${l===rLot?"on":""}">${LN[l]||l}</button>`).join("");
+  const R=rankData(B,rLot), TOP=8;
+  const cut=a=>rAll?a:a.slice(0,TOP), sum=a=>a.reduce((x,y)=>x+y[1],0);
+  const ball=n=>`<span class="ball"><b class="${wave(+n)}">${pad(+n)}</b>${zod(+n)}</span>`;
+  let h="", more=false;
+  const sec=(title,a,fn)=>{if(!a.length)return;if(a.length>TOP)more=true;h+=`<div class="rsec"><h4>${title}　合计 ${fmt(sum(a))}</h4><div class="rlist">${cut(a).map(fn).join("")}</div></div>`};
+  const tm=odd("特码单码"), zo=odd("一肖");
+  const cN=+D.settings.capNum||0, cZ=+D.settings.capZod||0;
+  sec("特码",R.N,([n,a])=>`<div class="ritem${cN&&a>cN?" over":""}">${ball(n)}<b>${fmt(a)}</b><small>中赔 ${fmt(Math.round(a*tm*100)/100)}</small></div>`);
+  sec("特肖",R.Z,([z,a])=>`<div class="ritem"><b>${esc(z)}</b> ${fmt(a)}<small>中赔 ${fmt(Math.round(a*zo*100)/100)}</small></div>`);
+  sec("平特（肖）",R.P,([z,a])=>`<div class="ritem${cZ&&a>cZ?" over":""}"><b>${esc(z)}</b> ${fmt(a)}</div>`);
+  sec("平特尾",R.T,([t,a])=>`<div class="ritem"><b>${esc(t)}尾</b> ${fmt(a)}</div>`);
+  if(!h)h=`<div class="muted">今天${LN[rLot]||rLot}还没有特码/平特注</div>`;
+  if(more)h+=`<button type="button" class="rmore" id="wb_rmore">${rAll?"收起":"展开全部"}</button>`;
+  el.innerHTML=h;
+  renderRisk(); renderAnalysis();
+}
+document.addEventListener("click",e=>{const t=e.target;
+  if(t.closest&&t.closest("#tabbar button")){const k=t.closest("button").dataset.s;["app","rk","an","mx"].forEach(x=>$(x).style.display=k===x?"":"none");if(k==="mx"){$("mx_date").value=$("wb_date").value||today();renderMX()}
+    document.querySelectorAll("#tabbar button").forEach(b=>b.classList.toggle("on",b.dataset.s===k));if(k==="rk"||k==="an")renderRank();scrollTo(0,0);return}
+  if(t.closest&&t.closest("#wb_rtab button")){rLot=t.closest("button").dataset.l;renderRank()}
+  else if(t.id==="wb_rmore"){rAll=!rAll;renderRank()}});
+const PV=()=>D.settings&&D.settings.view==="老板"?-1:1, VL=()=>PV()<0?"(老板)":"";
+const sg=v=>(v>0?"+":"")+fmt(v);
+function reconText(L,title){
+  const P=PV(), byLot={}; L.forEach(b=>{const k=(b.lot||"新澳")+"|"+b.issue;(byLot[k]=byLot[k]||[]).push(b)});
+  const out=[title];
+  Object.entries(byLot).forEach(([k,bs])=>{const [lot,is]=k.split("|");out.push(`【${LN[lot]||lot} ${String(is).replace(/^20\d\d/,"")}期】`);
+    const M={},O=[];bs.forEach(b=>{const kk=[b.type,b.amount,b.note,b.zexp||""].join("\0");if(!M[kk]){M[kk]=[];O.push(M[kk])}M[kk].push(b)});
+    O.forEach(g=>{const b0=g[0],w=g.filter(b=>b.res==="win"),pend=g.every(b=>b.res==="pend");
+      const what=b0.zexp?`${b0.zexp} 各数${fmt(b0.amount)}（${g.length}个号）`:`${TL(b0.type)} ${g.map(b=>b.content).join(g.length>1&&String(b0.content).includes(" ")?"／":" ")} ${g.length>1?"各":""}${fmt(b0.amount)}`;
+      const st=pend?"未开":w.length?`中 ${w.map(b=>b.content).join(" ")} 赔${fmt(w.reduce((a,b)=>a+winAmt(b),0))}`:"不中";
+      out.push(`${what}  ${st}`)})});
+  const s=agg(L); out.push(`下注 ${fmt(s.amt)}　中奖 ${fmt(s.ret)}　退水 ${fmt(s.reb)}　盈亏${VL()} ${sg(Math.round(s.pl*100)/100*P)}`);
+  if(L.some(b=>b.res==="pend"))out.push("（有未开奖的注，结果未定）");
+  return out.join("\n");
+}
+function copyText(t){const ok=()=>toast("已复制对账，可以直接粘贴发送");
+  if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(ok,()=>fb());else fb();
+  function fb(){const a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy");ok()}catch(e){prompt("复制下面的文字：",t)}a.remove()}
+  window.__lastCopy=t;}
+let ocrW=null,ocrWP=null;
+const OCRB=new URL("ocr/",location.href).href;
+function loadScript(src){return new Promise((ok,no)=>{const sc=document.createElement("script");sc.src=src;sc.onload=ok;sc.onerror=()=>no(Error("load"));document.head.appendChild(sc)})}
+async function ocrPrep(file){
+  // 灰度、深色背景自动反相、放大、拉伸对比度
+  const url=URL.createObjectURL(file);
+  try{
+    const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(Error("图片打不开"));i.src=url});
+    const sc=Math.min(3,Math.max(1,1800/im.naturalWidth)),w=Math.round(im.naturalWidth*sc),h=Math.round(im.naturalHeight*sc);
+    if(w*h>4e7)throw Error("图片太大");
+    const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d",{willReadFrequently:true});
+    x.imageSmoothingQuality="high";x.drawImage(im,0,0,w,h);
+    const d=x.getImageData(0,0,w,h),a=d.data,n=w*h,g=new Uint8Array(n);let sum=0;
+    for(let k=0;k<n;k++){const v=Math.max(a[k*4],a[k*4+1],a[k*4+2])*0.6+(0.299*a[k*4]+0.587*a[k*4+1]+0.114*a[k*4+2])*0.4;g[k]=v;sum+=v}
+    const inv=sum/n<110;c._g=g.slice();
+    const H=new Array(256).fill(0);for(let k=0;k<n;k++){const v=inv?255-g[k]:g[k];g[k]=v;H[v]++}
+    let lo=0,hi=255,cnt=0;for(;lo<255&&(cnt+=H[lo])<n*0.01;lo++);cnt=0;for(;hi>0&&(cnt+=H[hi])<n*0.01;hi--);
+    if(hi<=lo){lo=0;hi=255}
+    for(let k=0;k<n;k++){let v=(g[k]-lo)*255/(hi-lo);v=v<0?0:v>255?255:v;a[k*4]=a[k*4+1]=a[k*4+2]=v;a[k*4+3]=255}
+    x.putImageData(d,0,0);return c;
+  }finally{URL.revokeObjectURL(url)}
+}
+async function ocrWorker(msg){
+  if(ocrW)return ocrW; if(ocrWP)return ocrWP;
+  ocrWP=(async()=>{
+    msg.textContent="第一次用要加载识别库（约 6MB，之后离线可用）…";
+    let local=true;
+    if(!window.Tesseract){try{await loadScript(OCRB+"tesseract.min.js")}catch(e){local=false;await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js").catch(()=>{throw Error("识别库下载失败，请检查网络后再试")})}}
+    const lg=m=>{if(m.status==="recognizing text"&&m.progress!=null)msg.textContent=`图片识别中 ${Math.round(m.progress*100)}%`;else if(/load|initializ/.test(m.status||""))msg.textContent=`加载识别库 ${m.progress!=null?Math.round(m.progress*100)+"%":"…"}`};
+    const opt=local?{workerPath:OCRB+"worker.min.js",corePath:OCRB,langPath:OCRB.replace(/\/$/,""),logger:lg}:{logger:lg};
+    const w=await Tesseract.createWorker(["chi_sim","eng"],1,opt);
+    await w.setParameters({tessedit_pageseg_mode:"6",preserve_interword_spaces:"1"});
+    ocrW=w;return w;
+  })();
+  try{return await ocrWP}catch(e){ocrWP=null;throw e}
+}
+function ocrClean(t){
+  const out=[];
+  String(t||"").split(/\r?\n/).forEach(l=>{
+    l=l.replace(/[。，、·•]/g,m=>m==="，"||m==="、"?" ":".").replace(/[：]/g,":");
+    // 数字旁边的常见误认
+    l=l.replace(/(?<=[\d.\-\s]|^)[Oo〇](?=[\d.\-\s各x]|$)/g,"0").replace(/(?<=[\d.\-\s]|^)[lI|丨](?=[\d.\-\s各x]|$)/g,"1").replace(/[×X]/g,"x");
+    l=l.replace(/([\u4e00-\u9fff])[ \t]+(?=[\u4e00-\u9fff])/g,"$1").replace(/(\d)\s+(?=各)/g,"$1").replace(/各\s+(?=\d)/g,"各").trim();
+    l=l.replace(/各\s*[效敢救教散致故]/g,"各数").replace(/(\d)\s*[%％]\s*(?=\d)/g,"$1各");
+    l=l.replace(/(?<=[\d\-.,，\/+\s]|^)[%％&＆]+\s*(?=\d)/g,"各").replace(/(?<=\d)\s*(?:[Ff][rRtT]?|r)(?=[\s,，.。&]|$)/g,"斤").replace(/^\s*[Ff][rRtT]?\s*[,，.。]?\s*$/,"").replace(/万(?=各)/g,"龙").replace(/免(?=[鼠牛虎龙蛇马羊猴鸡狗猪各\s])|(?<=[鼠牛虎龙蛇马羊猴鸡狗猪])免/g,"兔").replace(/(?<=[.,，]\d)\/(?=[.,，])/g,"7")
+    l=l.replace(/各\s*[#＃]\s*(?=\d)/g,"各").replace(/[%％&＆#＃\[\]【】_~^`"'“”‘’{}<>《》»«©®@$¥]/g," ").replace(/\s{2,}/g," ").trim();
+    // 数字列表里粘在一起的 4 位数，如 4107 → 41 07
+    if(/\d{2}[\s.\-]+\d{2}/.test(l))l=l.replace(/(^|[\s.\-])(\d{2})(\d{2})(?=[\s.\-]|各)/g,(m,a,x,y)=>+x>=1&&+x<=49&&+y>=1&&+y<=49?a+x+" "+y:m);
+    if(!l)return;
+    if(/\d{1,2}:\d{2}(:\d{2})?/.test(l)&&!/各|x\d|[平特]/.test(l.replace(/\d{1,2}:\d{2}(:\d{2})?/,""))){if(out.length&&out[out.length-1]!=="")out.push("");return} // 人名+时间 → 新的一张单
+    if(/聊天记录|^\d{4}\s*年|^<|撤回|^\.\.\.$/.test(l))return;
+    if(!/\d/.test(l))return; // 没数字的杂行
+    l=l.replace(/^[^\d各个平特二三四五连复龙虎兔蛇马羊猴鸡狗猪鼠牛老新澳奥港香单双大小家野]+(?=\d)/,""); // 头像/杂字
+    out.push(l);
+  });
+  while(out.length&&out[out.length-1]==="")out.pop();
+  return out.join("\n");
+}
+function ocrBubbles(c){
+  // 找聊天气泡：和背景色不同、成片的矩形区域
+  const g=c._g,w=c.width,h=c.height;if(!g)return[];
+  const H=new Array(64).fill(0);for(let k=0;k<g.length;k+=7)H[g[k]>>2]++;const bg=(H.indexOf(Math.max(...H))<<2)+2;
+  const D=v=>Math.abs(v-bg)>10, rows=[];
+  for(let y=0;y<h;y++){let n=0;for(let x=0,o=y*w;x<w;x++)if(D(g[o+x]))n++;rows.push(n>w*0.16)}
+  const R=[];let y0=-1,gap=0;
+  for(let y=0;y<=h;y++){if(y<h&&rows[y]){if(y0<0)y0=y;gap=0}else if(y0>=0){if(++gap>3||y===h){R.push([y0,y-gap+1]);y0=-1;gap=0}}}
+  const out=[];
+  R.forEach(([a,b])=>{
+    if(b-a<h*0.012&&b-a<24)return; if(b>=h*0.985||a<=h*0.01)return; // 输入栏/状态栏
+    const col=new Array(w).fill(0);for(let y=a;y<b;y++)for(let x=0,o=y*w;x<w;x++)if(D(g[o+x]))col[x]++;
+    let best=null,s0=-1;for(let x=0;x<=w;x++){const on=x<w&&col[x]>(b-a)*0.55;if(on&&s0<0)s0=x;if(!on&&s0>=0){if(!best||x-s0>best[1]-best[0])best=[s0,x];s0=-1}}
+    if(best&&best[1]-best[0]>w*0.12)out.push({left:best[0],top:a,width:best[1]-best[0],height:b-a});
+  });
+  return out;
+}
+function ocrJoin(lines,r,wrapW){
+  // 气泡内：顶到最大宽度的行是自动折行，接回下一行
+  const L=lines.filter(l=>l.text.trim());let t="";
+  L.forEach((l,i)=>{const s=l.text.replace(/\s+$/,"");t+=s;if(i===L.length-1)return;
+    const lh=l.bbox.y1-l.bbox.y0, wrap=wrapW&&r.left+r.width>=wrapW-lh*0.6&&l.bbox.x1>=r.left+r.width-lh*1.6;
+    t+=wrap&&!/(?:各|个)\s*数?\s*\d+\s*$|[斤。]\s*$/.test(s)?"":"\n"});
+  return t;
+}
+async function ocrTail(w,c,lines,r){
+  // v19.4 金额后面的不明尾巴（低置信度，如「斤老」被认成 r&）：把这一小块放大加对比重识别
+  for(const l of lines){const W=l.words||[];if(W.length<2)continue;const z=W[W.length-1],t=(z.text||"").trim();
+    if(!t||z.confidence>=45||/\d/.test(t)||!/\d\s*$/.test(W[W.length-2].text||""))continue;
+    const prev=l.text.slice(0,l.text.lastIndexOf(t));if(!/\d/.test(prev))continue;
+    const lh=l.bbox.y1-l.bbox.y0,x0=Math.max(0,z.bbox.x0-4),y0=Math.max(0,l.bbox.y0-6),x1=Math.min(c.width,Math.max(z.bbox.x1+lh,r.left+r.width)),y1=Math.min(c.height,l.bbox.y1+6);
+    const V=[[2,0,"8"],[2,0,"13"],[4,0,"7"],[4,.7,"7"],[4,.85,"7"],[4,.85,"8"]],res=[];
+    try{for(const [S,th,psm] of V){const k=document.createElement("canvas");k.width=(x1-x0)*S;k.height=(y1-y0)*S;const g=k.getContext("2d",{willReadFrequently:true});
+      g.imageSmoothingQuality="high";g.drawImage(c,x0,y0,x1-x0,y1-y0,0,0,k.width,k.height);
+      if(th){const d=g.getImageData(0,0,k.width,k.height),a=d.data;let m=0;for(let i=0;i<a.length;i+=4)m+=a[i];m/=a.length/4;for(let i=0;i<a.length;i+=4){const v=a[i]<m*th?0:255;a[i]=a[i+1]=a[i+2]=v}g.putImageData(d,0,0)}
+      await w.setParameters({tessedit_pageseg_mode:psm});const {data}=await w.recognize(k);res.push((data.text||"").replace(/\s+/g,""))}}catch(e){}
+    finally{await w.setParameters({tessedit_pageseg_mode:"6"})}
+    const cnt=re=>res.filter(x=>re.test(x)).length, s=res.join("|");
+    if(window.__WBTEST)(window.__TAILLOG=window.__TAILLOG||[]).push([l.text,t,s]);
+    const u=(cnt(/[斤厅帮]|F[rT]/)?"斤":cnt(/元/)?"元":"")+(cnt(/老/)>=2?"老":cnt(/新/)>=2?"新":"");
+    if(u)l.text=prev.replace(/\s+$/,"")+u+"\n";
+  }
+}
+async function ocrImage(file,msg0){
+  const msg=$("wb_msg");
+  if(!file||!/^image\//.test(file.type||"image/"))throw Error("请选择图片");
+  msg.textContent=(msg0||"")+"处理图片…";
+  const c=await ocrPrep(file);
+  const w=await ocrWorker(msg);
+  const B=ocrBubbles(c);let t="";
+  if(B.length){
+    const mx=Math.max(...B.map(r=>r.left+r.width)),mw=Math.max(...B.map(r=>r.width)),wrapW=mw>=c.width*0.55?mx:0;
+    const parts=[];
+    for(let i=0;i<B.length;i++){msg.textContent=(msg0||"")+`识别第 ${i+1}/${B.length} 个气泡`;
+      const {data}=await w.recognize(c,{rectangle:B[i]});if(window.__WBTEST)(window.__OCRLOG=window.__OCRLOG||[]).push({r:B[i],lines:(data.lines||[]).map(l=>({t:l.text,b:l.bbox,w:(l.words||[]).map(x=>[x.text,x.bbox.x0,x.bbox.x1,Math.round(x.confidence)])}))});await ocrTail(w,c,data.lines||[],B[i]);const x=ocrClean(ocrJoin(data.lines||[],B[i],wrapW));if(x)parts.push(x)}
+    t=parts.join("\n\n");
+  }
+  if(!t){const {data}=await w.recognize(c);t=ocrClean(data.text)}
+  if(!t)throw Error("没认出文字，换一张清楚点的截图");
+  return t;
+}
+async function ocrFill(files){
+  files=[...files];const bt=$("wb_ocr");bt.disabled=true;const ta=$("wb_text"),bad=[];let n=0;
+  try{for(let i=0;i<files.length;i++){const pre=files.length>1?`第 ${i+1}/${files.length} 张：`:"";
+      try{const t=await ocrImage(files[i],pre);ta.value=(ta.value.trim()?ta.value.trim()+"\n\n":"")+t;n++;$("wb_paste_box").open=true;parseWB()}
+      catch(e){bad.push((i+1)+"（"+(e&&e.message||e)+"）")}}
+    $("wb_msg").textContent=n?`图片识别完成${files.length>1?`（${n}/${files.length} 张）`:""}，请逐行核对，确认后再点保存`+(bad.length?"；失败："+bad.join("、"):""):"图片识别失败："+bad.join("、");}
+  finally{bt.disabled=false}
+}
+function slipLocked(L){return L.some(b=>!!DRAWS[dkey(lotOf(b),b.issue)])}
+let toastT=null;
+function toast(msg,btn,fn){const el=$("toast");el.innerHTML=esc(msg)+(btn?`<button type="button" id="toast_b">${esc(btn)}</button>`:"");el.style.display="block";
+  if(btn)$("toast_b").onclick=()=>{el.style.display="none";fn&&fn()};clearTimeout(toastT);toastT=setTimeout(()=>el.style.display="none",6000)}
+function restoreTrash(id){
+  const i=(D.trash||[]).findIndex(x=>x.id===id); if(i<0)return; const it=D.trash.splice(i,1)[0];
+  const used=new Set(D.bets.filter(b=>b.date===it.date).map(b=>b.grp||1));
+  let g=it.grp; if(used.has(g))g=Math.max(0,...used)+1;
+  it.bets.forEach(b=>{b.grp=g;D.bets.push(b)}); settleAll(); save(); renderTrash(); toast(`已恢复到 ${it.date.slice(5)} 第${g}单`);
+}
+function renderTrash(){
+  const el=$("s_trash"); if(!el)return; const T=D.trash||[]; $("s_tn").textContent=T.length?`（${T.length}）`:"";
+  el.innerHTML=T.length?T.map(x=>`<div style="padding:4px 0;border-bottom:1px solid #eee">${esc(x.date.slice(5))} 第${x.grp}单 ${fmt(orderAmt(x.bets))}（${x.bets.length}注）${[...new Set(x.bets.map(b=>b.cust).filter(Boolean))].map(c=>" "+esc(c)).join("")}
+    <button type="button" data-tr="${x.id}" style="float:right;margin-left:4px">恢复</button><button type="button" data-tx="${x.id}" style="float:right;color:#c62828">彻底删</button></div>`).join(""):`<div class="muted">空</div>`;
+  el.querySelectorAll("[data-tr]").forEach(b=>b.onclick=()=>restoreTrash(b.dataset.tr));
+  el.querySelectorAll("[data-tx]").forEach(b=>b.onclick=()=>{if(confirm("彻底删除，不能恢复？")){D.trash=D.trash.filter(x=>x.id!==b.dataset.tx);saveUser();renderTrash()}});
+}
+/* 风险分布：假设特码=n，只算 特码/特肖（含各数展开） */
+function riskOf(lot,dt){
+  const B=D.bets.filter(b=>b.date===dt&&(b.lot||"新澳")===lot&&(b.type==="特码单码"||b.type==="一肖"));
+  const R=[];
+  for(let n=1;n<=49;n++){let p=0;B.forEach(b=>{const j=judge(b,[0,0,0,0,0,0,n]);const r=j?j.ret:0;p+=r-(+b.amount||0)+(+rebInfo(b).amt||0)});R.push([n,Math.round(p*100)/100])}
+  return{R,n:B.length};
+}
+function renderRisk(){
+  const el=$("an_risk"); if(!el)return; const dt=$("wb_date").value||today();
+  const {R,n}=riskOf(rLot,dt);
+  if(!n){el.innerHTML=`<div class="muted">今天${LN[rLot]}没有特码/特肖注</div>`;return}
+  const S=R.map(([k,v])=>[k,v*PV()]).sort((a,b)=>a[1]-b[1]);
+  const ball=k=>`<span class="ball"><b class="${wave(k)}">${pad(k)}</b>${zod(k)}</span>`;
+  const it=([k,v])=>`<div class="ritem">${ball(k)}<b class="${v>=0?"pos":"neg"}">${sg(v)}</b></div>`;
+  el.innerHTML=`<div class="muted" style="font-size:12px">开出这个特码时的盈亏${VL()}。只算特码和特肖；平特、连肖要看全部 7 个球，没算进来。</div>
+   <h4 style="margin:6px 0 2px;font-size:13px">最差 5 个</h4><div class="rlist">${S.slice(0,5).map(it).join("")}</div>
+   <h4 style="margin:6px 0 2px;font-size:13px">最好 5 个</h4><div class="rlist">${S.slice(-5).reverse().map(it).join("")}</div>`;
+}
+let aPer=7;
+const famOf=t=>t==="特码单码"||t==="一肖"?"特码":LIAN[t]?"连肖":"平特";
+function dAdd(dt,k){const d=new Date(dt+"T12:00:00");d.setDate(d.getDate()+k);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function renderAnalysis(){
+  const el=$("an_body"); if(!el)return;
+  $("an_per").innerHTML=[[1,"今天"],[7,"7天"],[30,"30天"]].map(([k,t])=>`<button type="button" data-p="${k}" class="${k===aPer?"on":""}">${t}</button>`).join("");
+  const end=$("wb_date").value||today(), st=dAdd(end,-(aPer-1)); if($("an_date"))$("an_date").textContent=end;
+  const B=D.bets.filter(b=>b.date>=st&&b.date<=end), P=PV();
+  const ag=L=>{const a=L.reduce((x,b)=>x+(+b.amount||0),0),r=L.reduce((x,b)=>x+reb(b),0),p=L.reduce((x,b)=>x+pl(b),0);return{a,r:Math.round(r*100)/100,p:Math.round(p*100)/100*P,pend:L.some(b=>b.res==="pend")}};
+  const cell=v=>`<td class="${v>=0?"pos":"neg"}">${sg(v)}</td>`;
+  const tbl=(title,rows)=>rows.length?`<h3 class="ah">${title}</h3><table class="atbl"><tr><th></th><th>下注</th><th>退水</th><th>盈亏${VL()}</th></tr>${rows.join("")}</table>`:"";
+  let h="";
+  // 客户
+  const C={};B.forEach(b=>{const c=b.cust||"（没写客户）";(C[c]=C[c]||[]).push(b)});
+  const top=L=>{const m={};L.forEach(b=>{if(b.type==="特码单码"||b.type==="一肖"||b.type==="平特一肖"||b.type==="平特"){const k=(b.type==="特码单码"?"":b.type==="一肖"?"特":"平")+b.content;m[k]=(m[k]||0)+(+b.amount||0)}});return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>esc(x[0])).join(" ")};
+  const cr=Object.entries(C).sort((a,b)=>ag(b[1]).a-ag(a[1]).a).map(([c,L])=>{const g=ag(L);return `<tr><td>${esc(c)} <button type="button" class="rc" style="float:none" data-rcc="${esc(c)}">对账</button><br><small class="muted">常买 ${top(L)||"—"}</small></td><td>${fmt(g.a)}</td><td>${fmt(g.r)}</td>${cell(g.p)}</tr>`});
+  h+=tbl("按客户",cr);
+  const F={};B.forEach(b=>{(F[famOf(b.type)]=F[famOf(b.type)]||[]).push(b)});
+  h+=tbl("按玩法",["特码","平特","连肖"].filter(k=>F[k]).map(k=>{const g=ag(F[k]);return `<tr><td>${k}</td><td>${fmt(g.a)}</td><td>${fmt(g.r)}</td>${cell(g.p)}</tr>`}));
+  const Lt={};B.forEach(b=>{const l=b.lot||"新澳";(Lt[l]=Lt[l]||[]).push(b)});
+  h+=tbl("按彩种",["新澳","老澳","香港"].filter(k=>Lt[k]).map(k=>{const g=ag(Lt[k]);return `<tr><td>${LN[k]}</td><td>${fmt(g.a)}</td><td>${fmt(g.r)}</td>${cell(g.p)}</tr>`}));
+  // 走势
+  if(aPer>1){
+    const days=[];for(let i=aPer-1;i>=0;i--)days.push(dAdd(end,-i));
+    const v=days.map(d=>Math.round(D.bets.filter(b=>b.date===d).reduce((x,b)=>x+pl(b),0)*100)/100*P);
+    const mx=Math.max(1,...v.map(Math.abs)); let run=0; const cum=v.map(x=>run+=x);
+    h+=`<h3 class="ah">走势（每天盈亏${VL()}）</h3><div class="bars">${v.map((x,i)=>`<div class="c" title="${days[i]} ${sg(x)}"><div class="u"><i style="height:${x>0?x/mx*100:0}%"></i></div><div class="d"><i style="height:${x<0?-x/mx*100:0}%"></i></div></div>`).join("")}</div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#888"><span>${days[0].slice(5)}</span><span>${days[days.length-1].slice(5)}</span></div>
+      <div style="font-size:13px;margin-top:4px">合计 <b class="${run>=0?"pos":"neg"}">${sg(Math.round(run*100)/100)}</b>　最好一天 ${sg(Math.max(...v))}　最差一天 ${sg(Math.min(...v))}</div>`;
+  }
+  if(!B.length)h+=`<div class="muted" style="margin-top:8px">这段时间没有注单</div>`;
+  el.innerHTML=h;
+}
+document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("#an_per button");if(t){aPer=+t.dataset.p;renderAnalysis()}});
+function renderWB(){renderSlip();renderHist();renderRank();drawWarn()}
+
+$("wb_date").onchange=()=>{if($("m_date"))$("m_date").value=$("wb_date").value;renderWB()};
+$("m_save").onclick=saveManualDraw;
+$("m_nums").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();saveManualDraw()}});
+
+$("wb_check").onclick=parseWB;
+$("wb_to").addEventListener("change",e=>{if(e.target.value==="new")delete e.target.dataset.user;else e.target.dataset.user="1"});
+$("wb_ocr").onclick=()=>$("wb_ocrf").click();
+$("wb_ocrf").onchange=e=>{const f=[...e.target.files];if(f.length)ocrFill(f);e.target.value=""};
+$("wb_text").addEventListener("paste",e=>{const it=[...(e.clipboardData&&e.clipboardData.items||[])].find(x=>x.type&&x.type.startsWith("image/"));if(it){e.preventDefault();ocrFill(it.getAsFile())}});
+function slipReb(g){
+  const dt=$("wb_date").value||today(), L=D.bets.filter(b=>b.date===dt&&(b.grp||1)===g); if(!L.length)return;
+  const o=L.find(b=>b.rebO)?.rebO||{}, f=k=>hasV(o[k])?o[k]:"";
+  const cur=["特码","平特","连肖"].map(k=>{const r=rateOf(L[0],k);return k+" "+r.v+"%（"+r.src+"）"}).join("，");
+  const v=prompt(`第${g}单 退水 %，按 特码,平特,连肖 填（0=不退水，空=跟客户/默认）\n现在：${cur}`,[f("特码"),f("平特"),f("连肖")].join(","));
+  if(v===null)return;
+  const a=v.split(/[,，\s]+/), n={};
+  ["特码","平特","连肖"].forEach((k,i)=>{const x=(a[i]??"").trim();if(x!==""){if(!isFinite(+x)||+x<0||+x>100){throw 0}n[k]=+x}});
+  L.forEach(b=>{if(Object.keys(n).length)b.rebO=n;else delete b.rebO});
+  settleAll();save();toast(Object.keys(n).length?`第${g}单 已单独设退水`:`第${g}单 退水恢复跟客户/默认`);
+}
+document.addEventListener("click",e=>{const t=e.target;if(!t.closest)return;
+  const rb=t.closest("[data-rbg]");if(rb){try{slipReb(+rb.dataset.rbg)}catch(x){alert("格式不对：填数字，例如 0,0,0 或 4,5,5")}return}
+  const a=t.closest("[data-rc]");if(a){const g=+a.dataset.rc,dt=$("wb_date").value||today();const L=D.bets.filter(b=>b.date===dt&&(b.grp||1)===g);copyText(reconText(L,`对账 ${dt} 第${g}单`+([...new Set(L.map(b=>b.cust).filter(Boolean))].map(c=>" "+c).join(""))));return}
+  const c=t.closest("[data-rcc]");if(c){const n=c.dataset.rcc,dt=$("wb_date").value||today();const L=D.bets.filter(b=>b.date===dt&&(b.cust||"（没写客户）")===n);if(!L.length){toast("今天这个客户没有注单");return}copyText(reconText(L,`对账 ${dt} ${n}`));}});
+$("wb_save").onclick=()=>{
+  const r=parseWB();
+  if(!wbPV.length){alert("没有识别到任何单");return}
+  if(r.bad){alert(`有 ${r.bad} 行没认对（红色），请先改好再保存`);return}
+  if(r.mism&&!confirm(`有 ${r.mism} 张单写的合计和算出来的对不上（红色）。确定还要保存？`))return;
+  const dt=$("wb_date").value||today();
+  {const to0=$("wb_to").value;
+   if(to0!=="new"&&slipLocked(D.bets.filter(b=>b.date===dt&&(b.grp||1)===+to0))&&!D.unlock[dt+"|"+to0]){alert("这张单已开奖锁定，先在单上点 🔒 解锁");return}
+   const sig=L=>L.map(b=>[b.lot||"新澳",b.type,b.content,+b.amount].join("|")).sort().join(";");
+   const ex={};D.bets.filter(b=>b.date===dt).forEach(b=>{(ex[b.grp||1]=ex[b.grp||1]||[]).push(b)});
+   const exS=new Set(Object.values(ex).map(sig));
+   const nw={};wbPV.forEach(x=>{(nw[x.grp||1]=nw[x.grp||1]||[]).push(x)});
+   const dup=to0==="new"?Object.keys(nw).filter(g=>exS.has(sig(nw[g]))):[];
+   if(dup.length&&!confirm(`可能重复：有 ${dup.length} 张单和今天已存的一模一样（同彩种、同内容、同金额）。还要保存吗？`))return;}
+  const cust0=($("wb_cust").value||"").trim()||(($("wb_taicust")&&$("wb_taicust").value)||D.settings.taiCust||"").trim();
+  const srcB=String($("wb_text").value).split(/\n[ \t\u3000]*\n/).filter(b=>b.trim()).map(b=>b.replace(/^[ \t]*客户[ \t]*[:：].*$/m,"").trim());
+  const old=D.bets.filter(b=>b.date===dt);
+  const mx=old.reduce((a,b)=>Math.max(a,b.grp||1),0);
+  const to=$("wb_to").value;
+  const gmap=g=>to==="new"?mx+(g||1):+to;
+  wbPV.forEach(r=>{
+    const lot=r.lot||"新澳";
+    let is=issueFor(lot,dt);
+    if(!is){
+      const last=Object.values(DRAWS).filter(d=>d.lot===lot&&(!d.date||d.date<dt)).sort((a,b)=>b.issue.localeCompare(a.issue))[0];
+      is=last?String(+last.issue+1):dt.replace(/-/g,"")+"01";
+    }
+    D.bets.push({id:uid(),date:dt,issue:is,lot,type:r.type,content:r.content,amount:r.amount,odds:r.odds,net:isNet(r.type),note:"工作台："+r.raw,...(r.zexp?{zexp:r.zexp}:{}),...((r.cust||cust0)?{cust:r.cust||cust0}:{}),grp:gmap(r.grp),...(srcB[(r.grp||1)-1]?{src:srcB[(r.grp||1)-1]}:{}),res:"pend",ret:0});
+  });
+  settleAll(); save();
+  const nSaved=[...new Set(wbPV.map(r=>r.grp||1))].length;
+  $("wb_msg").textContent=`已保存 ${nSaved} 单（${wbPV.length} 注）`;
+  $("wb_text").value=""; $("wb_cust").value=""; $("wb_prev").innerHTML=""; $("wb_to").value="new";delete $("wb_to").dataset.user; fillCustDefault();
+  $("wb_paste_box").open=false;
+};
+
+/* ========== 设置 ========== */
+function cebRow(c){const r=(D.settings.custReb||{})[c]||{},v=k=>hasV(r[k])?r[k]:"";
+  return `<div class="crow" data-c="${esc(c)}" style="display:flex;gap:4px;align-items:center;margin:2px 0"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c)}</span>`+["特码","平特","连肖"].map(k=>`<input data-k="${k}" type="number" step="0.1" min="0" placeholder="默认" value="${v(k)}" style="width:4.2em">`).join("")+`</div>`}
+function renderCReb(extra){
+  const cs=[...new Set([...Object.keys(D.settings.custReb||{}),...D.bets.map(b=>b.cust).filter(Boolean),...(extra||[])])].sort();
+  $("s_creb").innerHTML=cs.length?`<div style="display:flex;gap:4px;color:#888;font-size:12px"><span style="flex:1">客户</span><span style="width:4.2em">特码</span><span style="width:4.2em">平特</span><span style="width:4.2em">连肖</span></div>`+cs.map(cebRow).join(""):`<span class="muted">还没有客户</span>`;
+}
+function readCReb(){const m={};document.querySelectorAll("#s_creb .crow").forEach(r=>{const o={};r.querySelectorAll("input").forEach(i=>{if(i.value.trim()!==""&&isFinite(+i.value))o[i.dataset.k]=Math.max(0,+i.value)});if(Object.keys(o).length)m[r.dataset.c]=o});return m}
+function openSet(){
+  renderCReb();$("s_lockMin").value=D.settings.lockMin??10;
+  // no account
+  $("s_bm").innerHTML=ORDER.map(z=>`<option${z===BM()?" selected":""}>${z}</option>`).join("");
+  $("s_bmOdds").value=D.settings.bmOdds;
+  Object.keys(ODDS0).forEach(k=>{const el=$("o_"+k); if(el)el.value=odd(k)});
+  $("r_tema").value=D.settings.rebate.特码??4;
+  $("r_ping").value=D.settings.rebate.平特??5;
+  $("r_lian").value=D.settings.rebate.连肖??5;
+  $("s_view").value=D.settings.view==="老板"?"老板":"客户";
+  if($("s_taicust"))$("s_taicust").value=D.settings.taiCust||"";
+  $("s_maxBet").value=D.settings.maxBet??5000; $("s_capNum").value=D.settings.capNum||0; $("s_capZod").value=D.settings.capZod||0; renderTrash(); renderLearn();
+  $("s_msg").textContent="";
+  $("set").classList.add("on");
+}
+$("wb_gear").onclick=openSet;
+$("s_close").onclick=()=>$("set").classList.remove("on");
+$("set").onclick=e=>{if(e.target.id==="set")$("set").classList.remove("on")};
+$("s_save").onclick=()=>{
+  D.settings.bm=$("s_bm").value;
+  D.settings.bmOdds=parseOdds($("s_bmOdds").value,true);
+  D.settings.odds=D.settings.odds||{};
+  Object.keys(ODDS0).forEach(k=>{const el=$("o_"+k); if(el)D.settings.odds[k]=+el.value});
+  D.settings.view=$("s_view").value;
+  D.settings.maxBet=Math.max(0,+$("s_maxBet").value||0); D.settings.capNum=Math.max(0,+$("s_capNum").value||0); D.settings.capZod=Math.max(0,+$("s_capZod").value||0);
+  D.settings.rebate={特码:+$("r_tema").value||0,平特:+$("r_ping").value||0,连肖:+$("r_lian").value||0};
+  D.settings.custReb=readCReb();
+  D.settings.taiCust=(($("s_taicust")&&$("s_taicust").value)||($("wb_taicust")&&$("wb_taicust").value)||"").trim();
+  if($("wb_taicust"))$("wb_taicust").value=D.settings.taiCust;
+  D.settings.lockMin=Math.max(0,Math.round(+$("s_lockMin").value||0));
+  settleAll(); save();
+  $("s_msg").textContent="已保存（只存在本机此账号）";
+};
+$("s_cadd").onclick=()=>{const n=$("s_cnew").value.trim();if(!n)return;const keep=readCReb();const old=D.settings.custReb;D.settings.custReb=keep;renderCReb([n]);D.settings.custReb=old;$("s_cnew").value=""};
+$("s_fetch").onclick=()=>fetchDraws().catch(e=>$("s_msg").textContent="拉取失败："+e.message);
+$("s_export").onclick=()=>{
+  const blob=new Blob([JSON.stringify({bets:D.bets,settings:D.settings,exportedAt:new Date().toISOString()},null,1)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`工作台备份_${TAIN}_${today()}.json`; a.click();
+};
+$("s_import").onclick=()=>$("s_file").click();
+$("s_file").onchange=e=>{
+  const f=e.target.files[0]; if(!f)return;
+  f.text().then(t=>{
+    try{
+      const o=JSON.parse(t);
+      if(!Array.isArray(o.bets))throw Error("没有 bets");
+      if(!confirm(`导入 ${o.bets.length} 笔？会追加，不覆盖。`))return;
+      const ids=new Set(D.bets.map(b=>b.id));
+      o.bets.forEach(b=>{migNet(b);if(!b.id||ids.has(b.id))b.id=uid();D.bets.push(b)});
+      if(o.settings)D.settings=Object.assign(defaultSettings(),D.settings,o.settings);
+      settleAll(); save(); $("s_msg").textContent="已导入 "+o.bets.length+" 笔";
+    }catch(err){$("s_msg").textContent="导入失败："+err.message}
+    e.target.value="";
+  });
+};
+$("s_clr").onclick=()=>{
+  if(!confirm("清空全部注单？不可恢复（可先导出备份）。"))return;
+  D.bets=[]; D._clear=true; save(); $("s_msg").textContent="已清空"; $("set").classList.remove("on");
+};
+
+/* ========== 启动 ========== */
+/* ========== 授权 + 本机多账号 + PIN 锁（数据只在本机） ========== */
+const ACC_KEY="wb_accounts_v1", DEV_KEY="wb_device_id", LIC_KEY="wb_license_v1", LEGACY_KEY="wb_data_v1_local";
+const LIC_GRACE=30*864e5;
+const LIC_ON=false; // 授权码暂时关掉；改成 true 可重新启用（后台 functions 保留）
+const TEST=!!window.__WBTEST;
+const b64=u=>btoa(String.fromCharCode(...new Uint8Array(u)));
+const unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const rnd=n=>crypto.getRandomValues(new Uint8Array(n));
+async function pbk(pw,salt,iter,usage){
+  const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits","deriveKey"]);
+  if(usage==="bits")return b64(await crypto.subtle.deriveBits({name:"PBKDF2",salt,iterations:iter,hash:"SHA-256"},k,256));
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt,iterations:iter,hash:"SHA-256"},k,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+function accList(){try{return JSON.parse(Store.getItem(ACC_KEY)||"[]")}catch(e){return[]}}
+function accSave(L){Store.setItem(ACC_KEY,JSON.stringify(L))}
+let ACC=null; // 当前账号
+function setDataKey(id){DATA_KEY="wb_acct_"+id+"_data"}
+async function accCreate(name,pin){
+  name=String(name||"").trim(); if(!name)throw Error("请填账号名");
+  if(!/^\d{4,6}$/.test(pin))throw Error("PIN 要 4-6 位数字");
+  const L=accList(); if(L.some(a=>a.name===name))throw Error("这个账号名已存在");
+  const salt=rnd(16), iter=150000, id=b64(rnd(9)).replace(/[^A-Za-z0-9]/g,"x");
+  const a={id,name,salt:b64(salt),iter,hash:await pbk(pin,salt,iter,"bits"),at:Date.now()};
+  const legacy=!L.length&&Store.getItem(LEGACY_KEY);
+  if(legacy){Store.setItem("wb_acct_"+id+"_data",legacy);Store.removeItem(LEGACY_KEY)}
+  L.push(a); accSave(L); return{a,migrated:!!legacy};
+}
+async function accCheck(a,pin){
+  const h=await pbk(pin,unb64(a.salt),a.iter,"bits");
+  let d=h.length^a.hash.length; for(let i=0;i<h.length;i++)d|=h.charCodeAt(i)^(a.hash.charCodeAt(i)||0); return d===0;
+}
+function deviceId(){let d=Store.getItem(DEV_KEY);if(!d){d=[...rnd(16)].map(x=>x.toString(16).padStart(2,"0")).join("");Store.setItem(DEV_KEY,d)}return d}
+function licGet(){try{return JSON.parse(Store.getItem(LIC_KEY)||"null")}catch(e){return null}}
+function licSet(o){Store.setItem(LIC_KEY,JSON.stringify(o))}
+async function api(path,body){
+  const r=await fetch(path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body),cache:"no-store"});
+  let j={};try{j=await r.json()}catch(e){} if(!r.ok&&!j.err)j={ok:false,err:"http"+r.status};return j;
+}
+const LIC_ERR={invalid:"授权码不对",bound:"这个授权码已在另一台设备使用",disabled:"这个授权码已停用",revoked:"授权已失效，请联系管理员",missing:"请填授权码"};
+// 返回 true=可以用；false=需要输入授权码
+async function licVerify(){
+  if(TEST||!LIC_ON)return true;
+  const L=licGet(); if(!L||!L.code||!L.ok)return false;
+  try{
+    const j=await api("/api/check",{code:L.code,deviceId:deviceId()});
+    if(j.ok){licSet({code:L.code,ok:true,at:Date.now()});return true}
+    if(j.err&&LIC_ERR[j.err]){licSet({code:L.code,ok:false,at:Date.now(),err:j.err});return false}
+    throw Error(j.err||"net");
+  }catch(e){return Date.now()-(L.at||0)<LIC_GRACE} // 断网：3 天内照常用
+}
+/* ---- 界面 ---- */
+function gate(html){$("gate").innerHTML=`<div class="gcard"><div class="gtitle">工作台</div>${html}</div>`;$("gate").style.display="flex";$("app").style.display="none"}
+function gateOff(){$("gate").style.display="none";$("gate").innerHTML="";$("app").style.display=""}
+function showLic(msg){
+  const L=licGet();
+  gate(`<p class="gsub">请输入授权码（一个码只能在一台设备使用）</p>
+  <input id="g_code" placeholder="授权码" autocomplete="off" value="${esc(L&&L.code||"")}" style="text-transform:uppercase">
+  <button type="button" class="big" id="g_act">激活</button><p class="gerr" id="g_err">${esc(msg||(L&&L.err&&LIC_ERR[L.err])||"")}</p>
+  <p class="gnote">只会发送授权码和本机随机编号，注单数据不会上传。</p>`);
+  $("g_act").onclick=async()=>{
+    const code=$("g_code").value.trim().toUpperCase(); if(!code){$("g_err").textContent=LIC_ERR.missing;return}
+    $("g_act").disabled=true;$("g_err").textContent="验证中…";
+    try{const j=await api("/api/activate",{code,deviceId:deviceId()});
+      if(j.ok){licSet({code,ok:true,at:Date.now()});autoOpen()}
+      else $("g_err").textContent=LIC_ERR[j.err]||("激活失败："+(j.err||""));
+    }catch(e){$("g_err").textContent="连不上服务器，请检查网络"}
+    if($("g_act"))$("g_act").disabled=false;
+  };
+}
+function showAccounts(msg){
+  const L=accList();
+  if(!L.length)return showCreate(true);
+  gate(`<p class="gsub">选择账号</p><div class="glist">${L.map(a=>`<button type="button" class="gacc" data-acc="${esc(a.id)}">${esc(a.name)}</button>`).join("")}</div>
+  <button type="button" id="g_new" class="glink">＋ 新建账号</button><p class="gerr">${esc(msg||"")}</p>
+  <p class="gnote">每个账号的数据完全分开，只存在本机。</p>`);
+  $("gate").querySelectorAll("[data-acc]").forEach(b=>b.onclick=()=>{saveUser();openAcc(L.find(a=>a.id===b.dataset.acc))});
+  $("g_new").onclick=()=>showCreate(false);
+}
+function showCreate(first){
+  const legacy=first&&!!Store.getItem(LEGACY_KEY);
+  gate(`<p class="gsub">${first?"第一次使用，先建一个账号":"新建账号"}</p>
+  <input id="g_name" placeholder="账号名" maxlength="20" autocomplete="off">
+  <input id="g_pin" placeholder="PIN（4-6 位数字）" inputmode="numeric" type="password" maxlength="6" autocomplete="new-password">
+  <input id="g_pin2" placeholder="再输一次 PIN" inputmode="numeric" type="password" maxlength="6" autocomplete="new-password">
+  <button type="button" class="big" id="g_mk">建立</button>${first?"":`<button type="button" class="glink" id="g_back">返回</button>`}<p class="gerr" id="g_err"></p>
+  ${legacy?`<p class="gnote">本机已有的注单会归到这个账号。</p>`:""}<p class="gnote">PIN 忘了无法找回，请记好。</p>`);
+  if(!first)$("g_back").onclick=()=>showAccounts();
+  $("g_mk").onclick=async()=>{
+    if($("g_pin").value!==$("g_pin2").value){$("g_err").textContent="两次 PIN 不一样";return}
+    try{$("g_mk").disabled=true;const {a}=await accCreate($("g_name").value,$("g_pin").value);openAcc(a)}
+    catch(e){if($("g_err")){$("g_err").textContent=e.message;$("g_mk").disabled=false}}
+  };
+}
+let pinFails=0,pinWait=0;
+function showPin(a,msg){
+  gate(`<p class="gsub">${esc(a.name)}</p><input id="g_pin" placeholder="输入 PIN" inputmode="numeric" type="password" maxlength="6" autocomplete="current-password">
+  <button type="button" class="big" id="g_ok">解锁</button><button type="button" class="glink" id="g_sw">切换账号</button><p class="gerr" id="g_err">${esc(msg||"")}</p>`);
+  const go=async()=>{
+    if(Date.now()<pinWait){$("g_err").textContent=`错太多次，请 ${Math.ceil((pinWait-Date.now())/1000)} 秒后再试`;return}
+    $("g_ok").disabled=true;
+    if(await accCheck(a,$("g_pin").value)){pinFails=0;openAcc(a)}
+    else{pinFails++;if(pinFails>=5)pinWait=Date.now()+30000*Math.pow(2,pinFails-5);$("g_err").textContent="PIN 不对";if($("g_pin")){$("g_pin").value="";$("g_ok").disabled=false}}
+  };
+  $("g_ok").onclick=go;$("g_pin").onkeydown=e=>{if(e.key==="Enter")go()};$("g_sw").onclick=()=>showAccounts();
+  setTimeout(()=>$("g_pin")&&$("g_pin").focus(),50);
+}
+let appShown=false;
+/* v19.8：不再要 PIN，打开就直接进上次的账号；找回旧数据 */
+function bestAcc(L){let best=null,bn=-1;L.forEach(a=>{let n=0;try{n=(JSON.parse(Store.getItem("wb_acct_"+a.id+"_data")||"{}").bets||[]).length}catch(e){}if(n>bn){bn=n;best=a}});return best}
+const DATA_V2=TAI==="1"?"wb_data_v2":"wb_data_v2__t"+TAI;
+function migrateAll(){ // 把旧的（授权码/账号分开存的）注单合并到一个固定位置；旧数据原样保留不删
+  if(TAI!=="1"||Store.getItem(DATA_V2))return 0;
+  const ks=[LEGACY_KEY];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(/^wb_acct_.+_data$/.test(k))ks.push(k)}
+  let best=null,bn=-1;const bets=[],ids=new Set();
+  ks.forEach(k=>{let o;try{o=JSON.parse(Store.getItem(k)||"null")}catch(e){}if(!o||!Array.isArray(o.bets))return;
+    if(o.bets.length>bn){bn=o.bets.length;best=o}o.bets.forEach(b=>{const key=b.id||JSON.stringify(b);if(!ids.has(key)){ids.add(key);bets.push(b)}})});
+  if(!best)return 0;
+  Store.setItem(DATA_V2,JSON.stringify(Object.assign({},best,{bets})));return bets.length;
+}
+function autoOpen(){
+  const n=migrateAll();
+  ACC={id:"local",name:"本机"};DATA_KEY=DATA_V2;D=loadData();dataReady=true;gateOff();
+  if($("acc_name"))$("acc_name").textContent="";
+  if(!appShown){appShown=true;showApp()}else{settleAll();renderWB()}
+  try{fillCustDefault()}catch(e){}
+  if(n)setTimeout(()=>toast&&toast(`已找回旧数据 ${n} 注`),800);
+  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+}
+
+function openAcc(a){
+  ACC=a;setDataKey(a.id);D=loadData();dataReady=true;try{Store.setItem("wb_last_acc",a.id)}catch(e){}gateOff();lastAct=Date.now();
+  $("acc_name").textContent=a.name;
+  if(!appShown){appShown=true;showApp()}else{settleAll();renderWB()}
+}
+function lockNow(why){
+  return; // v19.8：去掉锁屏（锁屏曾把内存清空，之后自动拉开奖时把空数据写回，注单丢失）
+  if(!ACC||TEST)return;
+  try{saveUser()}catch(e){}
+  const a=ACC;D=emptyData();$("set").classList.remove("on");$("wb_text").value="";$("wb_cards").innerHTML="";
+  showPin(a,why||"");
+}
+/* 自动锁 */
+let lastAct=Date.now(),hidAt=0;
+const lockMs=()=>{const m=+((D.settings||{}).lockMin??10);return m>0?m*60000:0};
+["pointerdown","keydown","touchstart","scroll","input"].forEach(ev=>addEventListener(ev,()=>{lastAct=Date.now()},{passive:true,capture:true}));
+setInterval(()=>{const ms=lockMs();if(ACC&&$("gate").style.display==="none"&&ms&&Date.now()-lastAct>ms)lockNow("太久没操作，已自动锁定")},5000);
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){hidAt=Date.now();return}
+  const ms=lockMs();if(ACC&&$("gate").style.display==="none"&&hidAt&&ms&&Date.now()-hidAt>Math.min(ms,120000))lockNow("已锁定");
+  if(!TEST&&ACC)licVerify().then(ok=>{if(!ok){saveUser();showLic()}});
+});
+/* 加密备份 */
+async function encBackup(pw){
+  if(!pw||pw.length<4)throw Error("备份密码至少 4 位");
+  const salt=rnd(16),iv=rnd(12),iter=200000,key=await pbk(pw,salt,iter);
+  const plain=new TextEncoder().encode(JSON.stringify({app:"workbench",acc:ACC.name,at:new Date().toISOString(),data:JSON.parse(Store.getItem(DATA_KEY)||"{}")}));
+  const ct=await crypto.subtle.encrypt({name:"AES-GCM",iv},key,plain);
+  return JSON.stringify({wbenc:1,kdf:"PBKDF2-SHA256",iter,salt:b64(salt),iv:b64(iv),ct:b64(ct)});
+}
+async function decBackup(txt,pw){
+  let o;try{o=JSON.parse(txt)}catch(e){throw Error("文件格式不对")}
+  if(!o||o.wbenc!==1)throw Error("不是加密备份文件");
+  const key=await pbk(pw,unb64(o.salt),o.iter);
+  let p;try{p=await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(o.iv)},key,unb64(o.ct))}catch(e){throw Error("密码不对或文件损坏")}
+  return JSON.parse(new TextDecoder().decode(p));
+}
+function dl(name,txt){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"application/json"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+
+$("wb_lock").style.display="none";
+$("s_switch").style.display="none";
+$("s_eexp").onclick=async()=>{const pw=prompt("设一个备份密码（导入时要用，忘了打不开）");if(pw===null)return;
+  try{saveUser();const t=await encBackup(pw);dl(`工作台加密备份_${TAIN}_${today()}.json`,t);window.__lastEnc=t;$("s_msg").textContent="已导出加密备份"}catch(e){alert(e.message)}};
+$("s_eimp").onclick=()=>$("s_efile").click();
+$("s_efile").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const pw=prompt("输入这个备份的密码");if(pw===null)return;
+  try{const o=await decBackup(await f.text(),pw);const d=o.data||{};const n=(d.bets||[]).length;
+    if(!confirm(`备份里有 ${n} 笔注单（${o.acc||""} ${String(o.at||"").slice(0,10)}）。导入会替换当前账号的数据，继续？`))return;
+    Store.setItem(DATA_KEY,JSON.stringify(d));D=loadData();settleAll();save();$("s_msg").textContent=`已导入 ${n} 笔`}catch(x){alert(x.message)}};
+(async function boot(){
+  await Store.init();
+  Store.banner();
+  loadDraws();
+  if(TEST){D=loadData();dataReady=true;appShown=true;showApp()}
+  else{
+    $("app").style.display="none";
+    const ok=await licVerify();
+    if(!ok)showLic();else autoOpen();
+    setInterval(()=>{if(ACC)licVerify().then(ok=>{if(!ok){saveUser();showLic()}})},6*3600e3);
+  }
+  (function(){let _drawTimer=null; function scheduleDrawPoll(){
+    clearTimeout(_drawTimer);
+    if(D.settings.auto===false||!navigator.onLine){_drawTimer=setTimeout(scheduleDrawPoll,60000);return}
+    const m=bjMinutes(), need=Object.keys(SRC).some(l=>!tonightDrawn(l));
+    let wait=180000;
+    if(m>=DRAW_HH*60+35&&m<23*60&&need)wait=60000; // 临近开奖每分钟
+    else if(m<DRAW_HH*60+35)wait=600000; // 开奖前 10 分钟一拉，避免空刷
+    _drawTimer=setTimeout(()=>{fetchDraws().catch(()=>{}).finally(scheduleDrawPoll)},wait);
+  } scheduleDrawPoll(); addEventListener("online",()=>fetchDraws().catch(()=>{}));})();
+})();
+
+/* 测试钩子（仅本页） */
+
+/* ========== v19.7 兑奖明细（按客户，只读，不改结算） ========== */
+let mxCust=null;
+function renderMX(){
+  const dt=$("mx_date").value||($("mx_date").value=$("wb_date").value||today());
+  const B=D.bets.filter(b=>b.date===dt), CN=mxCN;
+  const cs=[...new Set(B.map(CN))];
+  if(!cs.includes(mxCust))mxCust=cs[0]||null;
+  $("mx_tabs").innerHTML=cs.map(c=>`<button type="button" data-mxc="${esc(c)}" class="${c===mxCust?"on":""}">${esc(c)}</button>`).join("");
+  if(!mxCust){$("mx_body").innerHTML=`<div class="muted" style="padding:10px">${dt.slice(5)} 没有注单</div>`;return}
+  const L=B.filter(b=>CN(b)===mxCust);
+  const st=b=>b.res==="win"?(b.ret||0)/M(b):0;
+  const ball=n=>`<span class="ball"><b class="${wave(n)}">${pad(n)}</b>${zod(n)}</span>`;
+  const draws=["香港","新澳","老澳"].map(l=>{
+    let d=drawOnDate(l,dt);
+    if(!d||!d.nums||d.nums.length!==7){const is=[...new Set(L.filter(b=>lotOf(b)===l).map(b=>b.issue))];d=is.map(i=>DRAWS[dkey(l,i)]).find(x=>x&&x.nums&&x.nums.length===7)}
+    return `<div class="lot"><b>${LN[l]}</b>`+(d&&d.nums&&d.nums.length===7?d.nums.slice(0,6).map(ball).join("")+`<span style="margin:0 3px;color:#999">+</span>`+ball(d.nums[6])+` <span class="muted">${esc(String(d.issue).replace(/^20\d\d/,""))}期 ${esc((d.date||dt||"").slice(5))}</span>`:`<span class="muted">未开奖</span>`)+`</div>`}).join("");
+  const G={};L.forEach(b=>{(G[b.grp||1]=G[b.grp||1]||[]).push(b)});
+  const gk=Object.keys(G).map(Number).sort((a,b)=>a-b);
+  const amt=L.reduce((a,b)=>a+(+b.amount||0),0), rb=Math.round(L.reduce((a,b)=>a+reb(b),0)*100)/100;
+  const s=agg(L.filter(b=>b.res!=="pend")), boss=-s.pl;
+  const winLine=(lot,nm,f)=>{const w=L.filter(b=>b.res==="win"&&lotOf(b)===lot&&f(b));if(!w.length)return"";const xs=w.map(st),sm=xs.reduce((a,x)=>a+x,0);
+    return `<div class="mxwl">${LN[lot]||lot} ${nm} 中:${xs.map(fmt).join("+")}=${fmt(sm)} —赔:${fmt(w.reduce((a,b)=>a+winAmt(b),0))}</div>`};
+  const wl=["香港","新澳","老澳"].map(lot=>winLine(lot,"特码",b=>!netOf(b))+winLine(lot,"平特",b=>netOf(b))).join("");
+  const pend=L.some(b=>b.res==="pend");
+  const short=s=>{const L=s.split("\n").map(x=>x.trim()).filter(Boolean),o=[];let cur=[];L.forEach(x=>{if(x.length<=22)cur.push(x);else{if(cur.length)o.push(cur.join("｜"));cur=[];o.push(x)}});if(cur.length)o.push(cur.join("｜"));return o.join("\n")};
+  const frag=S=>{const M=new Map();S.forEach(b=>{const k=rawOf(b)+"\0"+lotOf(b);if(!M.has(k))M.set(k,{r:rawOf(b),lot:lotOf(b),a:0,w:[]});const x=M.get(k);x.a+=+b.amount||0;if(b.res==="win")x.w.push(b)});
+    return [...M.values()].map(x=>{const tg=lotTag(x.lot), showTg=x.w.length||x.lot!=="新澳";
+      const ws=x.w.length?x.w.map(b=>`${esc((TL(b.type)||"").replace("特码单码","特码").replace("平特一肖","平特"))} 中:${fmt(st(b))}×${b.odds}=${fmt(winAmt(b))}`).join("，"):"";
+      return `<div class="mxf${x.w.length?" mxred":""}"><span>${showTg?`<span class="mxtag">${esc(tg)}</span>`:""}${esc(x.r)}${ws?`　<b>${ws}</b>`:""}</span><span>${fmt(x.a)}</span></div>`}).join("")};
+  let rows=gk.map(g=>{const S=G[g],a=S.reduce((x,b)=>x+(+b.amount||0),0),p=S.reduce((x,b)=>x+pl(b),0);
+    const W={};S.filter(b=>b.res==="win").forEach(b=>{const k=lotOf(b)+"|"+TL(b.type)+"|"+b.odds;(W[k]=W[k]||{s:0,w:0,m:new Set(),lot:lotOf(b)}).s+=st(b);W[k].w+=winAmt(b);W[k].m.add(String(b.content).trim())});
+    const hit=Object.entries(W).map(([k,v])=>{const [l,tp,o]=k.split("|");const tg=lotTag(l||v.lot);
+      return `<div class="mxred"><span class="mxtag">${esc(tg)}</span>${esc((tp||"").replace("特码单码","特码").replace("平特一肖","平特"))} 中:${fmt(v.s)}*${o}=${fmt(v.w)} ---(${esc([...v.m].join(""))})</div>`}).join("");
+    const pd=S.every(b=>b.res==="pend"), win=!!hit;
+    const op=mxAll||mxOpen.has(g);
+    return {win,g,a,pd,hit,op,S};
+  });
+  if(mxWin)rows=rows.filter(r=>r.win);
+  rows=rows.map((r,i)=>{const body=r.win?r.hit:(r.pd?'<span class="muted">未开</span>':"");
+    const more=r.op?`<div class="mxraw">${frag(r.S)}</div>`:`<span class="muted">${r.win?"":"未中 "}▼原文</span>`;
+    return `<tr class="mxr" data-mxg="${r.g}"><td>${i+1}</td><td>${fmt(r.a)}</td><td>${body}${more}</td></tr>`});
+  const NC=3, tb=r=>`<table><tr><th>#</th><th>金额</th><th>详情</th></tr>${r.join("")}</table>`;
+  const cols=colMajor(rows,NC);
+  $("mx_body").innerHTML=`<div class="mxh">${dt.slice(5)} 兑奖明细 — 申报人：${esc(mxCust)}</div><div class="mxd">${draws}</div>
+<div class="mxsum">申报人：${esc(mxCust)}　订单：${gk.length}　总额：<b>${fmt(amt)}</b>　退水合计：<b>${fmt(rb)}</b><div>中奖情况：</div>${wl||"<div>无</div>"}
+${settleHtml(L)}
+<div class="mxbtn"><button type="button" data-mxa="1">${mxAll?"收起原文":"展开原文"}</button><label><input type="checkbox" id="mx_win"${mxWin?" checked":""}> 只看中奖</label></div></div>
+<div class="mxg" style="grid-template-columns:repeat(${cols.length||1},1fr)">${rows.length?cols.map(tb).join(""):'<div class="muted" style="padding:8px">没有中奖的单</div>'}</div><div class="mxfoot">日期: ${dt.slice(5)}　申报人: ${esc(mxCust)}</div>`;
+}
+const taiName=()=>((D.settings&&D.settings.taiCust)||"").trim()||TAIN||"本台";
+const mxCN=b=>b.cust||taiName();
+let mxOpen=new Set(),mxAll=false,mxWin=false;
+document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-mxc]");if(b){mxCust=b.dataset.mxc;mxOpen.clear();mxAll=false;renderMX();scrollTo(0,0)}});
+document.addEventListener("click",e=>{if(!e.target.closest)return;
+  if(e.target.closest("[data-mxa]")){mxAll=!mxAll;mxOpen.clear();renderMX();return}
+  const r=e.target.closest("[data-mxg]");if(r){const g=+r.dataset.mxg;if(mxAll){mxAll=false;gkAllOpen(g)}else mxOpen.has(g)?mxOpen.delete(g):mxOpen.add(g);renderMX()}});
+function gkAllOpen(g){mxOpen=new Set(D.bets.filter(b=>b.date===$("mx_date").value&&mxCN(b)===mxCust).map(b=>b.grp||1));mxOpen.delete(g)}
+document.addEventListener("change",e=>{if(e.target.id==="mx_win"){mxWin=e.target.checked;renderMX()}});
+document.addEventListener("change",e=>{if(e.target.id==="mx_date")renderMX()});
+window.__WB={settleLines,settleOf,renderMX,colMajor,colBlocks,rowMajor,lotTag,setMX(c){mxCust=c},mxSt(){return{open:[...mxOpen],mxAll,mxWin}},wbJump,ocrPrep,ocrWorker,parseWB,get wbPV(){return wbPV},slipFix,suggest,lineBad,ocrFill,ocrImage,ocrClean,accList,accCreate,accCheck,encBackup,decBackup,lockNow,get ACC(){return ACC},parseBets,oddsOf,rebInfo,rateOf,slipReb,settleAll,judge,get D(){return D},get DRAWS(){return DRAWS},setTestData(d,dr){D=d;if(dr)DRAWS=dr},fmt,pl,agg,winAmt,BM,canReb,Store,loadData,saveUser,fetchLaoFromSite,ingestLao,fetchDraws,saveManualDraw,renderBalls,pickBestDate};
+</script>
+<script>
+if('serviceWorker' in navigator && location.protocol==='https:'){
+  var hadSW=!!navigator.serviceWorker.controller, reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){if(hadSW&&!reloaded){reloaded=true;location.reload()}});
+  addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){r.update();document.addEventListener('visibilitychange',function(){if(!document.hidden)r.update()})}).catch(function(){})});
+}
+</script>
+<script>
+function fillCustDefault(){const tc=((D.settings&&D.settings.taiCust)||"").trim();if($("wb_taicust"))$("wb_taicust").value=tc;if($("wb_cust")&&!($("wb_cust").value||"").trim())$("wb_cust").value=tc}
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="wb_taicust"){D.settings.taiCust=(e.target.value||"").trim();try{saveUser()}catch(x){}fillCustDefault()}});
+document.title=TAIN+" · 工作台";
+function taiFill(){const S=$("tai_sel");if(!S)return;S.innerHTML=taiList().map(t=>`<option value="${t}"${t===TAI?" selected":""}>${t+(/^\d+$/.test(t)?"号台":"台")}</option>`).join("")+'<option value="__new">＋ 新建台</option>'}
+taiFill();try{fillCustDefault()}catch(e){}
+function taiNew(){const n=String(Math.max(0,...taiList().filter(x=>/^\d+$/.test(x)).map(Number))+1);taiAdd(n);taiGo(n)}
+$("tai_sel").onchange=e=>{const v=e.target.value;e.target.value=TAI;if(v==="__new")taiNew();else if(v!==TAI)taiGo(v)};
+if(TAI_PICK){const o=document.createElement("div");o.id="taipick";
+  o.innerHTML=`<div class="tpc"><div class="tpt">选择工作台</div><div class="tpl">${taiList().map(t=>`<button type="button" data-tp="${t}">${t+(/^\d+$/.test(t)?"号台":"台")}</button>`).join("")}</div><button type="button" data-tp="__new" class="tpn">＋ 新建台</button><div class="tps">每个台的数据分开；这个标签页会记住你选的台</div></div>`;
+  document.body.appendChild(o);o.onclick=e=>{const b=e.target.closest("[data-tp]");if(!b)return;const v=b.dataset.tp;if(v==="__new")taiNew();else if(v===TAI)o.remove();else taiGo(v)}}
+addEventListener("storage",e=>{
+  if(e.key==="wb_tai_list")taiFill();
+  if(e.key===DATA_KEY&&dataReady){D=loadData();try{settleAll();renderWB()}catch(x){}}});
+</script>
+</body>
+</html>
