@@ -1,0 +1,39 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>授权码管理</title>
+<style>body{font-family:-apple-system,"PingFang SC",sans-serif;margin:0;background:#f4f6f5;color:#222}main{max-width:900px;margin:0 auto;padding:16px}
+h1{font-size:20px;color:#16a34a}.card{background:#fff;border-radius:12px;padding:14px;margin:10px 0;box-shadow:0 1px 8px rgba(0,0,0,.05)}
+input,button{font-size:15px;padding:8px 10px;border-radius:8px;border:1px solid #ccc}button{background:#16a34a;color:#fff;border:none;cursor:pointer}button.g{background:#eef2ef;color:#333}button.r{background:#fdecea;color:#c62828}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:7px 5px;border-bottom:1px solid #eee;text-align:left;vertical-align:top}th{color:#888;font-weight:500}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:14px;white-space:nowrap}.st{padding:1px 6px;border-radius:4px;font-size:12px}.on{background:#e6f6ea;color:#16a34a}.off{background:#fdecea;color:#c62828}.free{background:#eef;color:#447}
+.err{color:#c62828}.muted{color:#888;font-size:12px}td button{font-size:12px;padding:4px 7px;margin:1px}
+@media(max-width:640px){thead{display:none}table,tbody,tr,td{display:block;width:auto}tr{border:1px solid #eee;border-radius:10px;padding:8px;margin:8px 0}td{border:none;padding:2px 0}
+td:nth-child(1){font-size:16px;font-weight:600}td:nth-child(4):before{content:"设备 "}td:nth-child(5):before{content:"最近 "}td br{display:none}#note{width:9em}}</style></head><body><main>
+<h1>授权码管理</h1>
+<div class="card" id="login"><input id="k" type="password" placeholder="管理密码" autocomplete="current-password"> <button id="go">进入</button> <span class="err" id="le"></span></div>
+<div id="main" style="display:none">
+<div class="card"><input id="note" placeholder="备注（客户名）" maxlength="60"> <input id="cnt" type="number" value="1" min="1" max="50" style="width:5em"> 个 <button id="mk">生成授权码</button> <span id="mm" class="muted"></span>
+<div id="made" class="code" style="margin-top:6px"></div></div>
+<div class="card"><input id="q" placeholder="搜索 码/备注" style="width:12em"> <button class="g" id="rf">刷新</button> <button class="g" id="lo">退出</button> <span id="sum" class="muted"></span>
+<table><thead><tr><th>授权码</th><th>备注</th><th>状态</th><th>设备</th><th>最近使用</th><th></th></tr></thead><tbody id="tb"></tbody></table></div></div>
+<script>
+const $=id=>document.getElementById(id);let K=sessionStorage.getItem("ak")||"",ALL=[];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const t=x=>x?new Date(x).toLocaleString("zh-CN",{hour12:false}).replace(/\//g,"-"):"—";
+async function A(p,b){const r=await fetch("/api/admin/"+p,{method:b?"POST":"GET",headers:{"x-admin-key":K,"content-type":"application/json"},body:b?JSON.stringify(b):undefined,cache:"no-store"});const j=await r.json().catch(()=>({ok:false,err:"http"+r.status}));if(r.status===401){logout("管理密码不对");throw 0}if(!j.ok)throw Error(j.err||"失败");return j}
+function logout(m){K="";sessionStorage.removeItem("ak");$("main").style.display="none";$("login").style.display="";$("le").textContent=m||""}
+async function load(){const j=await A("list");ALL=j.codes;$("login").style.display="none";$("main").style.display="";draw()}
+function draw(){const q=$("q").value.trim().toUpperCase();const L=ALL.filter(r=>!q||r.code.includes(q)||String(r.note||"").toUpperCase().includes(q));
+ $("sum").textContent=`共 ${ALL.length} 个，已绑定 ${ALL.filter(r=>r.device).length}，停用 ${ALL.filter(r=>r.disabled).length}`;
+ $("tb").innerHTML=L.map(r=>`<tr><td class="code">${esc(r.code)}</td><td>${esc(r.note)}</td><td>${r.disabled?'<span class="st off">停用</span>':r.device?'<span class="st on">使用中</span>':'<span class="st free">未激活</span>'}</td>
+ <td class="muted">${r.device?esc(r.device.slice(0,8))+"…<br>"+t(r.bound):"—"}</td><td class="muted">${t(r.last)}</td>
+ <td>${r.disabled?`<button class="g" data-a="enable" data-c="${r.code}">启用</button>`:`<button class="r" data-a="disable" data-c="${r.code}">停用</button>`}${r.device?`<button class="g" data-a="unbind" data-c="${r.code}">解绑设备</button>`:""}<button class="g" data-a="note" data-c="${r.code}">备注</button><button class="r" data-a="delete" data-c="${r.code}">删除</button></td></tr>`).join("")||'<tr><td colspan="6" class="muted">没有授权码</td></tr>'}
+$("go").onclick=async()=>{K=$("k").value;try{await load();sessionStorage.setItem("ak",K)}catch(e){if(e)$("le").textContent=e.message}};
+$("k").onkeydown=e=>{if(e.key==="Enter")$("go").click()};
+$("lo").onclick=()=>logout();$("rf").onclick=()=>load().catch(e=>e&&alert(e.message));$("q").oninput=draw;
+$("mk").onclick=async()=>{try{const j=await A("create",{note:$("note").value,count:+$("cnt").value||1});$("made").innerHTML=j.codes.map(r=>esc(r.code)).join("<br>");$("mm").textContent="已生成，可复制发给客户";$("note").value="";await load()}catch(e){e&&alert(e.message)}};
+$("tb").onclick=async e=>{const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a,c=b.dataset.c;let x={code:c};
+ if(a==="delete"&&!confirm("删除 "+c+"？该设备会立刻失效"))return;if(a==="unbind"&&!confirm("解绑后这个码可以在新设备激活，旧设备会失效。继续？"))return;if(a==="disable"&&!confirm("停用 "+c+"？"))return;
+ if(a==="note"){const n=prompt("备注",(ALL.find(r=>r.code===c)||{}).note||"");if(n===null)return;x.note=n}
+ try{await A(a,x);await load()}catch(e){e&&alert(e.message)}};
+if(K)load().catch(()=>{});
+</script></main></body></html>
