@@ -95,7 +95,15 @@ const CHECK = `(() => {
     desk("2", [bet({ lot: "新澳", type: "特码单码", content: "1", amount: 50, odds: 47 })]),
     desk("3", [])
   ], "新澳", dt, "tema");
-  if (tema.rows.length !== 49) throw new Error("特码不是 49 行");
+  if (tema.rows.length !== 49 || tema.rows[0].key !== 1 || tema.rows[1].key !== 2 || tema.rows[48].key !== 49) throw new Error("特码排序 " + tema.rows.slice(0, 3).map((r) => r.key));
+  const ord = X.multiDeskRisk([desk("1", [
+    bet({ lot: "新澳", type: "特码单码", content: "8", amount: 20, odds: 47 }),
+    bet({ lot: "新澳", type: "特码单码", content: "2", amount: 20, odds: 47 }),
+    bet({ lot: "新澳", type: "特码单码", content: "15", amount: 40, odds: 1 })
+  ])], "新澳", dt, "tema");
+  if ([ord.rows[0].key, ord.rows[1].key, ord.rows[2].key, ord.rows[3].key].join() !== "15,2,8,1") throw new Error("下注排序 " + ord.rows.slice(0, 4).map((r) => r.key));
+  if (ord.worst !== row(ord, 2).risk && ord.worst !== row(ord, 8).risk) throw new Error("相同下注应一起算最亏 " + ord.worst);
+  if (ord.rows[0].risk === ord.worst) throw new Error("最高下注不是最亏时不应占最亏标记");
   near(tema.totalStake, 150, "特码总注");
   near(tema.totalRebate, 6, "特码退水");
   near(row(tema, 1).stake, 150, "01 下注");
@@ -134,7 +142,7 @@ const CHECK = `(() => {
     bet({ lot: "新澳", type: "平特", content: "龙蛇", amount: 999, odds: 4 }),
     bet({ lot: "香港", type: "平特", content: "鼠", amount: 999, odds: 1 })
   ])], "新澳", dt, "ping");
-  if (ping.rows.length !== 12 || ping.rows.map((r) => r.key).join("") !== "鼠牛虎兔龙蛇马羊猴鸡狗猪") throw new Error("十二肖不全 " + ping.rows.map((r) => r.key).join(""));
+  if (ping.rows.length !== 12 || ping.rows.map((r) => r.key).join("") !== "蛇马鼠牛虎兔龙羊猴鸡狗猪") throw new Error("平特应按下注再按肖序 " + ping.rows.map((r) => r.key).join(""));
   near(ping.totalStake, 300, "平特总注");
   near(ping.totalRebate, 8, "平特退水");
   if (row(ping, "蛇").risk !== Math.round(300 - 8 - 200 * 2)) throw new Error("蛇风险 " + row(ping, "蛇").risk);
@@ -303,7 +311,10 @@ async function main() {
     must(r.hkUi.lot === "香港" && hk.stake === 10 && hk.risk === Math.round(10 - 0.4 - 470), "香港 " + JSON.stringify(hk));
     must(r.laoUi.lot === "老澳" && r.laoUi.worst.length === 0 && r.laoUi.rows.every((x) => x.stake === 0 && x.risk === 0), "老澳应全 0");
     must(r.back.lot === "新澳" && r.back.kind === "tema" && rowOf(r.back, 1).worst, "回到新澳特码");
-    must(r.version.includes("v21.9"), "版本 " + r.version);
+    must(r.temaUi.rows[0].k === "1" && r.temaUi.rows[1].k === "2" && r.temaUi.rows[48].k === "49", "特码表序 " + r.temaUi.rows.slice(0, 3).map((x) => x.k));
+    must(r.pingUi.rows[0].k === "蛇" && r.pingUi.rows[1].k === "马" && r.pingUi.rows[2].k === "鼠", "平特表序 " + r.pingUi.rows.slice(0, 3).map((x) => x.k));
+    must(r.tailUi.rows[0].k === "8" && r.tailUi.rows[1].k === "0" && r.tailUi.rows[9].k === "9", "平特尾表序 " + r.tailUi.rows.map((x) => x.k));
+    must(r.version.includes("v21.10"), "版本 " + r.version);
     await shot(browser, sessionId, "multi-desk-risk-tema.png", 900, 1100);
     await shot(browser, sessionId, "multi-desk-risk-tema-mobile.png", 390, 844);
     await browser.send("Runtime.evaluate", { expression: `document.querySelector('#an_kind button[data-ak="ping"]').click()`, returnByValue: true }, sessionId);
@@ -313,9 +324,10 @@ async function main() {
     console.log("ok 多台合计风险 特码49 / 平特12 / 平特尾10，三台相加不除");
     browser.close();
   } finally {
-    chrome.kill("SIGKILL");
+    try { chrome.kill("SIGKILL"); } catch (e) {}
     server.close();
-    fs.rmSync(userDir, { recursive: true, force: true });
+    await new Promise((res) => setTimeout(res, 300));
+    try { fs.rmSync(userDir, { recursive: true, force: true }); } catch (e) {}
   }
 }
 

@@ -166,10 +166,10 @@ function staticCheck() {
   if (r.status !== 0) throw new Error((r.stdout || "") + (r.stderr || ""));
   process.stdout.write(r.stdout);
   const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
-  if (!sw.includes("wb-v219")) throw new Error("sw 不是 wb-v219");
+  if (!sw.includes("wb-v2110")) throw new Error("sw 不是 wb-v2110");
   for (const f of Object.values(FILES)) if (!sw.includes(f)) throw new Error("sw 未预缓存 " + f);
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
-  if (!html.includes("版本 v21.9")) throw new Error("页面版本不是 v21.9");
+  if (!html.includes("版本 v21.10")) throw new Error("页面版本不是 v21.10");
   if (!html.includes("await fetchLotCache(lot)")) throw new Error("fetchDraws 没有先读同站缓存");
   if (/macaumarksix|macaujc|history\.macaumarksix/.test(html)) throw new Error("仍引用 macaumarksix");
   if (html.includes("fetchLotLegacy")) throw new Error("仍有 macaumarksix legacy 入口");
@@ -234,7 +234,7 @@ async function main() {
       if (got.date !== exp.date) throw new Error(lot + " 日期 " + got.date + " != " + exp.date);
       if (got.n < exp.n) throw new Error(lot + " 只 ingest 了 " + got.n + " / " + exp.n);
     }
-    if (!snap.version.includes("v21.9") || !snap.version.includes("开奖自动含新澳、香港、老澳")) {
+    if (!snap.version.includes("v21.10") || !snap.version.includes("开奖自动含新澳、香港、老澳")) {
       throw new Error("版本文案不对: " + snap.version);
     }
     const lao = expect.老澳;
