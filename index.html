@@ -264,7 +264,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。底部「多台合计风险」看的是合计下注，不是赔付。<br><small>版本 v21.7 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。底部「多台合计风险」看的是合计下注，不是赔付。<br><small>版本 v21.8 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计 · 平特不含本1</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -474,8 +474,13 @@ function loadData(){
     s.odds=Object.assign({},ODDS0,s.odds||{});
     s.rebate=Object.assign({特码:4,平特:4,连肖:4},s.rebate||{});
     s.custReb=(s.custReb&&typeof s.custReb==='object')?s.custReb:{};
-    (o.bets||[]).forEach(migNet);
-    return{bets:o.bets||[],settings:s,trash:Array.isArray(o.trash)?o.trash:[],unlock:o.unlock||{},learn:Array.isArray(o.learn)?o.learn:[]};
+    const trash=Array.isArray(o.trash)?o.trash:[];
+    let mig=migOdds(s);
+    (o.bets||[]).forEach(b=>{if(migNet(b))mig=true});
+    trash.forEach(t=>{(t.bets||[]).forEach(b=>{if(migNet(b))mig=true})});
+    const data={bets:o.bets||[],settings:s,trash,unlock:o.unlock||{},learn:Array.isArray(o.learn)?o.learn:[]};
+    if(mig)data._oddsMig=true;
+    return data;
   }catch(e){return emptyData()}
 }
 let dataReady=false; // 只有真正读进了账号数据才允许写回，防止空数据盖掉注单
@@ -489,12 +494,32 @@ function saveUser(){
   LOADREV=Date.now()+Math.random();
   try{Store.setItem(DATA_KEY,JSON.stringify({rev:LOADREV,bets:D.bets,settings:D.settings,trash:D.trash||[],unlock:D.unlock||{},learn:D.learn||[]}));autoBak()}catch(e){console.error(e)}
 }
+/* 旧档把平特含本倍数 2 / 1.8 存在赔率上。不含本是 1 / 0.8。net 已经是 true 时也要改，否则 200 会按 1+2 派成 600。 */
+function legacyPingteOdds(v){
+  if(v===undefined||v===null||v==="")return null;
+  const o=Math.round(+v*100)/100;
+  if(!isFinite(o))return null;
+  if(o===2)return 1;
+  if(o===1.8)return 0.8;
+  return null;
+}
+function migOdds(s){
+  if(!s||!s.odds)return false;
+  let ch=false;
+  ["平特一肖","平特"].forEach(k=>{const n=legacyPingteOdds(s.odds[k]);if(n!=null){s.odds[k]=n;ch=true}});
+  return ch;
+}
 function migNet(b){
-  if(b.net===undefined||b.net===null){
-    if((b.type==="平特一肖"||b.type==="平特")&&(+b.odds===2||+b.odds===1.8)){
-      b.odds=Math.round((b.odds-1)*100)/100;b.net=true;
-    }else b.net=false;
+  if(!b)return false;
+  if(b.type==="平特一肖"||b.type==="平特"){
+    let ch=false;
+    const n=legacyPingteOdds(b.odds);
+    if(n!=null){b.odds=n;ch=true}
+    if(b.net!==true){b.net=true;ch=true}
+    return ch;
   }
+  if(b.net===undefined||b.net===null)b.net=false;
+  return false;
 }
 
 function showApp(){
@@ -601,6 +626,7 @@ function settleAll(){
     if(r){b.res=r.res;b.ret=r.ret;c++}
     else if(!["win","lose","tie"].includes(b.res)){b.res="pend";b.ret=0}
   });
+  if(D&&D._oddsMig){delete D._oddsMig;try{saveUser()}catch(e){}}
   return c;
 }
 function save(){saveUser(); renderWB()}
@@ -1604,7 +1630,7 @@ function restoreTrash(id){
   const i=(D.trash||[]).findIndex(x=>x.id===id); if(i<0)return; const it=D.trash.splice(i,1)[0];
   const used=new Set(D.bets.filter(b=>b.date===it.date).map(b=>b.grp||1));
   let g=it.grp; if(used.has(g))g=Math.max(0,...used)+1;
-  it.bets.forEach(b=>{b.grp=g;D.bets.push(b)}); settleAll(); save(); renderTrash(); toast(`已恢复到 ${it.date.slice(5)} 第${g}单`);
+  it.bets.forEach(b=>{migNet(b);b.grp=g;D.bets.push(b)}); settleAll(); save(); renderTrash(); toast(`已恢复到 ${it.date.slice(5)} 第${g}单`);
 }
 function renderTrash(){
   const el=$("s_trash"); if(!el)return; const T=D.trash||[]; $("s_tn").textContent=T.length?`（${T.length}）`:"";
@@ -1874,6 +1900,7 @@ $("s_file").onchange=e=>{
       const ids=new Set(D.bets.map(b=>b.id));
       o.bets.forEach(b=>{migNet(b);if(!b.id||ids.has(b.id))b.id=uid();D.bets.push(b)});
       if(o.settings)D.settings=Object.assign(defaultSettings(),D.settings,o.settings);
+      migOdds(D.settings);
       settleAll(); save(); $("s_msg").textContent="已导入 "+o.bets.length+" 笔";
     }catch(err){$("s_msg").textContent="导入失败："+err.message}
     e.target.value="";
