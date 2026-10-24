@@ -254,7 +254,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 &gt; 客户 &gt; 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码中奖含本×赔率，平特中奖=中本金×赔率不含本；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.1</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.2</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -442,7 +442,7 @@ function defaultSettings(){
   return{
     bm:"马", bmOdds:0.8,
     odds:Object.assign({},ODDS0),
-    rebate:{特码:4,平特:4,连肖:5}, custReb:{}, taiCust:"",
+    rebate:{特码:4,平特:5,连肖:5}, custReb:{}, taiCust:"",
     auto:true, defNum:"特码单码", defZod:"一肖", maxBet:5000, capNum:0, capZod:0
   };
 }
@@ -462,7 +462,7 @@ function loadData(){
     if(!o)return emptyData();
     const s=Object.assign(defaultSettings(),o.settings||{});
     s.odds=Object.assign({},ODDS0,s.odds||{});
-    s.rebate=Object.assign({特码:4,平特:4,连肖:5},s.rebate||{});
+    s.rebate=Object.assign({特码:4,平特:5,连肖:5},s.rebate||{});
     s.custReb=(s.custReb&&typeof s.custReb==='object')?s.custReb:{};
     (o.bets||[]).forEach(migNet);
     return{bets:o.bets||[],settings:s,trash:Array.isArray(o.trash)?o.trash:[],unlock:o.unlock||{},learn:Array.isArray(o.learn)?o.learn:[]};
@@ -524,7 +524,7 @@ function rebFam(t){
   if(LIAN[t])return"连肖";
   return"";
 }
-const REB0={特码:4,平特:4,连肖:5};
+const REB0={特码:4,平特:5,连肖:5};
 const hasV=x=>x!==undefined&&x!==null&&x!==""&&isFinite(+x);
 function custReb(c){const m=(D.settings.custReb||{});return c&&m[c]||null}
 function rateOf(b,f){
@@ -543,12 +543,16 @@ function rebInfo(b){
   return{amt:b.amount*r.v/100,src:r.src,rate:r.v};
 }
 const reb=b=>b.res==="tie"?0:Math.round(rebInfo(b).amt*100)/100;
-/* 中奖（进盈亏）：特码等含本用整笔 ret；平特净赔只计奖金部分（amount×odds），不含本 */
-const winAmt=b=>b.res!=="win"?0:(netOf(b)?(b.ret||0)/M(b)* +b.odds:(b.ret||0));
+/* 中奖（进盈亏）：特码与平特都含本，用整笔 ret。平特赔率仍按不含本录入，ret＝本金×(1+赔率)；连肖赔率本身是满倍。 */
+const winAmt=b=>b.res!=="win"?0:(b.ret||0);
 const pl=b=>b.res==="pend"?0:winAmt(b)-b.amount;
 function fml(b){
   const st=b.ret/M(b);
   return netOf(b)?`${fmt(st)}+${fmt(st)}×${b.odds}=${fmt(b.ret)}`:`${fmt(st)}×${b.odds}=${fmt(b.ret)}`;
+}
+function payEq(stake,odds,pay,net,times){
+  const s=fmt(stake), op=times||"*";
+  return (net?`${s}+${s}${op}${odds}`:`${s}${op}${odds}`)+`=${fmt(pay)}`;
 }
 function typeName(b){return TL(b.type)}
 function agg(list){
@@ -1228,8 +1232,8 @@ function hitLine(b){
   }
   return `<div class="hit">${lot} ${esc(TL(b.type))} 中:${f} ---${mark}</div>`;
 }
-function hitSum(S){const st=b=>(b.ret||0)/M(b),W={};S.filter(b=>b.res==="win").forEach(b=>{const k=lotOf(b)+"|"+TL(b.type)+"|"+b.odds;const w=W[k]=W[k]||{s:0,w:0,m:new Set()};w.s+=st(b);w.w+=winAmt(b);w.m.add(String(b.content).trim())});
-  return Object.entries(W).map(([k,v])=>{const [l,tp,o]=k.split("|");return `<div class="hit">${LN[l]} ${esc(tp.replace("特码单码","特码").replace("平特一肖","平特"))} 中:${fmt(v.s)}*${o}=${fmt(v.w)} ---(${esc([...v.m].join(""))})</div>`}).join("")}
+function hitSum(S){const st=b=>(b.ret||0)/M(b),W={};S.filter(b=>b.res==="win").forEach(b=>{const net=netOf(b)?1:0,k=lotOf(b)+"|"+TL(b.type)+"|"+b.odds+"|"+net;const w=W[k]=W[k]||{s:0,w:0,m:new Set(),net};w.s+=st(b);w.w+=winAmt(b);w.m.add(String(b.content).trim())});
+  return Object.entries(W).map(([k,v])=>{const [l,tp,o]=k.split("|");return `<div class="hit">${LN[l]} ${esc(tp.replace("特码单码","特码").replace("平特一肖","平特"))} 中:${payEq(v.s,o,v.w,v.net)} ---(${esc([...v.m].join(""))})</div>`}).join("")}
 function ncOf(el){const w=(el&&el.clientWidth)||innerWidth;return w<560?1:2}
 function rowMajor(a,n){const c=Array.from({length:n},()=>[]);a.forEach((x,i)=>c[i%n].push(x));return c.filter(x=>x.length)}
 function colMajor(a,n){n=Math.max(1,+n||1);const per=Math.ceil(a.length/n)||1,c=[];for(let i=0;i<n;i++){const sl=a.slice(i*per,(i+1)*per);if(sl.length)c.push(sl)}return c}
@@ -1697,7 +1701,7 @@ function openSet(){
   $("s_bmOdds").value=D.settings.bmOdds;
   Object.keys(ODDS0).forEach(k=>{const el=$("o_"+k); if(el)el.value=odd(k)});
   $("r_tema").value=D.settings.rebate.特码??4;
-  $("r_ping").value=D.settings.rebate.平特??4;
+  $("r_ping").value=D.settings.rebate.平特??5;
   $("r_lian").value=D.settings.rebate.连肖??5;
   $("s_view").value=D.settings.view==="老板"?"老板":"客户";
   if($("s_taicust"))$("s_taicust").value=D.settings.taiCust||"";
@@ -1979,12 +1983,12 @@ function renderMX(){
   const short=s=>{const L=s.split("\n").map(x=>x.trim()).filter(Boolean),o=[];let cur=[];L.forEach(x=>{if(x.length<=22)cur.push(x);else{if(cur.length)o.push(cur.join("｜"));cur=[];o.push(x)}});if(cur.length)o.push(cur.join("｜"));return o.join("\n")};
   const frag=S=>{const M=new Map();S.forEach(b=>{const k=rawOf(b)+"\0"+lotOf(b);if(!M.has(k))M.set(k,{r:rawOf(b),lot:lotOf(b),a:0,w:[]});const x=M.get(k);x.a+=+b.amount||0;if(b.res==="win")x.w.push(b)});
     return [...M.values()].map(x=>{const tg=lotTag(x.lot), showTg=x.w.length||x.lot!=="新澳";
-      const ws=x.w.length?x.w.map(b=>`${esc((TL(b.type)||"").replace("特码单码","特码").replace("平特一肖","平特"))} 中:${fmt(st(b))}×${b.odds}=${fmt(winAmt(b))}`).join("，"):"";
+      const ws=x.w.length?x.w.map(b=>`${esc((TL(b.type)||"").replace("特码单码","特码").replace("平特一肖","平特"))} 中:${payEq(st(b),b.odds,winAmt(b),netOf(b),"×")}`).join("，"):"";
       return `<div class="mxf${x.w.length?" mxred":""}"><span>${showTg?`<span class="mxtag">${esc(tg)}</span>`:""}${esc(x.r)}${ws?`　<b>${ws}</b>`:""}</span><span>${fmt(x.a)}</span></div>`}).join("")};
   let rows=gk.map(g=>{const S=G[g],a=S.reduce((x,b)=>x+(+b.amount||0),0),p=S.reduce((x,b)=>x+pl(b),0);
-    const W={};S.filter(b=>b.res==="win").forEach(b=>{const k=lotOf(b)+"|"+TL(b.type)+"|"+b.odds;(W[k]=W[k]||{s:0,w:0,m:new Set(),lot:lotOf(b)}).s+=st(b);W[k].w+=winAmt(b);W[k].m.add(String(b.content).trim())});
+    const W={};S.filter(b=>b.res==="win").forEach(b=>{const net=netOf(b)?1:0,k=lotOf(b)+"|"+TL(b.type)+"|"+b.odds+"|"+net;(W[k]=W[k]||{s:0,w:0,m:new Set(),lot:lotOf(b),net}).s+=st(b);W[k].w+=winAmt(b);W[k].m.add(String(b.content).trim())});
     const hit=Object.entries(W).map(([k,v])=>{const [l,tp,o]=k.split("|");const tg=lotTag(l||v.lot);
-      return `<div class="mxred"><span class="mxtag">${esc(tg)}</span>${esc((tp||"").replace("特码单码","特码").replace("平特一肖","平特"))} 中:${fmt(v.s)}*${o}=${fmt(v.w)} ---(${esc([...v.m].join(""))})</div>`}).join("");
+      return `<div class="mxred"><span class="mxtag">${esc(tg)}</span>${esc((tp||"").replace("特码单码","特码").replace("平特一肖","平特"))} 中:${payEq(v.s,o,v.w,v.net)} ---(${esc([...v.m].join(""))})</div>`}).join("");
     const pd=S.every(b=>b.res==="pend"), win=!!hit;
     const op=mxAll||mxOpen.has(g);
     return {win,g,a,pd,hit,op,S};

@@ -1,4 +1,4 @@
-const C='wb-v211';const A=['./','index.html','simple.html','manifest.json','icon.svg','draws_lao.json'];
+const C='wb-v212';const A=['./','index.html','simple.html','manifest.json','icon.svg','draws_lao.json'];
 const OCR='wb-ocr-1'; // 图片识别库（tesseract.js 及中文模型），第一次用时下载，之后离线可用
 self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(C).then(c=>c.addAll(A.map(u=>new Request(u,{cache:'reload'})))).catch(()=>{}))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C&&k!==OCR).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
