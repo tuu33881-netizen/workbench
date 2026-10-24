@@ -747,24 +747,13 @@ async function fetchLotCache(lot){
 async function fetchLotKai8(lot){
   const code=SRC[lot]; if(!code)throw Error("无彩种");
   let j=null, last=null;
-  // 同站代理（绕过浏览器 CORS）→ 直连 kai8 → 抛错给上层走旧站/缓存
+  // 同站代理 → 直连 kai8（166）。github.io 上直连通常被 CORS 拦住。
   for(const url of [`api/draws?code=${encodeURIComponent(code)}`,`/api/draws?code=${encodeURIComponent(code)}`,`${KAI8_BASE}/lottery/history/${KAI8_CO}/${code}`]){
     try{j=await fetchJson(url); if(j&&!j.status)break; last=Error((j&&j.msg)||"开奖接口失败"); j=null}catch(e){last=e;j=null}
   }
   if(!j)throw last||Error("开奖拉取失败");
   const list=(j.data&&j.data.list)||j.list||[];
   return ingest(lot, rowsFromKai8(list));
-}
-async function fetchLotLegacy(lot){
-  // 旧站兜底（新澳/香港）；老澳仍走站点/缓存
-  if(lot==="老澳")return fetchLaoFromSite();
-  const map={新澳:"macaujc2",香港:"hkjc"}, y=+today().slice(0,4); let add=0;
-  for(const yr of [y,y-1]){
-    if(yr<y&&today().slice(5,7)!=="01")continue;
-    const j=await fetchJson(`https://history.macaumarksix.com/history/${map[lot]}/y/${yr}`);
-    add+=ingest(lot,j.data||j);
-  }
-  return add;
 }
 async function fetchDraws(){
   const online=typeof navigator==="undefined"||navigator.onLine!==false;
@@ -774,10 +763,11 @@ async function fetchDraws(){
   for(const lot of Object.keys(SRC)){
     try{
       let add=0;
-      // 同站 JSON 成功就 ingest，不再打 kai8 / 旧站（那些在 github.io 上要么没 CORS，要么老澳 IP 跨域失败）
+      // 同站 JSON（Actions 从 kai8 写入）成功就 ingest。失败再直连 kai8。
       try{add=await fetchLotCache(lot)}catch(e0){
         try{add=await fetchLotKai8(lot)}catch(e1){
-          try{add=await fetchLotLegacy(lot)}catch(e2){throw e2||e1||e0}
+          if(lot!=="老澳")throw e1||e0;
+          try{add=await fetchLaoFromSite()}catch(e2){throw e2||e1||e0}
         }
       }
       out.push(`${LOTS[lot]}+${add}`); ok.push(LOTS[lot]);

@@ -171,6 +171,8 @@ function staticCheck() {
   const html = fs.readFileSync(path.join(root, "index.html"), "utf8");
   if (!html.includes("版本 v21.4")) throw new Error("页面版本不是 v21.4");
   if (!html.includes("await fetchLotCache(lot)")) throw new Error("fetchDraws 没有先读同站缓存");
+  if (/macaumarksix|macaujc|history\.macaumarksix/.test(html)) throw new Error("仍引用 macaumarksix");
+  if (html.includes("fetchLotLegacy")) throw new Error("仍有 macaumarksix legacy 入口");
   const laoFn = html.slice(html.indexOf("async function fetchLaoFromSite"), html.indexOf("function rowsFromKai8"));
   const ipAt = laoFn.indexOf("LAO_BASE");
   const cacheAt = laoFn.indexOf("readDrawCache");
