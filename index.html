@@ -265,7 +265,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。<br><small>版本 v21.11 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计风险 · 平特不含本1 · 尾各数为特码</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。<br><small>版本 v21.12 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计风险 · 平特不含本1 · 尾各数为特码 · 默认退点4%（已存平特/连肖5改为4）</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -454,6 +454,7 @@ function defaultSettings(){
     bm:"马", bmOdds:0.8,
     odds:Object.assign({},ODDS0),
     rebate:{特码:4,平特:4,连肖:4}, custReb:{}, taiCust:"",
+    rebMig:4,
     auto:true, defNum:"特码单码", defZod:"一肖", maxBet:5000, capNum:0, capZod:0
   };
 }
@@ -471,12 +472,14 @@ function loadData(){
     const o=JSON.parse(Store.getItem(DATA_KEY)||"null");
     LOADREV=(o&&o.rev)||0;
     if(!o)return emptyData();
-    const s=Object.assign(defaultSettings(),o.settings||{});
+    const rawS=o.settings||{};
+    const s=Object.assign(defaultSettings(),rawS);
     s.odds=Object.assign({},ODDS0,s.odds||{});
-    s.rebate=Object.assign({特码:4,平特:4,连肖:4},s.rebate||{});
+    s.rebate=Object.assign({特码:4,平特:4,连肖:4},rawS.rebate||{});
     s.custReb=(s.custReb&&typeof s.custReb==='object')?s.custReb:{};
     const trash=Array.isArray(o.trash)?o.trash:[];
     let mig=migOdds(s);
+    if(migRebate(s,rawS))mig=true;
     (o.bets||[]).forEach(b=>{if(migNet(b))mig=true});
     trash.forEach(t=>{(t.bets||[]).forEach(b=>{if(migNet(b))mig=true})});
     const data={bets:o.bets||[],settings:s,trash,unlock:o.unlock||{},learn:Array.isArray(o.learn)?o.learn:[]};
@@ -510,6 +513,25 @@ function migOdds(s){
   ["平特一肖","平特"].forEach(k=>{const n=legacyPingteOdds(s.odds[k]);if(n!=null){s.odds[k]=n;ch=true}});
   return ch;
 }
+/* 旧产品默认是平特 5、连肖 5。只把这两项改成 4。0、特码自己设的数、以及其它自定义比例不动。
+   rebMig===4 之后，用户再把平特或连肖存成 5 会保留。客户退水和单上的退水不在这里。 */
+function oldRebDefault(v){
+  if(v===undefined||v===null||v==="")return false;
+  const n=+v;
+  return isFinite(n)&&n===5;
+}
+function migRebate(s,raw){
+  if(!s)return false;
+  const src=raw&&typeof raw==="object"?raw:{};
+  s.rebate=Object.assign({特码:4,平特:4,连肖:4},s.rebate||{});
+  if(src.rebMig===4){s.rebMig=4;return false}
+  const prev=src.rebate||{};
+  let ch=false;
+  if(oldRebDefault(prev.平特)){s.rebate.平特=4;ch=true}
+  if(oldRebDefault(prev.连肖)){s.rebate.连肖=4;ch=true}
+  s.rebMig=4;
+  return ch;
+}
 function migNet(b){
   if(!b)return false;
   if(b.type==="平特一肖"||b.type==="平特"){
@@ -524,6 +546,7 @@ function migNet(b){
 }
 
 function showApp(){
+  migrateStoredDesks();
   $("wb_date").value=today();
   if($("m_date")) $("m_date").value=today();
   settleAll();
@@ -1681,13 +1704,34 @@ const AN_KINDS=[["tema","特码"],["ping","平特"],["tail","平特尾"]];
 let anLot="新澳", anKind="tema", anSplit=false;
 function deskStoreKey(t){return String(t)==="1"?"wb_data_v2":"wb_data_v2__t"+t}
 function coerceSettings(raw){
-  const s=Object.assign(defaultSettings(), raw||{});
-  s.odds=Object.assign({}, ODDS0, (raw&&raw.odds)||{});
-  s.rebate=Object.assign({特码:4,平特:4,连肖:4}, (raw&&raw.rebate)||{});
-  s.custReb=(raw&&raw.custReb&&typeof raw.custReb==="object")?raw.custReb:{};
+  const src=raw||{};
+  const s=Object.assign(defaultSettings(), src);
+  s.odds=Object.assign({}, ODDS0, src.odds||{});
+  s.rebate=Object.assign({特码:4,平特:4,连肖:4}, src.rebate||{});
+  s.custReb=(src.custReb&&typeof src.custReb==="object")?src.custReb:{};
   if(!s.bm)s.bm="马";
   if(!isFinite(+s.bmOdds))s.bmOdds=0.8;
+  migRebate(s, src);
   return s;
+}
+/* 其它台不经过 loadData。打开本台时把它们档里的旧默认 平特5 / 连肖5 写成 4，自定义比例不动。 */
+function migrateStoredDesks(){
+  const keys=new Set(["wb_data_v2","wb_data_v2__t2","wb_data_v2__t3"]);
+  try{taiList().forEach(t=>keys.add(deskStoreKey(t)))}catch(e){}
+  keys.forEach(k=>{
+    if(k===DATA_KEY)return;
+    let txt; try{txt=Store.getItem(k)}catch(e){return}
+    if(!txt)return;
+    let o; try{o=JSON.parse(txt)}catch(e){return}
+    if(!o||typeof o!=="object"||!o.settings||o.settings.rebMig===4)return;
+    const prev=o.settings.rebate||{};
+    if(!oldRebDefault(prev.平特)&&!oldRebDefault(prev.连肖))return;
+    const s=coerceSettings(o.settings);
+    o.settings.rebate=s.rebate;
+    o.settings.rebMig=4;
+    o.rev=Date.now()+Math.random();
+    try{Store.setItem(k,JSON.stringify(o))}catch(e){}
+  });
 }
 function readDesk(t){
   t=String(t);
@@ -2002,7 +2046,12 @@ $("s_file").onchange=e=>{
       if(!confirm(`导入 ${o.bets.length} 笔？会追加，不覆盖。`))return;
       const ids=new Set(D.bets.map(b=>b.id));
       o.bets.forEach(b=>{migNet(b);if(!b.id||ids.has(b.id))b.id=uid();D.bets.push(b)});
-      if(o.settings)D.settings=Object.assign(defaultSettings(),D.settings,o.settings);
+      if(o.settings){
+        const incoming=o.settings;
+        D.settings=Object.assign(defaultSettings(),D.settings,incoming);
+        D.settings.rebate=Object.assign({特码:4,平特:4,连肖:4},(D.settings.rebate||{}),(incoming.rebate||{}));
+        if(incoming.rebMig!==4)migRebate(D.settings,incoming);
+      }
       migOdds(D.settings);
       settleAll(); save(); $("s_msg").textContent="已导入 "+o.bets.length+" 笔";
     }catch(err){$("s_msg").textContent="导入失败："+err.message}
