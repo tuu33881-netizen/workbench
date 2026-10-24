@@ -181,7 +181,7 @@ async function main() {
     if (!r.zx.length || r.zx.some((x) => x.type !== "特码单码" || !x.zexp)) throw new Error("各数没有展开特码: " + JSON.stringify(r.zx.slice(0, 3)));
     if (r.zx.length < 8) throw new Error("各数展开太少: " + r.zx.length);
     if (r.allRed < 16) throw new Error("红波各应展开全部红波，实际 " + r.allRed);
-    if (!r.version.includes("v21.8")) throw new Error("版本不是 v21.8: " + r.version);
+    if (!r.version.includes("v21.10")) throw new Error("版本不是 v21.10: " + r.version);
     console.log("ok 同一单 特肖6 + 红单" + gotRed.length + " + 绿双" + gotGreen.length + "，" + r.msg);
     console.log("特肖", zod.map((x) => x.content).join(""));
     console.log("红波单", gotRed.map((n) => String(n).padStart(2, "0")).join(" "));
