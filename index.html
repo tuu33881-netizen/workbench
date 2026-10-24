@@ -264,7 +264,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。<br><small>版本 v21.9 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计风险 · 平特不含本1</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。<br><small>版本 v21.10 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计风险 · 平特不含本1</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -1785,6 +1785,8 @@ function multiDeskRisk(desks, lot, dt, kind){
     const payout=parts.reduce((s,p)=>s+(p.pay[key]||0),0);
     return {key, stake, risk:Math.round(totalStake-totalRebate-payout), dStake};
   });
+  const rank=key=>kind==="ping"?(ZALL.indexOf(String(key))+1||99):+key;
+  rows.sort((a,b)=>{const d=b.stake-a.stake; if(Math.abs(d)>1e-6) return d; return rank(a.key)-rank(b.key)});
   let worst=null;
   rows.forEach(r=>{if(r.risk<0&&(worst==null||r.risk<worst)) worst=r.risk});
   return {lot,dt,kind,rows,totalStake,totalRebate,worst,desks:parts.map(p=>({t:p.t,missing:p.missing,n:p.n,stake:p.stake,rebate:p.rebate}))};
@@ -1819,7 +1821,7 @@ function renderMultiRisk(){
     const cls=r.risk<0?"neg":r.risk>0?"pos":"";
     return `<tr class="${hot?"worst":""}" data-k="${esc(r.key)}" data-stake="${r.stake}" data-risk="${r.risk}"><td class="k">${riskLabel(anKind,r.key)}</td><td>${fmt(Math.round(r.stake*100)/100)}</td><td class="risk ${cls}${hot?" hi":""}">${sg(r.risk)}</td>${cells}</tr>`;
   }).join("");
-  el.innerHTML=`<div class="muted" style="font-size:12px">${hint} 总下注和退水只算${esc(anLot)}这一项。三台相加，不除以台数。${deskNote}</div>
+  el.innerHTML=`<div class="muted" style="font-size:12px">${hint} 总下注和退水只算${esc(anLot)}这一项。三台相加，不除以台数。按下注从多到少排，相同再按号码、肖或尾从小到大。最亏的一行标红。${deskNote}</div>
   <div style="font-size:13px;margin:4px 0">${sumLine}</div>
   ${anSplit?`<div class="muted" style="font-size:12px">分台列是该行在各台的下注，三列相加等于下注数。</div>`:""}
   <div class="lvwrap"><table class="atbl lv" id="an_table" data-kind="${anKind}" data-lot="${esc(anLot)}" data-n="${data.rows.length}"><thead>${th}</thead><tbody>${body}</tbody></table></div>`;
