@@ -70,7 +70,7 @@ textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;paddin
 .wops{position:absolute;top:1px;right:2px;display:flex;gap:2px;align-items:center}
 .wmore{border:0;background:none;color:#bbb;cursor:pointer;font-size:14px;padding:0 3px;line-height:1}
 .wmenu{display:none;gap:2px;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);padding:2px;border-radius:4px}
-.wmenu .wdel{float:none}.wops.op .wmenu{display:flex}
+.wmenu .wdel,.wops .wed{float:none}.wops.op .wmenu{display:flex}
 @media(hover:hover){.wtd .wmore{visibility:hidden}.wtd:hover .wmore{visibility:visible}.wtd:hover .wmenu{display:flex}}
 .hitrow td{background:#fff}
 .hit{color:#d0021b;font-weight:700}
@@ -200,7 +200,8 @@ body{padding-bottom:56px}
   <div class="sumbox" id="wb_sum"><span class="muted">还没有本期注单</span></div>
   <details class="paste" id="wb_paste_box">
     <summary>＋ 粘贴注单（同一次粘贴＝一张单；空行不拆单；行尾/行首可写 新澳/新/老奥/香港）</summary>
-    <textarea id="wb_text" placeholder="例：&#10;香港平龙200&#10;鸡猴兔各数15&#10;&#10;新澳&#10;平猪200&#10;&#10;老奥&#10;03.09各350&#10;（空行仍是同一张单；换客户或点保存才是新单）"></textarea>
+    <div id="wb_editbar" class="lrn" style="display:none">正在改 <b id="wb_editg"></b> 的原文和金额。保存后按新内容重新识别并结算这张单，不会另存。<button type="button" id="wb_editx">取消</button></div>
+    <textarea id="wb_text" placeholder="例：&#10;香港平龙200&#10;鸡猴兔各数15&#10;6尾各数400&#10;6尾500&#10;&#10;新澳&#10;平猪200&#10;&#10;老奥&#10;03.09各350&#10;（空行仍是同一张单；换客户或点保存才是新单。6尾各数＝特码，6尾500＝平特尾）"></textarea>
     <div class="bar">
       <span>加到</span><select id="wb_to"><option value="new">新单</option></select>
       <input id="wb_taicust" placeholder="本台客户" title="本台默认客户名，空着保存时用这个；也可每单改" style="width:90px;padding:6px;border:1px solid #9ad;border-radius:6px;color:#16a34a">
@@ -264,7 +265,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。<br><small>版本 v21.10 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计风险 · 平特不含本1</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。<br><small>版本 v21.11 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计风险 · 平特不含本1 · 尾各数为特码</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -964,6 +965,15 @@ function flush0(g,out){
     for(let n=1;n<=49;n++)if(zs.includes(zod(n)))mk("特码单码",[{k:"nums",v:n}],g.amount,[],{zexp:zs.join("")});
     return;
   }
+  // v21.11：N尾各数 / 各数N尾 → 特码单码（6→06 16 26 36 46），不是平特尾。没写各数的 N尾 仍走下面的平特尾。
+  if(g.zx&&g.items.length&&g.items.every(i=>i.k==="tail")){
+    const tails=[];
+    g.items.forEach(i=>{const t=String(i.v);if(/^[0-9]$/.test(t)&&!tails.includes(t))tails.push(t)});
+    if(!tails.length){mk("其他",[],g.amount,["没找到尾"]);return}
+    const label=tails.map(t=>t+"尾").join("");
+    tails.forEach(t=>{for(let n=1;n<=49;n++)if(n%10===+t)mk("特码单码",[{k:"nums",v:n}],g.amount,[],{zexp:label})});
+    return;
+  }
   const t0=typeFor(g.items[0]);
   if(P==="平特"&&g.items.every(i=>i.k==="zod"))g.each=true;
   if(!LIAN[t0]&&!g.each&&!g.total&&g.items.length>1&&g.amount!=null){g.items.forEach(it=>mk(typeFor(it),[it],g.amount,["没写各：请写各"+fmt(g.amount)+"或共"+fmt(g.amount)]));return}
@@ -1084,7 +1094,7 @@ function slipFix(text){
   // v19.4 写法统一 + 跨行合并（只在同一单内）
   let L=String(text).split("\n").map(l=>l
     .replace(/(平特尾数?|平尾)\s*([\d.．,，、]+)(?=\s*各|\s*$)/g,(m,p,d)=>{const ds=String(d).match(/\d/g)||[];return ds.length?("平特"+ds.map(x=>x+"尾").join("")+" "):m})
-    .replace(/格\s*数/g,"各数").replace(/(?<!每)个\s*(?=\d)/g,"各").replace(/特\s*各\s*数/g,"各数").replace(/各\s*[#＃]\s*(?=\d)/g,"各")
+    .replace(/格\s*数/g,"各数").replace(/各\s+数/g,"各数").replace(/(?<!每)个\s*(?=\d)/g,"各").replace(/特\s*各\s*数/g,"各数").replace(/各\s*[#＃]\s*(?=\d)/g,"各")
     .replace(/(\d)\s*[.。,，、]?\s*[#＃]\s*(?=\d)/g,"$1各")
     .replace(/(连肖?[\s,，、.。]*[鼠牛虎兔龙蛇马羊猴鸡狗猪](?:[\s、，,.]*[鼠牛虎兔龙蛇马羊猴鸡狗猪])*)\s*[。.，,]\s*(\d+)\s*$/,"$1 $2")
     .replace(/^(.*\d\s*(?:斤|元|块|米)?)\s*[，,。.\s]*老\s*[。.]?\s*$/,(m,a)=>/老澳|老奥/.test(a)?m:"老澳 "+a)
@@ -1130,8 +1140,11 @@ function parseBets0(text){
       else if(t.k==="fs")g.fs=true;
       else if(t.k==="junk")g.junk+=t.v;
       else if(t.k==="num"){
-        const isAmt=t.unit||g.each||!nx||(nx.k!=="num"&&nx.k!=="each"&&nx.k!=="total")||(g.play&&g.play!=="特码"&&!MULTI.includes(g.play));
-        if(isAmt){g.amount=t.v;if(!g.lot&&curLot)g.lot=curLot;flush(g,out);g={play:lp,items:[],each:false,amount:null,junk:"",raw:"",lot:curLot}}
+        // 500.6尾：金额写在尾前面，先记下金额，等尾进来再出平特尾。有各数时仍按特码展开。
+        const holdForTail=nx&&(nx.k==="tail"||nx.k==="tails")&&!g.items.length&&!g.each;
+        const isAmt=!holdForTail&&(t.unit||g.each||!nx||(nx.k!=="num"&&nx.k!=="each"&&nx.k!=="total")||(g.play&&g.play!=="特码"&&!MULTI.includes(g.play)));
+        if(holdForTail){g.amount=t.v;if(!g.lot&&curLot)g.lot=curLot}
+        else if(isAmt){g.amount=t.v;if(!g.lot&&curLot)g.lot=curLot;flush(g,out);g={play:lp,items:[],each:false,amount:null,junk:"",raw:"",lot:curLot}}
         else if(Number.isInteger(t.v)&&t.v>=1&&t.v<=49)g.items.push({k:"nums",v:t.v});
         else g.junk+=t.v+" ";
       }
@@ -1404,7 +1417,7 @@ function renderSlip(){
     const hasWin=L.some(b=>b.res==="win");
     const src=L.find(b=>b.src)?.src||[...new Set(L.map(rawOf).filter(Boolean))].join("\n");
     const body=src?`<div class="wsrc">${esc(src)}</div>`:orderLines(L).replace(/<div class="rebl">[\s\S]*?<\/div>/g,"");
-    return `<tr${hasWin?' class="hitrow"':""}><td>${no}</td><td>${fmt(orderAmt(L))}${(()=>{const ra=L.reduce((a,b)=>a+(+rebInfo(b).amt||0),0);if(!ra)return"";const od=[...new Set(L.map(rebInfo).filter(r=>r.rate!==undefined&&r.src!=="默认"&&r.amt).map(r=>r.rate+"%"))];return `<div class="wreb">退 ${fmt(Math.round(ra*100)/100)}${od.length?` (${od.join("/")})`:""}</div>`})()}</td><td class="wtd">${cu.map(c=>`<span class="cust wcu">${esc(c)}</span>`).join("")}<span class="wops"><button type="button" class="wmore" title="更多">⋯</button><span class="wmenu">${rcb}${del}</span></span>${hitSum(L)}${body}</td></tr>`;
+    return `<tr${hasWin?' class="hitrow"':""}><td>${no}</td><td>${fmt(orderAmt(L))}${(()=>{const ra=L.reduce((a,b)=>a+(+rebInfo(b).amt||0),0);if(!ra)return"";const od=[...new Set(L.map(rebInfo).filter(r=>r.rate!==undefined&&r.src!=="默认"&&r.amt).map(r=>r.rate+"%"))];return `<div class="wreb">退 ${fmt(Math.round(ra*100)/100)}${od.length?` (${od.join("/")})`:""}</div>`})()}</td><td class="wtd">${cu.map(c=>`<span class="cust wcu">${esc(c)}</span>`).join("")}<span class="wops"><button type="button" class="rc wed" data-ed="${g}" title="改原文或金额，重新识别并结算">改</button><button type="button" class="wmore" title="更多">⋯</button><span class="wmenu">${rcb}${del}</span></span>${hitSum(L)}${body}</td></tr>`;
   };
   const NC=ncOf($("wb_cards"));$("wb_cards").style.gridTemplateColumns=`repeat(${NC},1fr)`;
   const cols=(NC<=1?[gk]:colBlocks(gk,6,NC).flat());
@@ -1849,7 +1862,38 @@ function slipReb(g){
   L.forEach(b=>{if(Object.keys(n).length)b.rebO=n;else delete b.rebO});
   settleAll();save();toast(Object.keys(n).length?`第${g}单 已单独设退水`:`第${g}单 退水恢复跟客户/默认`);
 }
+let wbEdit=null;
+function slipText(L){
+  const srcs=[...new Set(L.map(b=>String(b.src||"").trim()).filter(Boolean))];
+  if(srcs.length)return srcs.join("\n");
+  return [...new Set(L.map(b=>rawOf(b).trim()).filter(Boolean))].join("\n");
+}
+function closeSlipEdit(){
+  wbEdit=null;
+  if($("wb_editbar"))$("wb_editbar").style.display="none";
+  if($("wb_save"))$("wb_save").textContent="保存";
+}
+function openSlipEdit(g){
+  const dt=$("wb_date").value||today();
+  const L=D.bets.filter(b=>b.date===dt&&(b.grp||1)===+g);
+  if(!L.length){toast("找不到这张单");return}
+  if(slipLocked(L)&&!D.unlock[dt+"|"+g]&&!confirm("这张单已开奖。改原文或金额后会重新识别并结算。继续？"))return;
+  if($("wb_text").value.trim()&&!(wbEdit&&wbEdit.g===+g&&wbEdit.date===dt)&&!confirm("粘贴框里还有没保存的内容，改这张单会换掉它。继续？"))return;
+  wbEdit={g:+g,date:dt};
+  $("wb_paste_box").open=true;
+  $("wb_text").value=slipText(L);
+  const cu=[...new Set(L.map(b=>b.cust).filter(Boolean))];
+  $("wb_cust").value=cu[0]||"";
+  $("wb_editbar").style.display="";
+  $("wb_editg").textContent=`${dt.slice(5)} 第${g}单`;
+  $("wb_save").textContent="保存修改";
+  parseWB();
+  try{$("wb_text").focus()}catch(e){}
+  $("wb_paste_box").scrollIntoView({block:"center"});
+}
+if($("wb_editx"))$("wb_editx").onclick=()=>{closeSlipEdit();$("wb_text").value="";$("wb_prev").innerHTML="";$("wb_msg").textContent="已取消修改"};
 document.addEventListener("click",e=>{const t=e.target;if(!t.closest)return;
+  const ed=t.closest("[data-ed]");if(ed){openSlipEdit(+ed.dataset.ed);return}
   const rb=t.closest("[data-rbg]");if(rb){try{slipReb(+rb.dataset.rbg)}catch(x){alert("格式不对：填数字，例如 0,0,0 或 4,5,5")}return}
   const a=t.closest("[data-rc]");if(a){const g=+a.dataset.rc,dt=$("wb_date").value||today();const L=D.bets.filter(b=>b.date===dt&&(b.grp||1)===g);copyText(reconText(L,`对账 ${dt} 第${g}单`+([...new Set(L.map(b=>b.cust).filter(Boolean))].map(c=>" "+c).join(""))));return}
   const c=t.closest("[data-rcc]");if(c){const n=c.dataset.rcc,dt=$("wb_date").value||today();const L=D.bets.filter(b=>b.date===dt&&(b.cust||"（没写客户）")===n);if(!L.length){toast("今天这个客户没有注单");return}copyText(reconText(L,`对账 ${dt} ${n}`));}});
@@ -1859,20 +1903,28 @@ $("wb_save").onclick=()=>{
   if(r.bad){alert(`有 ${r.bad} 行没认对（红色），请先改好再保存`);return}
   if(r.mism&&!confirm(`有 ${r.mism} 张单写的合计和算出来的对不上（红色）。确定还要保存？`))return;
   const dt=$("wb_date").value||today();
-  {const to0=$("wb_to").value;
-   if(to0!=="new"&&slipLocked(D.bets.filter(b=>b.date===dt&&(b.grp||1)===+to0))&&!D.unlock[dt+"|"+to0]){alert("这张单已开奖锁定，先在单上点 🔒 解锁");return}
-   const sig=L=>L.map(b=>[b.lot||"新澳",b.type,b.content,+b.amount].join("|")).sort().join(";");
-   const ex={};D.bets.filter(b=>b.date===dt).forEach(b=>{(ex[b.grp||1]=ex[b.grp||1]||[]).push(b)});
-   const exS=new Set(Object.values(ex).map(sig));
-   const nw={};wbPV.forEach(x=>{(nw[x.grp||1]=nw[x.grp||1]||[]).push(x)});
-   const dup=to0==="new"?Object.keys(nw).filter(g=>exS.has(sig(nw[g]))):[];
-   if(dup.length&&!confirm(`可能重复：有 ${dup.length} 张单和今天已存的一模一样（同彩种、同内容、同金额）。还要保存吗？`))return;}
-  const cust0=($("wb_cust").value||"").trim()||(($("wb_taicust")&&$("wb_taicust").value)||D.settings.taiCust||"").trim();
+  const editing=wbEdit&&wbEdit.date===dt?wbEdit:null;
+  if(wbEdit&&!editing){alert(`正在改 ${wbEdit.date} 第${wbEdit.g}单。请把日期改回去，或先点取消。`);return}
+  const to0=$("wb_to").value;
+  if(!editing&&to0!=="new"&&slipLocked(D.bets.filter(b=>b.date===dt&&(b.grp||1)===+to0))&&!D.unlock[dt+"|"+to0]){alert("这张单已开奖锁定，先在单上点 🔒 解锁");return}
+  const sig=L=>L.map(b=>[b.lot||"新澳",b.type,String(b.content),+b.amount].join("|")).sort().join(";");
+  const skip=editing?editing.g:null;
+  const ex={};D.bets.filter(b=>b.date===dt&&(skip==null||(b.grp||1)!==skip)).forEach(b=>{(ex[b.grp||1]=ex[b.grp||1]||[]).push(b)});
+  const exS=new Set(Object.values(ex).map(sig));
+  const nw={};wbPV.forEach(x=>{(nw[x.grp||1]=nw[x.grp||1]||[]).push(x)});
+  const dup=(to0==="new"||editing)?Object.keys(nw).filter(g=>exS.has(sig(nw[g]))):[];
+  if(dup.length&&!confirm(`可能重复：有 ${dup.length} 张单和今天已存的一模一样（同彩种、同内容、同金额）。还要保存吗？`))return;
+  const oldL=editing?D.bets.filter(b=>b.date===dt&&(b.grp||1)===editing.g):[];
+  const keepReb=oldL.find(b=>b.rebO)?.rebO;
+  if(editing)D.bets=D.bets.filter(b=>!(b.date===dt&&(b.grp||1)===editing.g));
+  const cust0=($("wb_cust").value||"").trim()||(oldL.find(b=>b.cust)?.cust||"")||(($("wb_taicust")&&$("wb_taicust").value)||D.settings.taiCust||"").trim();
+  const fullSrc=String($("wb_text").value).replace(/^[ \t]*客户[ \t]*[:：].*$/gm,"").trim();
   const srcB=String($("wb_text").value).split(/\n[ \t\u3000]*\n/).filter(b=>b.trim()).map(b=>b.replace(/^[ \t]*客户[ \t]*[:：].*$/m,"").trim());
+  const oneSlip=new Set(wbPV.map(x=>x.grp||1)).size===1;
   const old=D.bets.filter(b=>b.date===dt);
   const mx=old.reduce((a,b)=>Math.max(a,b.grp||1),0);
   const to=$("wb_to").value;
-  const gmap=g=>to==="new"?mx+(g||1):+to;
+  const gmap=g=>editing?editing.g:(to==="new"?mx+(g||1):+to);
   wbPV.forEach(r=>{
     const lot=r.lot||"新澳";
     let is=issueFor(lot,dt);
@@ -1880,13 +1932,17 @@ $("wb_save").onclick=()=>{
       const last=Object.values(DRAWS).filter(d=>d.lot===lot&&(!d.date||d.date<dt)).sort((a,b)=>b.issue.localeCompare(a.issue))[0];
       is=last?String(+last.issue+1):dt.replace(/-/g,"")+"01";
     }
-    D.bets.push({id:uid(),date:dt,issue:is,lot,type:r.type,content:r.content,amount:r.amount,odds:r.odds,net:isNet(r.type),note:"工作台："+r.raw,...(r.zexp?{zexp:r.zexp}:{}),...((r.cust||cust0)?{cust:r.cust||cust0}:{}),grp:gmap(r.grp),...(srcB[(r.grp||1)-1]?{src:srcB[(r.grp||1)-1]}:{}),res:"pend",ret:0});
+    const src=editing||oneSlip?fullSrc:(srcB[(r.grp||1)-1]||fullSrc);
+    const bet={id:uid(),date:dt,issue:is,lot,type:r.type,content:r.content,amount:r.amount,odds:r.odds,net:isNet(r.type),note:"工作台："+r.raw,...(r.zexp?{zexp:r.zexp}:{}),...((r.cust||cust0)?{cust:r.cust||cust0}:{}),grp:gmap(r.grp),...(src?{src}:{}),res:"pend",ret:0};
+    if(keepReb)bet.rebO=keepReb;
+    D.bets.push(bet);
   });
   settleAll(); save();
-  const nSaved=[...new Set(wbPV.map(r=>r.grp||1))].length;
-  $("wb_msg").textContent=`已保存 ${nSaved} 单（${wbPV.length} 注）`;
+  const nSaved=editing?1:[...new Set(wbPV.map(r=>r.grp||1))].length;
+  $("wb_msg").textContent=editing?`已改第${editing.g}单（${wbPV.length} 注）并重新结算`:`已保存 ${nSaved} 单（${wbPV.length} 注）`;
   $("wb_text").value=""; $("wb_cust").value=""; $("wb_prev").innerHTML=""; $("wb_to").value="new";delete $("wb_to").dataset.user; fillCustDefault();
   $("wb_paste_box").open=false;
+  closeSlipEdit();
 };
 
 /* ========== 设置 ========== */
@@ -2219,7 +2275,7 @@ document.addEventListener("click",e=>{if(!e.target.closest)return;
 function gkAllOpen(g){mxOpen=new Set(D.bets.filter(b=>b.date===$("mx_date").value&&mxCN(b)===mxCust).map(b=>b.grp||1));mxOpen.delete(g)}
 document.addEventListener("change",e=>{if(e.target.id==="mx_win"){mxWin=e.target.checked;renderMX()}});
 document.addEventListener("change",e=>{if(e.target.id==="mx_date")renderMX()});
-window.__WB={settleLines,settleOf,renderMX,colMajor,colBlocks,rowMajor,lotTag,setMX(c){mxCust=c},mxSt(){return{open:[...mxOpen],mxAll,mxWin}},wbJump,ocrPrep,ocrWorker,parseWB,get wbPV(){return wbPV},slipFix,suggest,lineBad,ocrFill,ocrImage,ocrClean,accList,accCreate,accCheck,encBackup,decBackup,lockNow,get ACC(){return ACC},parseBets,oddsOf,rebInfo,rateOf,slipReb,settleAll,judge,get D(){return D},get DRAWS(){return DRAWS},setTestData(d,dr){D=d;if(dr)DRAWS=dr},fmt,pl,agg,winAmt,BM,canReb,Store,loadData,saveUser,fetchLaoFromSite,ingestLao,fetchDraws,saveManualDraw,renderBalls,pickBestDate,multiDeskRisk,renderMultiRisk,readDesk,deskStoreKey,playRebate,multOf};
+window.__WB={settleLines,settleOf,renderMX,colMajor,colBlocks,rowMajor,lotTag,setMX(c){mxCust=c},mxSt(){return{open:[...mxOpen],mxAll,mxWin}},wbJump,ocrPrep,ocrWorker,parseWB,get wbPV(){return wbPV},slipFix,suggest,lineBad,ocrFill,ocrImage,ocrClean,accList,accCreate,accCheck,encBackup,decBackup,lockNow,get ACC(){return ACC},parseBets,oddsOf,rebInfo,rateOf,slipReb,settleAll,judge,get D(){return D},get DRAWS(){return DRAWS},setTestData(d,dr){D=d;if(dr)DRAWS=dr},fmt,pl,agg,winAmt,BM,canReb,Store,loadData,saveUser,fetchLaoFromSite,ingestLao,fetchDraws,saveManualDraw,renderBalls,pickBestDate,multiDeskRisk,renderMultiRisk,readDesk,deskStoreKey,playRebate,multOf,openSlipEdit,closeSlipEdit,slipText};
 </script>
 <script>
 if('serviceWorker' in navigator && location.protocol==='https:'){
