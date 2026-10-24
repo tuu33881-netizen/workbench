@@ -84,7 +84,7 @@ textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;paddin
 .rmore{font-size:12px;margin-top:4px;background:none;border:0;color:#1565c0;cursor:pointer;padding:0}
 #rk,#an{max-width:1100px;margin:auto;background:#fff;min-height:100vh}
 #tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid #cfe9d8;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
-#tabbar button{flex:1;border:0;background:none;padding:12px 0;font-size:15px;color:#777;cursor:pointer}#tabbar button.on{color:#16b55a;font-weight:700;box-shadow:inset 0 3px 0 #16b55a}
+#tabbar button{flex:1;border:0;background:none;padding:12px 2px;font-size:clamp(11px,3.2vw,15px);color:#777;cursor:pointer;white-space:nowrap}#tabbar button.on{color:#16b55a;font-weight:700;box-shadow:inset 0 3px 0 #16b55a}
 body{padding-bottom:56px}
 #taipick{position:fixed;inset:0;background:rgba(240,246,242,.97);z-index:1000;display:flex;align-items:center;justify-content:center}.tpc{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.1);padding:22px;min-width:280px;max-width:90vw;text-align:center}.tpt{font-size:20px;font-weight:700;color:#16a34a;margin-bottom:12px}.tpl{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.tpl button{font-size:17px;padding:14px 8px;border:1px solid #bfe3cc;background:#f2faf4;border-radius:10px;cursor:pointer;font-weight:700}.tpn{margin-top:10px;width:100%;font-size:15px;padding:10px;border:1px dashed #16a34a;background:#fff;color:#16a34a;border-radius:10px;cursor:pointer}.tps{font-size:12px;color:#888;margin-top:10px}.stl{line-height:1.6}.stl_最终{font-weight:700;font-size:15px}.stl_客户{color:#1565c0}.taisel{font-size:13px;padding:2px 4px;border-radius:4px;border:1px solid #9ad;background:#fff;font-weight:700;color:#16a34a}.rebl{font-size:11px;color:#aaa;margin:0 0 2px;line-height:1.2}.rebl .rsrc.r_d{display:none}
 #gate{position:fixed;inset:0;background:#f4f6f5;z-index:999;align-items:center;justify-content:center;padding:16px}
@@ -106,6 +106,16 @@ body{padding-bottom:56px}
 #toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;display:none;z-index:200}
 #toast button{margin-left:10px;background:#16b55a;color:#fff;border:0;border-radius:12px;padding:3px 10px}
 .atbl{width:100%;border-collapse:collapse;font-size:12.5px}.atbl td,.atbl th{border-bottom:1px solid #eee;padding:4px 3px;text-align:left}
+.lvwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.lv td,.lv th{text-align:right;white-space:nowrap;padding:3px 5px}
+.lv td.k,.lv th:first-child{text-align:left}
+.lv td.hi{background:#ffd0d0;color:#b71c1c;font-weight:700}
+.lv tr.worst td{background:#fff1f1}
+.lv tr.worst td.hi{background:#ffd0d0}
+.lv .ball b{width:22px;height:22px;font-size:11px}
+.lv thead th{position:sticky;top:0;background:#f7fbf8;z-index:1}
+.lvz{margin-left:auto;font-size:12px;color:#555;display:flex;align-items:center;gap:4px}
+#an_lot,#an_kind{flex-wrap:wrap;align-items:center}
 .bars{display:flex;align-items:center;gap:2px;height:120px;border-bottom:1px solid #ddd;position:relative}
 .bars .c{flex:1;display:flex;flex-direction:column;justify-content:center;height:100%}
 .bars .u{display:flex;flex-direction:column;justify-content:flex-end;height:50%}.bars .d{height:50%}
@@ -213,11 +223,11 @@ body{padding-bottom:56px}
 <h3 class="ah">今晚排名</h3><div id="wb_rbody"></div>
 <h3 class="ah">风险分布（开奖前）</h3><div id="an_risk"></div>
 </div></div>
-<div id="an" style="display:none"><div class="dh"><span>分析</span><span id="an_date" style="margin-left:auto;font-size:13px;color:#fff;opacity:.9"></span></div>
-<div class="rank"><div class="rtab" id="an_per"></div><div id="an_body"></div></div></div>
+<div id="an" style="display:none"><div class="dh"><span>多台合计风险</span><span id="an_date" style="margin-left:auto;font-size:13px;color:#fff;opacity:.9"></span></div>
+<div class="rank"><div class="rtab" id="an_lot"></div><div class="rtab" id="an_kind"></div><div id="an_level"></div></div></div>
 <div id="toast"></div>
 <div id="mx" style="display:none"><div class="mxbar"><input type="date" id="mx_date"><div id="mx_tabs"></div></div><div id="mx_body"></div></div>
-<nav id="tabbar"><button type="button" data-s="app" class="on">工作台</button><button type="button" data-s="rk">排名</button><button type="button" data-s="an">分析</button><button type="button" data-s="mx">兑奖明细</button></nav>
+<nav id="tabbar"><button type="button" data-s="app" class="on">工作台</button><button type="button" data-s="rk">排名</button><button type="button" data-s="an">多台合计风险</button><button type="button" data-s="mx">兑奖明细</button></nav>
 <div id="set">
   <div class="panel">
     <h3>设置</h3>
@@ -254,7 +264,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.8 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 平特不含本1</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。<br><small>版本 v21.9 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计风险 · 平特不含本1</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -1457,11 +1467,13 @@ function renderRank(){
   if(!h)h=`<div class="muted">今天${LN[rLot]||rLot}还没有特码/平特注</div>`;
   if(more)h+=`<button type="button" class="rmore" id="wb_rmore">${rAll?"收起":"展开全部"}</button>`;
   el.innerHTML=h;
-  renderRisk(); renderAnalysis();
+  renderRisk(); renderMultiRisk();
 }
 document.addEventListener("click",e=>{const t=e.target;
   if(t.closest&&t.closest("#tabbar button")){const k=t.closest("button").dataset.s;["app","rk","an","mx"].forEach(x=>$(x).style.display=k===x?"":"none");if(k==="mx"){$("mx_date").value=$("wb_date").value||today();renderMX()}
     document.querySelectorAll("#tabbar button").forEach(b=>b.classList.toggle("on",b.dataset.s===k));if(k==="rk"||k==="an")renderRank();scrollTo(0,0);return}
+  const al=t.closest&&t.closest("[data-al]"); if(al){anLot=al.dataset.al;renderMultiRisk();return}
+  const ak=t.closest&&t.closest("[data-ak]"); if(ak){anKind=ak.dataset.ak;renderMultiRisk();return}
   if(t.closest&&t.closest("#wb_rtab button")){rLot=t.closest("button").dataset.l;renderRank()}
   else if(t.id==="wb_rmore"){rAll=!rAll;renderRank()}});
 const PV=()=>D.settings&&D.settings.view==="老板"?-1:1, VL=()=>PV()<0?"(老板)":"";
@@ -1645,40 +1657,174 @@ function renderRisk(){
    <h4 style="margin:6px 0 2px;font-size:13px">最差 5 个</h4><div class="rlist">${S.slice(0,5).map(it).join("")}</div>
    <h4 style="margin:6px 0 2px;font-size:13px">最好 5 个</h4><div class="rlist">${S.slice(-5).reverse().map(it).join("")}</div>`;
 }
-let aPer=7;
-const famOf=t=>t==="特码单码"||t==="一肖"?"特码":LIAN[t]?"连肖":"平特";
-function dAdd(dt,k){const d=new Date(dt+"T12:00:00");d.setDate(d.getDate()+k);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
-function renderAnalysis(){
-  const el=$("an_body"); if(!el)return;
-  $("an_per").innerHTML=[[1,"今天"],[7,"7天"],[30,"30天"]].map(([k,t])=>`<button type="button" data-p="${k}" class="${k===aPer?"on":""}">${t}</button>`).join("");
-  const end=$("wb_date").value||today(), st=dAdd(end,-(aPer-1)); if($("an_date"))$("an_date").textContent=end;
-  const B=D.bets.filter(b=>b.date>=st&&b.date<=end), P=PV();
-  const ag=L=>{const a=L.reduce((x,b)=>x+(+b.amount||0),0),r=L.reduce((x,b)=>x+reb(b),0),p=L.reduce((x,b)=>x+pl(b),0);return{a,r:Math.round(r*100)/100,p:Math.round(p*100)/100*P,pend:L.some(b=>b.res==="pend")}};
-  const cell=v=>`<td class="${v>=0?"pos":"neg"}">${sg(v)}</td>`;
-  const tbl=(title,rows)=>rows.length?`<h3 class="ah">${title}</h3><table class="atbl"><tr><th></th><th>下注</th><th>退水</th><th>盈亏${VL()}</th></tr>${rows.join("")}</table>`:"";
-  let h="";
-  // 客户
-  const C={};B.forEach(b=>{const c=b.cust||"（没写客户）";(C[c]=C[c]||[]).push(b)});
-  const top=L=>{const m={};L.forEach(b=>{if(b.type==="特码单码"||b.type==="一肖"||b.type==="平特一肖"||b.type==="平特"){const k=(b.type==="特码单码"?"":b.type==="一肖"?"特":"平")+b.content;m[k]=(m[k]||0)+(+b.amount||0)}});return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>esc(x[0])).join(" ")};
-  const cr=Object.entries(C).sort((a,b)=>ag(b[1]).a-ag(a[1]).a).map(([c,L])=>{const g=ag(L);return `<tr><td>${esc(c)} <button type="button" class="rc" style="float:none" data-rcc="${esc(c)}">对账</button><br><small class="muted">常买 ${top(L)||"—"}</small></td><td>${fmt(g.a)}</td><td>${fmt(g.r)}</td>${cell(g.p)}</tr>`});
-  h+=tbl("按客户",cr);
-  const F={};B.forEach(b=>{(F[famOf(b.type)]=F[famOf(b.type)]||[]).push(b)});
-  h+=tbl("按玩法",["特码","平特","连肖"].filter(k=>F[k]).map(k=>{const g=ag(F[k]);return `<tr><td>${k}</td><td>${fmt(g.a)}</td><td>${fmt(g.r)}</td>${cell(g.p)}</tr>`}));
-  const Lt={};B.forEach(b=>{const l=b.lot||"新澳";(Lt[l]=Lt[l]||[]).push(b)});
-  h+=tbl("按彩种",["新澳","老澳","香港"].filter(k=>Lt[k]).map(k=>{const g=ag(Lt[k]);return `<tr><td>${LN[k]}</td><td>${fmt(g.a)}</td><td>${fmt(g.r)}</td>${cell(g.p)}</tr>`}));
-  // 走势
-  if(aPer>1){
-    const days=[];for(let i=aPer-1;i>=0;i--)days.push(dAdd(end,-i));
-    const v=days.map(d=>Math.round(D.bets.filter(b=>b.date===d).reduce((x,b)=>x+pl(b),0)*100)/100*P);
-    const mx=Math.max(1,...v.map(Math.abs)); let run=0; const cum=v.map(x=>run+=x);
-    h+=`<h3 class="ah">走势（每天盈亏${VL()}）</h3><div class="bars">${v.map((x,i)=>`<div class="c" title="${days[i]} ${sg(x)}"><div class="u"><i style="height:${x>0?x/mx*100:0}%"></i></div><div class="d"><i style="height:${x<0?-x/mx*100:0}%"></i></div></div>`).join("")}</div>
-      <div style="display:flex;justify-content:space-between;font-size:11px;color:#888"><span>${days[0].slice(5)}</span><span>${days[days.length-1].slice(5)}</span></div>
-      <div style="font-size:13px;margin-top:4px">合计 <b class="${run>=0?"pos":"neg"}">${sg(Math.round(run*100)/100)}</b>　最好一天 ${sg(Math.max(...v))}　最差一天 ${sg(Math.min(...v))}</div>`;
-  }
-  if(!B.length)h+=`<div class="muted" style="margin-top:8px">这段时间没有注单</div>`;
-  el.innerHTML=h;
+/* 多台合计风险：本机 1/2/3 号台相加，不除以台数。总下注和退水只算当前彩种、当前玩法。
+   特码：round(总下注−退水−该号下注×特码赔率)，默认 ×47。不含特肖。
+   平特：round(总下注−退水−该肖下注×(1+不含本赔率))，普通默认 ×2。本命用本命赔率（默认 ×1.8）且不退水。
+   平特尾：round(总下注−退水−该尾下注×(1+尾赔率))，默认 ×1.8，不退水。
+   注上有赔率就用该注的；没有就用该台设置。 */
+const RISK_DESKS=["1","2","3"];
+const AN_LOTS=["新澳","香港","老澳"];
+const AN_KINDS=[["tema","特码"],["ping","平特"],["tail","平特尾"]];
+let anLot="新澳", anKind="tema", anSplit=false;
+function deskStoreKey(t){return String(t)==="1"?"wb_data_v2":"wb_data_v2__t"+t}
+function coerceSettings(raw){
+  const s=Object.assign(defaultSettings(), raw||{});
+  s.odds=Object.assign({}, ODDS0, (raw&&raw.odds)||{});
+  s.rebate=Object.assign({特码:4,平特:4,连肖:4}, (raw&&raw.rebate)||{});
+  s.custReb=(raw&&raw.custReb&&typeof raw.custReb==="object")?raw.custReb:{};
+  if(!s.bm)s.bm="马";
+  if(!isFinite(+s.bmOdds))s.bmOdds=0.8;
+  return s;
 }
-document.addEventListener("click",e=>{const t=e.target.closest&&e.target.closest("#an_per button");if(t){aPer=+t.dataset.p;renderAnalysis()}});
+function readDesk(t){
+  t=String(t);
+  if(t===String(TAI)&&dataReady&&D&&Array.isArray(D.bets)) return {t,bets:D.bets,settings:D.settings||defaultSettings(),missing:false};
+  let raw=null; try{raw=Store.getItem(deskStoreKey(t))}catch(e){raw=null}
+  if(raw==null||raw==="") return {t,bets:[],settings:defaultSettings(),missing:true};
+  try{
+    const o=JSON.parse(raw);
+    if(!o||!Array.isArray(o.bets)) return {t,bets:[],settings:defaultSettings(),missing:true};
+    const settings=coerceSettings(o.settings); migOdds(settings);
+    const bets=o.bets.map(b=>{const c=Object.assign({},b); migNet(c); return c});
+    return {t,bets,settings,missing:false};
+  }catch(e){return {t,bets:[],settings:defaultSettings(),missing:true}}
+}
+function famRate(b,fam,settings){
+  settings=settings||{};
+  if(b.rebO&&hasV(b.rebO[fam])) return +b.rebO[fam];
+  const cr=settings.custReb&&b.cust?settings.custReb[b.cust]:null;
+  if(cr&&hasV(cr[fam])) return +cr[fam];
+  const R=settings.rebate||{};
+  if(hasV(R[fam])) return +R[fam];
+  return REB0[fam]||0;
+}
+function playRebate(b,kind,settings){
+  if(!b||b.res==="tie") return 0;
+  const a=+b.amount||0; if(!(a>0)) return 0;
+  if(kind==="tail") return 0;
+  settings=settings||{};
+  if(kind==="ping"){
+    if(String(b.content||"").trim()===(settings.bm||"马")) return 0;
+    const rate=famRate(b,"平特",settings);
+    return rate>0?Math.round(a*rate/100*100)/100:0;
+  }
+  const rate=famRate(b,"特码",settings);
+  return rate>0?Math.round(a*rate/100*100)/100:0;
+}
+function multOf(b,kind,settings){
+  settings=settings||{};
+  if(kind==="tema"){
+    const o=+b.odds; if(isFinite(o)&&o>0) return o;
+    const s=settings.odds&&+settings.odds["特码单码"];
+    return isFinite(s)&&s>0?s:47;
+  }
+  if(kind==="ping"){
+    const o=+b.odds; if(isFinite(o)&&o>=0) return 1+o;
+    const isBm=String(b.content||"").trim()===(settings.bm||"马");
+    let base=isBm?+settings.bmOdds:+(settings.odds&&settings.odds["平特一肖"]);
+    if(!isFinite(base)||base<0) base=isBm?0.8:1;
+    return 1+base;
+  }
+  const o=+b.odds; if(isFinite(o)&&o>=0) return 1+o;
+  let base=settings.odds&&+settings.odds["平特尾数"];
+  if(!isFinite(base)||base<0) base=0.8;
+  return 1+base;
+}
+function splitBet(b,kind){
+  const a=+b.amount||0; if(!(a>0)) return null;
+  if(kind==="tema"){
+    if(b.type!=="特码单码") return null;
+    const N=nums(b.content); if(!N.length) return null;
+    const share=a/N.length;
+    const parts=N.filter(n=>n>=1&&n<=49).map(n=>[n,share]);
+    return parts.length?{amount:a,parts}:null;
+  }
+  if(kind==="ping"){
+    if(b.type!=="平特一肖"&&b.type!=="平特") return null;
+    const Z=zods(b.content); if(Z.length!==1) return null;
+    return {amount:a, parts:[[Z[0],a]]};
+  }
+  if(kind==="tail"){
+    if(b.type!=="平特尾数") return null;
+    const T=(String(b.content).match(/\d/g)||[]).map(Number); if(!T.length) return null;
+    const share=a/T.length;
+    return {amount:a, parts:T.map(t=>[t,share])};
+  }
+  return null;
+}
+function riskKeys(kind){
+  if(kind==="ping") return [...ZALL];
+  if(kind==="tail"){const a=[]; for(let t=0;t<=9;t++) a.push(t); return a}
+  const a=[]; for(let n=1;n<=49;n++) a.push(n); return a;
+}
+function multiDeskRisk(desks, lot, dt, kind){
+  lot=lot||"新澳"; kind=kind||"tema";
+  const keys=riskKeys(kind);
+  const parts=(desks||[]).map(desk=>{
+    const settings=desk.settings||defaultSettings();
+    const item={}, pay={};
+    keys.forEach(k=>{item[k]=0; pay[k]=0});
+    let stake=0, rebate=0, n=0;
+    (desk.bets||[]).forEach(b=>{
+      if(!b||b.date!==dt||(b.lot||"新澳")!==lot) return;
+      const sp=splitBet(b, kind); if(!sp) return;
+      n++; stake+=sp.amount; rebate+=playRebate(b, kind, settings);
+      const m=multOf(b, kind, settings);
+      sp.parts.forEach(([k,s])=>{
+        if(!Object.prototype.hasOwnProperty.call(item, k)) return;
+        item[k]+=s; pay[k]+=s*m;
+      });
+    });
+    return {t:String(desk.t), missing:!!desk.missing, n, stake, rebate, item, pay, settings};
+  });
+  const totalStake=parts.reduce((s,p)=>s+p.stake,0);
+  const totalRebate=parts.reduce((s,p)=>s+p.rebate,0);
+  const rows=keys.map(key=>{
+    const dStake=parts.map(p=>p.item[key]||0);
+    const stake=dStake.reduce((a,x)=>a+x,0);
+    const payout=parts.reduce((s,p)=>s+(p.pay[key]||0),0);
+    return {key, stake, risk:Math.round(totalStake-totalRebate-payout), dStake};
+  });
+  let worst=null;
+  rows.forEach(r=>{if(r.risk<0&&(worst==null||r.risk<worst)) worst=r.risk});
+  return {lot,dt,kind,rows,totalStake,totalRebate,worst,desks:parts.map(p=>({t:p.t,missing:p.missing,n:p.n,stake:p.stake,rebate:p.rebate}))};
+}
+function riskLabel(kind, key){
+  if(kind==="ping"){const bm=BM(); return `<b>${esc(key)}</b>${key===bm?` <small class="muted">本命</small>`:""}`}
+  if(kind==="tail") return `<b>${esc(key)}尾</b>`;
+  return `<span class="ball"><b class="${wave(key)}">${pad(key)}</b>${zod(key)}</span>`;
+}
+function renderMultiRisk(){
+  const el=$("an_level"); if(!el) return;
+  const dt=($("wb_date")&&$("wb_date").value)||today();
+  if($("an_date")) $("an_date").textContent=dt;
+  const lotEl=$("an_lot"), kindEl=$("an_kind");
+  if(lotEl) lotEl.innerHTML=AN_LOTS.map(l=>`<button type="button" data-al="${l}" class="${l===anLot?"on":""}">${l}</button>`).join("");
+  if(kindEl) kindEl.innerHTML=AN_KINDS.map(([k,t])=>`<button type="button" data-ak="${k}" class="${k===anKind?"on":""}">${t}</button>`).join("")+`<label class="lvz"><input type="checkbox" id="an_split"${anSplit?" checked":""}> 分台</label>`;
+  const data=multiDeskRisk(RISK_DESKS.map(readDesk), anLot, dt, anKind);
+  const miss=data.desks.filter(d=>d.missing);
+  const head=anKind==="ping"?"生肖":anKind==="tail"?"尾":"号码";
+  const hint=anKind==="ping"
+    ?"平特风险＝round(总下注−退水−该肖下注×(1+不含本赔率))。普通默认 ×2。本命按本命赔率（默认 ×1.8）且不退水。"
+    :anKind==="tail"
+    ?"平特尾风险＝round(总下注−退水−该尾下注×(1+尾赔率))。默认 ×1.8。平特尾不退水。"
+    :"特码风险＝round(总下注−退水−该号下注×特码赔率)。默认 ×47。不含特肖。";
+  const worstName=data.worst==null?"":data.rows.filter(r=>r.risk===data.worst).map(r=>anKind==="tema"?pad(r.key)+zod(r.key):anKind==="tail"?r.key+"尾":r.key).join("、");
+  const sumLine=`总下注 ${fmt(Math.round(data.totalStake*100)/100)}　退水 ${fmt(Math.round(data.totalRebate*100)/100)}`+(worstName?`　最亏 ${esc(worstName)} ${sg(data.worst)}`:"");
+  const deskNote=miss.length?miss.map(d=>d.t+"号台").join("、")+"在本机没有数据，已按 0。":"1、2、3 号台都按本机已保存的注单相加。";
+  const th=`<tr><th>${head}</th><th>下注数</th><th>风险数</th>${anSplit?"<th>1号台</th><th>2号台</th><th>3号台</th>":""}</tr>`;
+  const body=data.rows.map(r=>{
+    const hot=data.worst!=null&&r.risk===data.worst;
+    const cells=anSplit?r.dStake.map(v=>`<td>${fmt(Math.round(v*100)/100)}</td>`).join(""):"";
+    const cls=r.risk<0?"neg":r.risk>0?"pos":"";
+    return `<tr class="${hot?"worst":""}" data-k="${esc(r.key)}" data-stake="${r.stake}" data-risk="${r.risk}"><td class="k">${riskLabel(anKind,r.key)}</td><td>${fmt(Math.round(r.stake*100)/100)}</td><td class="risk ${cls}${hot?" hi":""}">${sg(r.risk)}</td>${cells}</tr>`;
+  }).join("");
+  el.innerHTML=`<div class="muted" style="font-size:12px">${hint} 总下注和退水只算${esc(anLot)}这一项。三台相加，不除以台数。${deskNote}</div>
+  <div style="font-size:13px;margin:4px 0">${sumLine}</div>
+  ${anSplit?`<div class="muted" style="font-size:12px">分台列是该行在各台的下注，三列相加等于下注数。</div>`:""}
+  <div class="lvwrap"><table class="atbl lv" id="an_table" data-kind="${anKind}" data-lot="${esc(anLot)}" data-n="${data.rows.length}"><thead>${th}</thead><tbody>${body}</tbody></table></div>`;
+}
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="an_split"){anSplit=!!e.target.checked;renderMultiRisk()}});
 function renderWB(){renderSlip();renderHist();renderRank();drawWarn()}
 
 $("wb_date").onchange=()=>{if($("m_date"))$("m_date").value=$("wb_date").value;renderWB()};
@@ -2071,7 +2217,7 @@ document.addEventListener("click",e=>{if(!e.target.closest)return;
 function gkAllOpen(g){mxOpen=new Set(D.bets.filter(b=>b.date===$("mx_date").value&&mxCN(b)===mxCust).map(b=>b.grp||1));mxOpen.delete(g)}
 document.addEventListener("change",e=>{if(e.target.id==="mx_win"){mxWin=e.target.checked;renderMX()}});
 document.addEventListener("change",e=>{if(e.target.id==="mx_date")renderMX()});
-window.__WB={settleLines,settleOf,renderMX,colMajor,colBlocks,rowMajor,lotTag,setMX(c){mxCust=c},mxSt(){return{open:[...mxOpen],mxAll,mxWin}},wbJump,ocrPrep,ocrWorker,parseWB,get wbPV(){return wbPV},slipFix,suggest,lineBad,ocrFill,ocrImage,ocrClean,accList,accCreate,accCheck,encBackup,decBackup,lockNow,get ACC(){return ACC},parseBets,oddsOf,rebInfo,rateOf,slipReb,settleAll,judge,get D(){return D},get DRAWS(){return DRAWS},setTestData(d,dr){D=d;if(dr)DRAWS=dr},fmt,pl,agg,winAmt,BM,canReb,Store,loadData,saveUser,fetchLaoFromSite,ingestLao,fetchDraws,saveManualDraw,renderBalls,pickBestDate};
+window.__WB={settleLines,settleOf,renderMX,colMajor,colBlocks,rowMajor,lotTag,setMX(c){mxCust=c},mxSt(){return{open:[...mxOpen],mxAll,mxWin}},wbJump,ocrPrep,ocrWorker,parseWB,get wbPV(){return wbPV},slipFix,suggest,lineBad,ocrFill,ocrImage,ocrClean,accList,accCreate,accCheck,encBackup,decBackup,lockNow,get ACC(){return ACC},parseBets,oddsOf,rebInfo,rateOf,slipReb,settleAll,judge,get D(){return D},get DRAWS(){return DRAWS},setTestData(d,dr){D=d;if(dr)DRAWS=dr},fmt,pl,agg,winAmt,BM,canReb,Store,loadData,saveUser,fetchLaoFromSite,ingestLao,fetchDraws,saveManualDraw,renderBalls,pickBestDate,multiDeskRisk,renderMultiRisk,readDesk,deskStoreKey,playRebate,multOf};
 </script>
 <script>
 if('serviceWorker' in navigator && location.protocol==='https:'){
@@ -2093,7 +2239,8 @@ if(TAI_PICK){const o=document.createElement("div");o.id="taipick";
   document.body.appendChild(o);o.onclick=e=>{const b=e.target.closest("[data-tp]");if(!b)return;const v=b.dataset.tp;if(v==="__new")taiNew();else if(v===TAI)o.remove();else taiGo(v)}}
 addEventListener("storage",e=>{
   if(e.key==="wb_tai_list")taiFill();
-  if(e.key===DATA_KEY&&dataReady){D=loadData();try{settleAll();renderWB()}catch(x){}}});
+  if(e.key===DATA_KEY&&dataReady){D=loadData();try{settleAll();renderWB()}catch(x){}}
+  else if(e.key&&(e.key==="wb_data_v2"||/^wb_data_v2__t[123]$/.test(e.key))){try{renderMultiRisk()}catch(x){}}});
 </script>
 </body>
 </html>
