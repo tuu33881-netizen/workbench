@@ -84,7 +84,7 @@ textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;paddin
 .rmore{font-size:12px;margin-top:4px;background:none;border:0;color:#1565c0;cursor:pointer;padding:0}
 #rk,#an{max-width:1100px;margin:auto;background:#fff;min-height:100vh}
 #tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid #cfe9d8;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
-#tabbar button{flex:1;border:0;background:none;padding:12px 0;font-size:15px;color:#777;cursor:pointer}#tabbar button.on{color:#16b55a;font-weight:700;box-shadow:inset 0 3px 0 #16b55a}
+#tabbar button{flex:1;border:0;background:none;padding:12px 2px;font-size:clamp(11px,3.2vw,15px);color:#777;cursor:pointer;white-space:nowrap}#tabbar button.on{color:#16b55a;font-weight:700;box-shadow:inset 0 3px 0 #16b55a}
 body{padding-bottom:56px}
 #taipick{position:fixed;inset:0;background:rgba(240,246,242,.97);z-index:1000;display:flex;align-items:center;justify-content:center}.tpc{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.1);padding:22px;min-width:280px;max-width:90vw;text-align:center}.tpt{font-size:20px;font-weight:700;color:#16a34a;margin-bottom:12px}.tpl{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.tpl button{font-size:17px;padding:14px 8px;border:1px solid #bfe3cc;background:#f2faf4;border-radius:10px;cursor:pointer;font-weight:700}.tpn{margin-top:10px;width:100%;font-size:15px;padding:10px;border:1px dashed #16a34a;background:#fff;color:#16a34a;border-radius:10px;cursor:pointer}.tps{font-size:12px;color:#888;margin-top:10px}.stl{line-height:1.6}.stl_最终{font-weight:700;font-size:15px}.stl_客户{color:#1565c0}.taisel{font-size:13px;padding:2px 4px;border-radius:4px;border:1px solid #9ad;background:#fff;font-weight:700;color:#16a34a}.rebl{font-size:11px;color:#aaa;margin:0 0 2px;line-height:1.2}.rebl .rsrc.r_d{display:none}
 #gate{position:fixed;inset:0;background:#f4f6f5;z-index:999;align-items:center;justify-content:center;padding:16px}
@@ -106,6 +106,15 @@ body{padding-bottom:56px}
 #toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:#333;color:#fff;padding:8px 14px;border-radius:20px;font-size:14px;display:none;z-index:200}
 #toast button{margin-left:10px;background:#16b55a;color:#fff;border:0;border-radius:12px;padding:3px 10px}
 .atbl{width:100%;border-collapse:collapse;font-size:12.5px}.atbl td,.atbl th{border-bottom:1px solid #eee;padding:4px 3px;text-align:left}
+.lvwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.lv td,.lv th{text-align:right;white-space:nowrap;padding:3px 5px}
+.lv td.k,.lv th:first-child{text-align:left}
+.lv td.hi{background:#ffd0d0;color:#b71c1c;font-weight:700}
+.lv td.peak{box-shadow:inset 0 0 0 2px #c62828}
+.lv tr.hot td.k{font-weight:700}
+.lv .ball b{width:22px;height:22px;font-size:11px}
+.lvz{margin-left:auto;font-size:12px;color:#555;display:flex;align-items:center;gap:4px}
+#lv_kind{flex-wrap:wrap;align-items:center}
 .bars{display:flex;align-items:center;gap:2px;height:120px;border-bottom:1px solid #ddd;position:relative}
 .bars .c{flex:1;display:flex;flex-direction:column;justify-content:center;height:100%}
 .bars .u{display:flex;flex-direction:column;justify-content:flex-end;height:50%}.bars .d{height:50%}
@@ -213,11 +222,12 @@ body{padding-bottom:56px}
 <h3 class="ah">今晚排名</h3><div id="wb_rbody"></div>
 <h3 class="ah">风险分布（开奖前）</h3><div id="an_risk"></div>
 </div></div>
-<div id="an" style="display:none"><div class="dh"><span>分析</span><span id="an_date" style="margin-left:auto;font-size:13px;color:#fff;opacity:.9"></span></div>
-<div class="rank"><div class="rtab" id="an_per"></div><div id="an_body"></div></div></div>
+<div id="an" style="display:none"><div class="dh"><span>多台合计风险</span><span id="an_date" style="margin-left:auto;font-size:13px;color:#fff;opacity:.9"></span></div>
+<div class="rank"><h3 class="ah" id="lv_title">多台合计</h3><div id="an_level"></div>
+<h3 class="ah">客户与走势</h3><div class="rtab" id="an_per"></div><div id="an_body"></div></div></div>
 <div id="toast"></div>
 <div id="mx" style="display:none"><div class="mxbar"><input type="date" id="mx_date"><div id="mx_tabs"></div></div><div id="mx_body"></div></div>
-<nav id="tabbar"><button type="button" data-s="app" class="on">工作台</button><button type="button" data-s="rk">排名</button><button type="button" data-s="an">分析</button><button type="button" data-s="mx">兑奖明细</button></nav>
+<nav id="tabbar"><button type="button" data-s="app" class="on">工作台</button><button type="button" data-s="rk">排名</button><button type="button" data-s="an">多台合计风险</button><button type="button" data-s="mx">兑奖明细</button></nav>
 <div id="set">
   <div class="panel">
     <h3>设置</h3>
@@ -254,7 +264,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.5 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。底部「多台合计风险」看的是合计下注，不是赔付。<br><small>版本 v21.7 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -1401,7 +1411,7 @@ function renderHist(){
   $("wb_hist").querySelectorAll("tr[data-h]").forEach(t=>t.onclick=()=>{$("wb_date").value=t.dataset.h;renderWB();scrollTo(0,0)});
 }
 
-let rLot="新澳", rAll=false;
+let rLot="新澳", rAll=false, lvKind="tema", lvZero=false;
 function rankData(B,lot){
   const N={},Z={},P={},T={};
   B.filter(b=>(b.lot||"新澳")===lot).forEach(b=>{const a=+b.amount||0,c=String(b.content).trim();
@@ -1413,7 +1423,7 @@ function rankData(B,lot){
   return{N:so(N),Z:so(Z),P:so(P),T:so(T)};
 }
 function renderRank(){
-  const el=$("wb_rbody"); if(!el)return;
+  const el=$("wb_rbody"); if(!el){renderLevel();return}
   if($("rk_date"))$("rk_date").textContent=$("wb_date").value||today();
   const B=dayBets(), LOTS3=["新澳","老澳","香港"];
   $("wb_rtab").innerHTML=LOTS3.map(l=>`<button type="button" data-l="${l}" class="${l===rLot?"on":""}">${LN[l]||l}</button>`).join("");
@@ -1431,13 +1441,15 @@ function renderRank(){
   if(!h)h=`<div class="muted">今天${LN[rLot]||rLot}还没有特码/平特注</div>`;
   if(more)h+=`<button type="button" class="rmore" id="wb_rmore">${rAll?"收起":"展开全部"}</button>`;
   el.innerHTML=h;
-  renderRisk(); renderAnalysis();
+  renderRisk(); renderLevel(); renderAnalysis();
 }
 document.addEventListener("click",e=>{const t=e.target;
   if(t.closest&&t.closest("#tabbar button")){const k=t.closest("button").dataset.s;["app","rk","an","mx"].forEach(x=>$(x).style.display=k===x?"":"none");if(k==="mx"){$("mx_date").value=$("wb_date").value||today();renderMX()}
     document.querySelectorAll("#tabbar button").forEach(b=>b.classList.toggle("on",b.dataset.s===k));if(k==="rk"||k==="an")renderRank();scrollTo(0,0);return}
+  const lk=t.closest&&t.closest("[data-lvk]"); if(lk){lvKind=lk.dataset.lvk;renderLevel();return}
   if(t.closest&&t.closest("#wb_rtab button")){rLot=t.closest("button").dataset.l;renderRank()}
   else if(t.id==="wb_rmore"){rAll=!rAll;renderRank()}});
+document.addEventListener("change",e=>{if(e.target&&e.target.id==="lv_zero"){lvZero=!!e.target.checked;renderLevel()}});
 const PV=()=>D.settings&&D.settings.view==="老板"?-1:1, VL=()=>PV()<0?"(老板)":"";
 const sg=v=>(v>0?"+":"")+fmt(v);
 function reconText(L,title){
@@ -1618,6 +1630,95 @@ function renderRisk(){
   el.innerHTML=`<div class="muted" style="font-size:12px">开出这个特码时的盈亏${VL()}。只算特码和特肖；平特、连肖要看全部 7 个球，没算进来。</div>
    <h4 style="margin:6px 0 2px;font-size:13px">最差 5 个</h4><div class="rlist">${S.slice(0,5).map(it).join("")}</div>
    <h4 style="margin:6px 0 2px;font-size:13px">最好 5 个</h4><div class="rlist">${S.slice(-5).reverse().map(it).join("")}</div>`;
+}
+/* 多台合计：只读本机 1/2/3 号台，把今天的注额加总。不除以台数。
+   注额口径跟 judge 相同，不乘赔率。
+   特码单码：命中份数 k*amount/号码个数（各数保存时已拆成每号一注）。
+   一肖：该肖每个号都计入整注（开出这个号会中）。
+   平特/平特一肖：必须正好一个生肖才算，平特马和普通平特都只加该肖金额。
+   平特尾：k*amount/尾个数，和 judge 的派彩份数一致。 */
+const LEVEL_DESKS=["1","2","3"];
+function deskStoreKey(t){return String(t)==="1"?"wb_data_v2":"wb_data_v2__t"+t}
+function readDeskBets(t){
+  t=String(t);
+  if(t===String(TAI)&&dataReady&&D&&Array.isArray(D.bets)) return {bets:D.bets,missing:false};
+  let raw=null; try{raw=Store.getItem(deskStoreKey(t))}catch(e){raw=null}
+  if(raw==null||raw==="") return {bets:[],missing:true};
+  try{const o=JSON.parse(raw); if(!o||!Array.isArray(o.bets)) return {bets:[],missing:true}; return {bets:o.bets,missing:false}}
+  catch(e){return {bets:[],missing:true}}
+}
+function temaStake(b,n){
+  const a=+b.amount||0; if(!(a>0)||!(n>=1&&n<=49)) return 0;
+  if(b.type==="特码单码"){const N=nums(b.content); if(!N.length) return 0; return N.filter(x=>x===n).length*a/N.length}
+  if(b.type==="一肖"){const Z=zods(b.content); return Z.length&&Z.includes(zod(n))?a:0}
+  return 0;
+}
+function pingStake(b,z){
+  if(b.type!=="平特一肖"&&b.type!=="平特") return 0;
+  const Z=zods(b.content); if(Z.length!==1||Z[0]!==z) return 0;
+  const a=+b.amount||0; return a>0?a:0;
+}
+function tailStake(b,t){
+  if(b.type!=="平特尾数") return 0;
+  const T=(String(b.content).match(/\d/g)||[]).map(Number); if(!T.length) return 0;
+  const a=+b.amount||0; if(!(a>0)) return 0;
+  return T.filter(x=>x===t).length*a/T.length;
+}
+function levelPack(keys, add, desks){
+  return keys.map(key=>{
+    const d=desks.map(desk=>{let s=0; desk.bets.forEach(b=>{s+=add(b,key)}); return s});
+    const sum=d.reduce((a,x)=>a+x,0);
+    return {key,d,sum};
+  });
+}
+function levelData(lot,dt){
+  lot=lot||"新澳"; dt=dt||today();
+  const desks=LEVEL_DESKS.map(t=>{const r=readDeskBets(t); return {t,missing:r.missing,bets:(r.bets||[]).filter(b=>b&&b.date===dt&&(b.lot||"新澳")===lot)}});
+  const numsA=[]; for(let n=1;n<=49;n++) numsA.push(n);
+  const tails=[]; for(let t=0;t<=9;t++) tails.push(t);
+  return {dt,lot,desks:desks.map(d=>({t:d.t,missing:d.missing,n:d.bets.length})),tema:levelPack(numsA,temaStake,desks),ping:levelPack([...ZALL],pingStake,desks),tail:levelPack(tails,tailStake,desks)};
+}
+function levelRows(list, zero){
+  const rows=(list||[]).slice().sort((a,b)=>b.sum-a.sum||(a.key<b.key?-1:a.key>b.key?1:0));
+  return zero?rows:rows.filter(r=>r.sum>1e-6);
+}
+function levelLabel(kind, key){
+  if(kind==="ping") return `<b>${esc(key)}</b>`;
+  if(kind==="tail") return `<b>${esc(key)}尾</b>`;
+  return `<span class="ball"><b class="${wave(key)}">${pad(key)}</b>${zod(key)}</span>`;
+}
+function levelTable(data, kind, zero){
+  const shown=levelRows(data[kind]||[], !!zero);
+  if(!shown.length) return `<div class="muted">今天没有这类注${zero?"":"，无注的行已收起"}</div>`;
+  const head=kind==="ping"?"生肖":kind==="tail"?"尾":"号码";
+  const max=shown.reduce((m,r)=>Math.max(m,r.sum),0);
+  const body=shown.map(r=>{
+    const hot=r.sum>0.005&&Math.abs(r.sum-max)<=1e-6;
+    const topDesk=Math.max(...r.d), alone=r.d.filter(v=>Math.abs(v-topDesk)<=1e-6).length===1;
+    const cells=r.d.map(v=>{const big=hot&&alone&&v>0.005&&Math.abs(v-topDesk)<=1e-6;
+      return `<td class="${big?"hi peak":""}">${fmt(Math.round(v*100)/100)}</td>`}).join("");
+    return `<tr class="${hot?"hot":""}" data-k="${esc(r.key)}"><td class="k">${levelLabel(kind,r.key)}</td>${cells}<td class="${hot?"hi":""}">${fmt(Math.round(r.sum*100)/100)}</td></tr>`;
+  }).join("");
+  return `<div class="lvwrap"><table class="atbl lv"><tr><th>${head}</th><th>1号台</th><th>2号台</th><th>3号台</th><th>合计</th></tr>${body}</table></div>`;
+}
+const LV_HINT={
+  tema:"特码按每个号的下注额。特肖计入该肖每一个号（开出这个号会中的整注，同一注会在这几个号上各算一遍）。各数保存时已按号展开。平特、连肖、平特尾不在这栏。",
+  ping:"平特、平特一肖按生肖加下注额。平特马（本命肖）和普通平特都只加金额，不乘赔率、不扣退点。一注里写了两个肖、结算认不了的，这里也不拆。平特尾不在这栏。",
+  tail:"平特尾按 0–9 尾加下注额。一注写了几个尾，按结算一样把金额平分。不乘赔率。"
+};
+function renderLevel(){
+  const el=$("an_level"); if(!el) return;
+  const lot=typeof rLot==="string"?rLot:"新澳";
+  const data=levelData(lot, today());
+  const miss=data.desks.filter(d=>d.missing);
+  const kinds=[["tema","特码"],["ping","平特"],["tail","平特尾"]];
+  const top=levelRows(data[lvKind]||[], false)[0];
+  const topName=top?(lvKind==="tail"?top.key+"尾":lvKind==="ping"?top.key:pad(top.key)):"";
+  const picked=$("wb_date")&&$("wb_date").value;
+  el.innerHTML=`<div class="muted" style="font-size:12px">今天 ${esc(data.dt)}（北京时间）${picked&&picked!==data.dt?`，不跟工作台日期 ${esc(picked)} 走`:""} · ${esc(LN[lot]||lot)}。合计＝三台注额相加，不除以台数，也不按赔率折算。只读本机这个浏览器的 1号台、2号台、3号台（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传、不跟别的电脑同步。${miss.length?esc(miss.map(d=>d.t+"号台").join("、"))+"在本机没有数据，已按 0。":"1、2、3 号台在本机都有数据。"}</div>
+  <div class="rtab" id="lv_kind">${kinds.map(([k,t])=>`<button type="button" data-lvk="${k}" class="${k===lvKind?"on":""}">${t}</button>`).join("")}<label class="lvz"><input type="checkbox" id="lv_zero"${lvZero?" checked":""}> 显示无注</label></div>
+  <div class="muted" style="font-size:12px">${LV_HINT[lvKind]||""}${top?` 下注合计最高 ${esc(topName)} ${fmt(Math.round(top.sum*100)/100)}。`:""}按下注合计从大到小排，最高的一行已标出。</div>
+  ${levelTable(data, lvKind, lvZero)}`;
 }
 let aPer=7;
 const famOf=t=>t==="特码单码"||t==="一肖"?"特码":LIAN[t]?"连肖":"平特";
@@ -1965,7 +2066,7 @@ $("s_efile").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!
   await Store.init();
   Store.banner();
   loadDraws();
-  if(TEST){D=loadData();dataReady=true;appShown=true;showApp()}
+  if(TEST){DATA_KEY=DATA_V2;D=loadData();dataReady=true;appShown=true;showApp()}
   else{
     $("app").style.display="none";
     const ok=await licVerify();
@@ -2044,7 +2145,7 @@ document.addEventListener("click",e=>{if(!e.target.closest)return;
 function gkAllOpen(g){mxOpen=new Set(D.bets.filter(b=>b.date===$("mx_date").value&&mxCN(b)===mxCust).map(b=>b.grp||1));mxOpen.delete(g)}
 document.addEventListener("change",e=>{if(e.target.id==="mx_win"){mxWin=e.target.checked;renderMX()}});
 document.addEventListener("change",e=>{if(e.target.id==="mx_date")renderMX()});
-window.__WB={settleLines,settleOf,renderMX,colMajor,colBlocks,rowMajor,lotTag,setMX(c){mxCust=c},mxSt(){return{open:[...mxOpen],mxAll,mxWin}},wbJump,ocrPrep,ocrWorker,parseWB,get wbPV(){return wbPV},slipFix,suggest,lineBad,ocrFill,ocrImage,ocrClean,accList,accCreate,accCheck,encBackup,decBackup,lockNow,get ACC(){return ACC},parseBets,oddsOf,rebInfo,rateOf,slipReb,settleAll,judge,get D(){return D},get DRAWS(){return DRAWS},setTestData(d,dr){D=d;if(dr)DRAWS=dr},fmt,pl,agg,winAmt,BM,canReb,Store,loadData,saveUser,fetchLaoFromSite,ingestLao,fetchDraws,saveManualDraw,renderBalls,pickBestDate};
+window.__WB={settleLines,settleOf,renderMX,colMajor,colBlocks,rowMajor,lotTag,setMX(c){mxCust=c},mxSt(){return{open:[...mxOpen],mxAll,mxWin}},wbJump,ocrPrep,ocrWorker,parseWB,get wbPV(){return wbPV},slipFix,suggest,lineBad,ocrFill,ocrImage,ocrClean,accList,accCreate,accCheck,encBackup,decBackup,lockNow,get ACC(){return ACC},parseBets,oddsOf,rebInfo,rateOf,slipReb,settleAll,judge,get D(){return D},get DRAWS(){return DRAWS},setTestData(d,dr){D=d;if(dr)DRAWS=dr},fmt,pl,agg,winAmt,BM,canReb,Store,loadData,saveUser,fetchLaoFromSite,ingestLao,fetchDraws,saveManualDraw,renderBalls,pickBestDate,levelData,levelTable,renderLevel,deskStoreKey,readDeskBets};
 </script>
 <script>
 if('serviceWorker' in navigator && location.protocol==='https:'){
@@ -2066,7 +2167,8 @@ if(TAI_PICK){const o=document.createElement("div");o.id="taipick";
   document.body.appendChild(o);o.onclick=e=>{const b=e.target.closest("[data-tp]");if(!b)return;const v=b.dataset.tp;if(v==="__new")taiNew();else if(v===TAI)o.remove();else taiGo(v)}}
 addEventListener("storage",e=>{
   if(e.key==="wb_tai_list")taiFill();
-  if(e.key===DATA_KEY&&dataReady){D=loadData();try{settleAll();renderWB()}catch(x){}}});
+  if(e.key===DATA_KEY&&dataReady){D=loadData();try{settleAll();renderWB()}catch(x){}}
+  else if(e.key&&(e.key==="wb_data_v2"||/^wb_data_v2__t[123]$/.test(e.key))){try{renderLevel()}catch(x){}}});
 </script>
 </body>
 </html>
