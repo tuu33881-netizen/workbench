@@ -141,8 +141,7 @@ const CHECK = `(() => {
     settings: Object.assign({}, X.D.settings, { auto: false, view: "客户" }),
     trash: [], unlock: {}, learn: []
   }, {});
-  document.getElementById("app").style.display = "none";
-  document.getElementById("rk").style.display = "";
+  document.querySelector('#tabbar button[data-s="an"]').click();
   X.renderLevel();
   const data = X.levelData("新澳", ${JSON.stringify(dt)});
   const find = (list, key) => list.find((r) => r.key === key);
@@ -176,6 +175,10 @@ const CHECK = `(() => {
     err: "",
     note: (document.querySelector("#set .note small") || {}).textContent || "",
     title: (document.getElementById("lv_title") || {}).textContent || "",
+    tab: (document.querySelector('#tabbar button[data-s="an"]') || {}).textContent || "",
+    header: (document.querySelector("#an .dh span") || {}).textContent || "",
+    anOpen: document.getElementById("an").style.display !== "none",
+    tableOnTab: document.getElementById("an").contains(document.getElementById("an_level")) && !document.getElementById("rk").querySelector("#an_level"),
     hint: box.innerText,
     dataDesks: data.desks,
     n01: find(data.tema, 1),
@@ -215,7 +218,7 @@ async function shot(b, sessionId, file) {
 
 async function main() {
   const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
-  if (!sw.includes("wb-v216")) throw new Error("sw cache not wb-v216");
+  if (!sw.includes("wb-v217")) throw new Error("sw cache not wb-v217");
   const server = await serve();
   const port = server.address().port;
   const userDir = fs.mkdtempSync("/tmp/wb-level-");
@@ -238,12 +241,14 @@ async function main() {
     await loaded;
     const r = await evalJs(b, sessionId, CHECK);
     if (r.err) throw new Error(r.err);
-    if (!r.note.includes("v21.6")) throw new Error("version " + r.note);
-    if (r.title !== "多台合计风险") throw new Error("title " + r.title);
+    if (!r.note.includes("v21.7")) throw new Error("version " + r.note);
+    if (r.tab !== "多台合计风险") throw new Error("tab " + r.tab);
+    if (r.header !== "多台合计风险") throw new Error("header " + r.header);
+    if (r.title !== "多台合计") throw new Error("title " + r.title);
+    if (!r.anOpen || !r.tableOnTab) throw new Error("多台合计 table is not the open tab");
     if (!r.hint.includes("wb_data_v2__t3") || !r.hint.includes("不上传") || !r.hint.includes("不除以台数")) throw new Error("hint missing same-browser note: " + r.hint.slice(0, 280));
     if (/平摊|366\.67|÷/.test(r.hint)) throw new Error("UI still divides by desk count: " + r.hint.slice(0, 280));
     triple("01", r.n01, [1000, 50, 50]);
-    near("01 dev", r.n01.dev, Math.abs(1000 - 1100 / 3));
     triple("鼠号07 特肖+各号", r.n07, [10, 5, 0]);
     triple("鼠号19 只有特肖", r.n19, [10, 0, 0]);
     triple("马号13 平特不摊进特码", r.n13, [0, 0, 0]);

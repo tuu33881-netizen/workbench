@@ -214,7 +214,7 @@ async function main() {
     assertCase("平特马 100@0.8", r.ma, { res: "win", ret: 180, win: 180, pl: 80, reb: 0, boss: "-80" });
     assertCase("二连肖 unchanged", r.lian, { res: "win", ret: 400, win: 400, pl: 300, reb: 4 });
     assertCase("特码 unchanged", r.tema, { res: "win", ret: 4700, win: 4700, pl: 4600, reb: 4 });
-    if (!r.note.includes("版本 v21.6")) throw new Error("version note missing v21.6: " + r.note);
+    if (!r.note.includes("版本 v21.7")) throw new Error("version note missing v21.7: " + r.note);
     if (!/平特中奖含本|平特中奖都含本|特码、平特中奖都含本/.test(r.note)) throw new Error("settings note still not 含本: " + r.note);
     if (/平特中奖=中本金×赔率不含本|平特中奖不含本/.test(r.note)) throw new Error("settings note still says 不含本 payout: " + r.note);
     if (!r.sum.includes("平特尾数") || !r.sum.includes("180")) throw new Error("中奖情况 missing 含本 180: " + r.sum);
@@ -224,7 +224,7 @@ async function main() {
     if (/不含本/.test(r.mx)) throw new Error("兑奖明细 still says 不含本: " + r.mx);
     if (!r.mx.includes("100+100*0.8=180") && !r.mx.includes("100+100×0.8=180")) throw new Error("兑奖明细 formula not 含本: " + r.mx);
     const sw = fs.readFileSync(path.join(root, "sw.js"), "utf8");
-    if (!sw.includes("wb-v216")) throw new Error("sw cache not bumped");
+    if (!sw.includes("wb-v217")) throw new Error("sw cache not bumped");
     const simple = fs.readFileSync(path.join(root, "simple.html"), "utf8");
     if (simple.includes("平特中本金")) throw new Error("simple.html still says 平特中本金");
     if (!simple.includes("pps=pw.reduce((a,b)=>a+X.winAmt(b),0)")) throw new Error("simple.html 输赢 still uses 平特本金");
