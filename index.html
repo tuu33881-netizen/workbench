@@ -84,7 +84,7 @@ textarea{width:100%;box-sizing:border-box;min-height:120px;font-size:15px;paddin
 .rmore{font-size:12px;margin-top:4px;background:none;border:0;color:#1565c0;cursor:pointer;padding:0}
 #rk,#an{max-width:1100px;margin:auto;background:#fff;min-height:100vh}
 #tabbar{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid #cfe9d8;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
-#tabbar button{flex:1;border:0;background:none;padding:12px 0;font-size:15px;color:#777;cursor:pointer}#tabbar button.on{color:#16b55a;font-weight:700;box-shadow:inset 0 3px 0 #16b55a}
+#tabbar button{flex:1;border:0;background:none;padding:12px 2px;font-size:clamp(11px,3.2vw,15px);color:#777;cursor:pointer;white-space:nowrap}#tabbar button.on{color:#16b55a;font-weight:700;box-shadow:inset 0 3px 0 #16b55a}
 body{padding-bottom:56px}
 #taipick{position:fixed;inset:0;background:rgba(240,246,242,.97);z-index:1000;display:flex;align-items:center;justify-content:center}.tpc{background:#fff;border-radius:14px;box-shadow:0 2px 16px rgba(0,0,0,.1);padding:22px;min-width:280px;max-width:90vw;text-align:center}.tpt{font-size:20px;font-weight:700;color:#16a34a;margin-bottom:12px}.tpl{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}.tpl button{font-size:17px;padding:14px 8px;border:1px solid #bfe3cc;background:#f2faf4;border-radius:10px;cursor:pointer;font-weight:700}.tpn{margin-top:10px;width:100%;font-size:15px;padding:10px;border:1px dashed #16a34a;background:#fff;color:#16a34a;border-radius:10px;cursor:pointer}.tps{font-size:12px;color:#888;margin-top:10px}.stl{line-height:1.6}.stl_最终{font-weight:700;font-size:15px}.stl_客户{color:#1565c0}.taisel{font-size:13px;padding:2px 4px;border-radius:4px;border:1px solid #9ad;background:#fff;font-weight:700;color:#16a34a}.rebl{font-size:11px;color:#aaa;margin:0 0 2px;line-height:1.2}.rebl .rsrc.r_d{display:none}
 #gate{position:fixed;inset:0;background:#f4f6f5;z-index:999;align-items:center;justify-content:center;padding:16px}
@@ -221,13 +221,13 @@ body{padding-bottom:56px}
 <div class="rank"><div class="rtab" id="wb_rtab"></div>
 <h3 class="ah">今晚排名</h3><div id="wb_rbody"></div>
 <h3 class="ah">风险分布（开奖前）</h3><div id="an_risk"></div>
-<h3 class="ah" id="lv_title">多台合计风险</h3><div id="an_level"></div>
 </div></div>
-<div id="an" style="display:none"><div class="dh"><span>分析</span><span id="an_date" style="margin-left:auto;font-size:13px;color:#fff;opacity:.9"></span></div>
-<div class="rank"><div class="rtab" id="an_per"></div><div id="an_body"></div></div></div>
+<div id="an" style="display:none"><div class="dh"><span>多台合计风险</span><span id="an_date" style="margin-left:auto;font-size:13px;color:#fff;opacity:.9"></span></div>
+<div class="rank"><h3 class="ah" id="lv_title">多台合计</h3><div id="an_level"></div>
+<h3 class="ah">客户与走势</h3><div class="rtab" id="an_per"></div><div id="an_body"></div></div></div>
 <div id="toast"></div>
 <div id="mx" style="display:none"><div class="mxbar"><input type="date" id="mx_date"><div id="mx_tabs"></div></div><div id="mx_body"></div></div>
-<nav id="tabbar"><button type="button" data-s="app" class="on">工作台</button><button type="button" data-s="rk">排名</button><button type="button" data-s="an">分析</button><button type="button" data-s="mx">兑奖明细</button></nav>
+<nav id="tabbar"><button type="button" data-s="app" class="on">工作台</button><button type="button" data-s="rk">排名</button><button type="button" data-s="an">多台合计风险</button><button type="button" data-s="mx">兑奖明细</button></nav>
 <div id="set">
   <div class="panel">
     <h3>设置</h3>
@@ -264,7 +264,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。<br><small>版本 v21.6 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。底部「多台合计风险」看的是合计下注，不是赔付。<br><small>版本 v21.7 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -1717,7 +1717,7 @@ function renderLevel(){
   const picked=$("wb_date")&&$("wb_date").value;
   el.innerHTML=`<div class="muted" style="font-size:12px">今天 ${esc(data.dt)}（北京时间）${picked&&picked!==data.dt?`，不跟工作台日期 ${esc(picked)} 走`:""} · ${esc(LN[lot]||lot)}。合计＝三台注额相加，不除以台数，也不按赔率折算。只读本机这个浏览器的 1号台、2号台、3号台（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传、不跟别的电脑同步。${miss.length?esc(miss.map(d=>d.t+"号台").join("、"))+"在本机没有数据，已按 0。":"1、2、3 号台在本机都有数据。"}</div>
   <div class="rtab" id="lv_kind">${kinds.map(([k,t])=>`<button type="button" data-lvk="${k}" class="${k===lvKind?"on":""}">${t}</button>`).join("")}<label class="lvz"><input type="checkbox" id="lv_zero"${lvZero?" checked":""}> 显示无注</label></div>
-  <div class="muted" style="font-size:12px">${LV_HINT[lvKind]||""}${top?` 合计最高 ${esc(topName)} ${fmt(Math.round(top.sum*100)/100)}。`:""}按合计从大到小排，最高的一行已标出。</div>
+  <div class="muted" style="font-size:12px">${LV_HINT[lvKind]||""}${top?` 下注合计最高 ${esc(topName)} ${fmt(Math.round(top.sum*100)/100)}。`:""}按下注合计从大到小排，最高的一行已标出。</div>
   ${levelTable(data, lvKind, lvZero)}`;
 }
 let aPer=7;
