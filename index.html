@@ -183,7 +183,7 @@ body{padding-bottom:56px}
       <input type="text" id="m_nums" placeholder="7个号，如 35 14 09 22 28 23 17 或粘贴">
       <button type="button" class="big" id="m_save">保存开奖</button>
     </div>
-    <div class="hint">特码是第7个号。保存后立刻出现在上方彩球，并按此结算当天注单。开奖约 21:40 自动拉取（166开奖网）；拉不到可对照下面预览抄号，或把同目录 draws_lao.json 更新后点设置里「立即拉开奖」。</div>
+    <div class="hint">特码是第7个号。保存后立刻出现在上方彩球，并按此结算当天注单。开奖约 21:40 自动拉取（同站缓存，来源 166开奖网；新澳、香港、老澳都会更新）。拉不到可对照下面预览抄号，或点设置里「立即拉开奖」。</div>
     <div id="m_msg" class="hint"></div>
     <iframe id="m_lao_preview" title="老澳开奖预览" src="https://166w2.com/" style="width:100%;height:120px;border:1px solid #ddd;border-radius:6px;margin-top:8px;background:#fff" sandbox="allow-scripts allow-same-origin"></iframe>
   </details>
@@ -254,7 +254,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.3</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。<br><small>版本 v21.5 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -494,7 +494,8 @@ function showApp(){
   pickBestDate();
   renderWB();
   if(!$("wb_ballstat").textContent) setBallStat("正在拉取开奖…","");
-  if(D.settings.auto!==false) fetchDraws().catch(e=>{setBallStat("自动拉取失败："+(e&&e.message||e)+"，请手动输入","err"); renderBalls()});
+  if(window.__WBTEST) setBallStat("测试模式","");
+  else if(D.settings.auto!==false) fetchDraws().catch(e=>{setBallStat("自动拉取失败："+(e&&e.message||e)+"，请手动输入","err"); renderBalls()});
   else setBallStat("已关闭自动拉取，可用手动输入","");
 }
 
@@ -598,6 +599,8 @@ function save(){saveUser(); renderWB()}
 const SRC={新澳:"XOMLHC",香港:"HK6",老澳:"OMLHC"}; // 166w2 / data.kai8.us
 const KAI8_BASE="https://data.kai8.us/api";
 const KAI8_CO="kai166";
+// 同站静态缓存（无 CORS）。GitHub Pages 上由定时任务从 kai8 写入。
+const DRAW_CACHE={新澳:["draws_xinao.json","./draws_xinao.json"],香港:["draws_hk.json","./draws_hk.json"],老澳:["draws_lao.json","./draws_lao.json"]};
 const DRAW_HH=21, DRAW_MM=40; // 约 21:40 开奖；此前不把「今晚未出」当失败
 function bjNow(){return new Date(Date.now()+8*3600e3)}
 function bjMinutes(){const d=bjNow();return d.getUTCHours()*60+d.getUTCMinutes()}
@@ -649,11 +652,52 @@ async function fetchJson(url,opts){
     throw e;
   }
 }
+function drawCacheUrl(path){
+  const b=Math.floor(Date.now()/60000); // 每分钟换一次，避开 Pages 约 10 分钟的 CDN 缓存
+  return path+(path.includes("?")?"&":"?")+"t="+b;
+}
+function drawTimeout(ms){
+  try{if(typeof AbortSignal!=="undefined"&&AbortSignal.timeout)return{signal:AbortSignal.timeout(ms)}}catch(e){}
+  return {};
+}
+async function readDrawCache(lot){
+  let last=null;
+  for(const path of DRAW_CACHE[lot]||[]){
+    try{return await fetchJson(drawCacheUrl(path))}catch(e){last=e}
+  }
+  throw last||Error("无同站开奖缓存");
+}
+function rowsFromCache(j){
+  if(!j||typeof j!=="object")return [];
+  const list=(j.data&&j.data.list)||j.list;
+  if(Array.isArray(list)&&list.length) return rowsFromKai8(list);
+  if(Array.isArray(j.nums)&&j.nums.length===7&&j.issue){
+    const dt=[j.date||"", j.time||""].filter(Boolean).join(" ");
+    return [{expect:String(j.issue), openTime:dt, openCode:j.nums.map(n=>String(n).padStart(2,"0")).join(",")}];
+  }
+  if(j.k){
+    const p=String(j.k).split(",").map(s=>s.trim()).filter(Boolean);
+    if(p.length>=8){
+      const y=/^\d{4}/.test(String(j.issue||""))?String(j.issue).slice(0,4):today().slice(0,4);
+      const expect=/^\d{6,8}$/.test(String(j.issue||""))?String(j.issue):y+String(+p[0]).padStart(3,"0");
+      return [{expect, openTime:j.date||"", openCode:p.slice(1,8).join(",")}];
+    }
+  }
+  return [];
+}
 async function fetchLaoFromSite(){
-  // 用户指定站：先从 /tb/ 找嵌入源，再拉 bmjg.js（开奖号）
+  // 同站缓存优先。旧 IP / bmjg 在浏览器里跨域失败，只做最后兜底。
+  let lastErr=null;
+  try{
+    const j=await readDrawCache("老澳");
+    const rows=rowsFromCache(j);
+    if(rows.length) return ingest("老澳", rows);
+    if(j&&j.k) return ingestLao(j.k, j.date||today());
+    throw Error("老澳缓存无开奖");
+  }catch(e){lastErr=e}
   let widgetOrigin="";
   try{
-    const tb=await fetch(LAO_BASE+"/tb/",{cache:"no-store",mode:"cors"});
+    const tb=await fetch(LAO_BASE+"/tb/",Object.assign({cache:"no-store",mode:"cors"},drawTimeout(8000)));
     const html=await tb.text();
     const m=html.match(/src=["'](https?:\/\/[^"']*lambm\/[^"']+)["']/i) || html.match(/src=["'](https?:\/\/[^"']+)["']/i);
     if(m){
@@ -664,38 +708,16 @@ async function fetchLaoFromSite(){
   const candidates=[];
   if(widgetOrigin) candidates.push(widgetOrigin+"/lambm/bmjg.js");
   LAO_BMJG.forEach(u=>{if(!candidates.includes(u))candidates.push(u)});
-  let lastErr=null;
   for(const url of candidates){
     try{
-      const j=await fetchJson(url);
+      const j=await fetchJson(url, drawTimeout(8000));
       if(!j||!j.k)throw Error("无开奖字段");
-      // 期号旁若有 qs.js 可对齐日期；默认用今天（跨日后手动可改）
       let dt=today();
       try{
-        const q=await (await fetch(LAO_BASE+"/qs.js",{cache:"no-store",mode:"cors"})).text();
-        // qs 只有期号；老澳晚开，若本地已过 0 点但仍是同一期，沿用已有同号日期
         const exist=Object.values(DRAWS).find(d=>d.lot==="老澳"&&d.issue.endsWith(String(j.k).split(",")[0].padStart(3,"0")));
         if(exist&&exist.date) dt=exist.date;
       }catch(e){}
       return ingestLao(j.k,dt);
-    }catch(e){lastErr=e}
-  }
-  // 浏览器跨域常失败：再试同目录缓存 draws_lao.json（可离线）
-  for(const path of ["./draws_lao.json","draws_lao.json"]){
-    try{
-      const j=await fetchJson(path);
-      if(j&&j.k) return ingestLao(j.k, j.date||today());
-      if(j&&j.nums&&j.issue){
-        const k=dkey("老澳",String(j.issue));
-        const balls=j.nums.map(Number);
-        if(balls.length===7){
-          if(!(DRAWS[k]&&DRAWS[k].nums.join()===balls.join())){
-            putAuto(k,{lot:"老澳",issue:String(j.issue),date:j.date||today(),time:"",nums:balls,auto:true,src:j.src||"draws_lao.json"});
-            return 1;
-          }
-          return 0;
-        }
-      }
     }catch(e){lastErr=e}
   }
   if(LAO_SEED&&(LAO_SEED.k||LAO_SEED.nums)){
@@ -709,34 +731,29 @@ async function fetchLaoFromSite(){
       }
     }catch(e){lastErr=e}
   }
-  throw lastErr||Error("老澳开奖拉取失败（跨域），请手动输入");
+  throw lastErr||Error("老澳开奖拉取失败，请手动输入");
 }
 function rowsFromKai8(list){
   return (list||[]).filter(r=>r&&(r.draw_code||r.openCode)&&r.issue).map(r=>({
     expect:String(r.issue), openTime:r.draw_time||r.openTime||"", openCode:r.draw_code||r.openCode||""
   }));
 }
+async function fetchLotCache(lot){
+  const j=await readDrawCache(lot);
+  const rows=rowsFromCache(j);
+  if(!rows.length)throw Error("缓存无有效开奖");
+  return ingest(lot, rows);
+}
 async function fetchLotKai8(lot){
   const code=SRC[lot]; if(!code)throw Error("无彩种");
   let j=null, last=null;
-  // 同站代理（绕过浏览器 CORS）→ 直连 kai8 → 抛错给上层走旧站/缓存
+  // 同站代理 → 直连 kai8（166）。github.io 上直连通常被 CORS 拦住。
   for(const url of [`api/draws?code=${encodeURIComponent(code)}`,`/api/draws?code=${encodeURIComponent(code)}`,`${KAI8_BASE}/lottery/history/${KAI8_CO}/${code}`]){
     try{j=await fetchJson(url); if(j&&!j.status)break; last=Error((j&&j.msg)||"开奖接口失败"); j=null}catch(e){last=e;j=null}
   }
   if(!j)throw last||Error("开奖拉取失败");
   const list=(j.data&&j.data.list)||j.list||[];
   return ingest(lot, rowsFromKai8(list));
-}
-async function fetchLotLegacy(lot){
-  // 旧站兜底（新澳/香港）；老澳仍走站点/缓存
-  if(lot==="老澳")return fetchLaoFromSite();
-  const map={新澳:"macaujc2",香港:"hkjc"}, y=+today().slice(0,4); let add=0;
-  for(const yr of [y,y-1]){
-    if(yr<y&&today().slice(5,7)!=="01")continue;
-    const j=await fetchJson(`https://history.macaumarksix.com/history/${map[lot]}/y/${yr}`);
-    add+=ingest(lot,j.data||j);
-  }
-  return add;
 }
 async function fetchDraws(){
   const online=typeof navigator==="undefined"||navigator.onLine!==false;
@@ -746,8 +763,12 @@ async function fetchDraws(){
   for(const lot of Object.keys(SRC)){
     try{
       let add=0;
-      try{add=await fetchLotKai8(lot)}catch(e1){
-        try{add=await fetchLotLegacy(lot)}catch(e2){throw e2||e1}
+      // 同站 JSON（Actions 从 kai8 写入）成功就 ingest。失败再直连 kai8。
+      try{add=await fetchLotCache(lot)}catch(e0){
+        try{add=await fetchLotKai8(lot)}catch(e1){
+          if(lot!=="老澳")throw e1||e0;
+          try{add=await fetchLaoFromSite()}catch(e2){throw e2||e1||e0}
+        }
       }
       out.push(`${LOTS[lot]}+${add}`); ok.push(LOTS[lot]);
       if(!tonightDrawn(lot)&&!pastDrawWindow())wait.push(LOTS[lot]);
@@ -845,7 +866,7 @@ function tokenize(line){
     [/^(?:每[个一]?[数码号](?:\s*各数?)?|各数?|每[个码号]?|[xX×*＊])/,m=>({k:"each",zx:/^每[个一]?[数码号]|^各数/.test(m[0])})],
     [/^尾\s*(\d)/,m=>({k:"tail",v:m[1]})],
     [/^(\d(?:\s*[.．,，、]\s*\d)*)\s*尾/,m=>({k:"tails",v:m[1].match(/\d/g)})],
-    [/^(?:[红蓝绿]波)/,m=>({k:"opt",v:m[0].replace(/波/,"")})],
+    [/^(?:[红蓝绿]\s*波[\s,，、]*?(?:单|双)?)/,m=>({k:"opt",v:m[0].replace(/[\s,，、波]/g,"")})],
     [/^[羊猪兔蛇虎狗牛龙马猴鼠鸡]/,m=>({k:"zod",v:m[0]})],
     [/^(?:\d+(?=[百千万佰仟]))?[零一二两俩三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾佰仟][\d零一二两俩三四五六七八九十百千万壹贰叁肆伍陆柒捌玖拾佰仟]*\s*(元|块|米|斤)?/,m=>{const v=cnNum(m[0].replace(/[元块米斤\s]/g,""));return v>0?{k:"num",v,unit:true}:{k:"junk",v:m[0]}}],
     [/^(\d+)\s*(?:([百千万])\s*(\d)?)?\s*(元|块|米|斤)?/,m=>{let v=+m[1];if(m[2]){v*=MULT[m[2]];if(m[3])v+=+m[3]*MULT[m[2]]/10}return{k:"num",v,raw:+m[1],unit:!!(m[2]||m[4])}}],
@@ -853,6 +874,15 @@ function tokenize(line){
   ];
   while(x.length){for(const [re,f] of R){if((m=x.match(re))){const t=f(m);if(t){t.src=m[0];T.push(t)}x=x.slice(m[0].length);break}}}
   return T;
+}
+function wavePick(v){
+  const s=String(v||"");
+  const color=(s.match(/[红蓝绿]/)||[])[0];
+  if(!color||!WAVE_MAP[color])return null;
+  let nums=WAVE_MAP[color].slice();
+  if(s.includes("单"))nums=nums.filter(n=>n%2===1);
+  else if(s.includes("双"))nums=nums.filter(n=>n%2===0);
+  return {label:color+(s.includes("单")?"单":s.includes("双")?"双":""), nums};
 }
 function playOf(kw,n){
   if(!kw)return null;
@@ -885,11 +915,11 @@ function flush0(g,out){
     odds:oddsOf(type,items.map(cont).join(" ")), raw, warn:[...warn,...(w||[])].join("；"), ...(extra||{})
   });
   if(!g.items.length){mk("其他",[],g.amount);return}
-  // 波色拆特码
+  // 波色拆特码。红波单 / 绿波双 = 该波色并且单或双的号，各金额。
   const waveOnly=[], rest=[];
-  g.items.forEach(it=>{const w=it.k==="opt"&&WAVE_MAP[String(it.v).replace(/波$/,"")];if(w)waveOnly.push(String(it.v).replace(/波$/,""));else rest.push(it)});
+  g.items.forEach(it=>{const w=it.k==="opt"&&wavePick(it.v);if(w)waveOnly.push(w);else rest.push(it)});
   if(waveOnly.length){
-    waveOnly.forEach(w=>WAVE_MAP[w].forEach(n=>mk("特码单码",[{k:"nums",v:n}],g.amount,[],{wave:w})));
+    waveOnly.forEach(w=>w.nums.forEach(n=>mk("特码单码",[{k:"nums",v:n}],g.amount,[],{wave:w.label})));
     if(!rest.length)return; g.items=rest;
   }
   // 每个数 → 生肖展开成特码号码
@@ -1021,7 +1051,6 @@ function slipFix(text){
     .replace(/格\s*数/g,"各数").replace(/(?<!每)个\s*(?=\d)/g,"各").replace(/特\s*各\s*数/g,"各数").replace(/各\s*[#＃]\s*(?=\d)/g,"各")
     .replace(/(\d)\s*[.。,，、]?\s*[#＃]\s*(?=\d)/g,"$1各")
     .replace(/(连肖?[\s,，、.。]*[鼠牛虎兔龙蛇马羊猴鸡狗猪](?:[\s、，,.]*[鼠牛虎兔龙蛇马羊猴鸡狗猪])*)\s*[。.，,]\s*(\d+)\s*$/,"$1 $2")
-    .replace(/^(\s*(?:新澳|新奥|老澳|老奥|澳门|澳|奥|香港|香|港|新)?\s*)([鼠牛虎兔龙蛇马羊猴鸡狗猪]+)\s*各\s*(?=\d)/,"$1$2各数")
     .replace(/^(.*\d\s*(?:斤|元|块|米)?)\s*[，,。.\s]*老\s*[。.]?\s*$/,(m,a)=>/老澳|老奥/.test(a)?m:"老澳 "+a)
     .replace(/^(.*\d\s*(?:斤|元|块|米)?)\s*[，,。.\s]*新\s*[。.]?\s*$/,(m,a)=>/新澳|新奥/.test(a)?m:"新澳 "+a));
   const NO=l=>{const t=l.replace(/[。.,，、\s]+$/,"");return /^[\d\s.,，、\-\/+＋]+$/.test(t)&&(t.match(/\d+/g)||[]).length>=3&&(t.match(/\d+/g)||[]).every(n=>+n>=1&&+n<=49)};
