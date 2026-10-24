@@ -1,0 +1,60 @@
+# 把 kai8（166w2）公开开奖号写成同站 JSON，提交到 GitHub Pages 使用的 gh-pages。
+# schedule 只在默认分支（main）上触发。本工作流只改三个 draws_*.json，不发布前端。
+# 北京时间 = UTC+8。加密轮询指开奖时段更密，不是加密传输。
+# Actions 的 cron 可能被平台推迟，最短间隔 5 分钟。
+name: sync-draws
+
+on:
+  schedule:
+    # 21:00–23:55 北京时间，每 5 分钟（覆盖约 21:30–23:30 的开奖窗口）
+    - cron: "*/5 13-15 * * *"
+    # 20:45 北京时间，开奖前对一下
+    - cron: "45 12 * * *"
+    # 白天和凌晨稀疏：09:30、13:30、17:30、01:30、07:30 北京时间
+    - cron: "30 1,5,9,17,23 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-draws-gh-pages
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'tuu33881-netizen/workbench'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout gh-pages（Pages 部署内容）
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: site
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Checkout sync script
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: src
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Pull kai8 into same-site JSON
+        run: node src/scripts/sync-draws.mjs --out site
+
+      - name: Commit draw cache on gh-pages
+        working-directory: site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- draws_xinao.json draws_hk.json draws_lao.json
+          if git diff --cached --quiet; then
+            echo "开奖缓存无变化，不推送"
+            exit 0
+          fi
+          git commit -m "chore: refresh draw cache from kai8 (XOMLHC/HK6/OMLHC)"
+          git push origin HEAD:gh-pages
