@@ -178,7 +178,7 @@ function nightHtml(L){
   const wl=wlByLot();
   return `<div class="gt">${dt} 兑奖明细 — 申报人：${esc(cur)}</div><div class="draws">${dr||'<span class="muted">还没有注单</span>'}</div>
 <div class="sm">申报人：${esc(cur)}　订单：${secs.length}　总额：<b>${fmt(s.amt)}</b>　退水合计：<b>${fmt(s.reb)}</b><div>中奖情况：</div>${wl||"<div>无</div>"}${STL(s).map(x=>`<div${x.k==="最终"?' class="pl"':x.k==="客户"?' style="color:#1565c0"':""}>${esc(x.t)}</div>`).join("")}<div class="muted" style="font-size:12px">（输赢=下注−中奖含本；平特中奖=本金+本金×赔率；最终结算=输赢−退水）</div></div>
-${rows.length?`<div class="g3" style="grid-template-columns:repeat(${cols.length||1},1fr)">${cols.filter(c=>c.length).map(c=>`<table><tr><th>#</th><th>金额</th><th>详情</th></tr>${c.join("")}</table>`).join("")}</div>`:""}<div class="ft">日期: ${dt}　申报人: ${esc(cur)}</div>`}
+${rows.length?`<div class="g3" style="grid-template-columns:repeat(${cols.length||1},1fr)">${cols.filter(c=>c.length).map(c=>`<table><tr><th>#</th><th>金额</th><th>详情</th></tr>${c.join("")}</table>`).join("")}</div>`:""}<div class="ft">日期: ${dt}　申报人: ${esc(cur)}　总金额: ${fmt(s.amt)}</div>`}
 function copyTxt(L){const s=sumOf(L),o=[`${$("date").value.slice(5)} 对账 — ${cur}`];
   sections(L).forEach((S,k)=>{o.push(`【第${k+1}单】`);linesOf(S).forEach(x=>o.push(`${x.r}  ${fmt(x.a)}${x.w.length?"  ★"+winTxt(x):""}`))});
   o.push(`总下注 ${fmt(s.amt)}`);
@@ -216,7 +216,7 @@ function makeImg(L){
     add(h,y0=>{g.strokeStyle="#ddd";g.strokeRect(P,y0,Wd-2*P,h);g.beginPath();g.moveTo(P+C1,y0);g.lineTo(P+C1,y0+h);g.moveTo(P+C1+C2,y0);g.lineTo(P+C1+C2,y0+h);g.stroke();
       g.fillStyle="#666";g.font="13px "+FONT;g.fillText(String(k+1),P+8,y0+17);g.fillStyle="#222";g.fillText(fmt(a),P+C1+8,y0+17);
       let yy=y0+17;HL.forEach(t=>{g.fillStyle="#d32f2f";g.font="bold 13px "+FONT;g.fillText(t,TX,yy);yy+=18});RL.forEach(t=>{g.fillStyle="#333";g.font="13px "+FONT;g.fillText(t,TX,yy);yy+=18})})});
-  add(30,y0=>{g.fillStyle="#666";g.font="13px "+FONT;g.fillText(`日期: ${$("date").value.slice(5)}　申报人: ${cur}`,P,y0+20)});
+  add(30,y0=>{g.fillStyle="#666";g.font="13px "+FONT;g.fillText(`日期: ${$("date").value.slice(5)}　申报人: ${cur}　总金额: ${fmt(s.amt)}`,P,y0+20)});
   const sc=2;cv.width=Wd*sc;cv.height=y*sc;g.scale(sc,sc);g.fillStyle="#fff";g.fillRect(0,0,Wd,y);ops.forEach(f=>f());
   const url=cv.toDataURL("image/png");window.__lastImg=url;
   $("imgout").innerHTML=`<div class="card"><div class="row"><h2 style="margin:0">对账图</h2><a download="${esc(cur)}_${$("date").value}.png" href="${url}"><button class="pri">下载图片</button></a><button id="cpimg">复制图片</button><span class="muted">下载后发微信；或复制后直接粘贴到微信</span></div><img src="${url}"></div>`;
