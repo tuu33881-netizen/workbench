@@ -265,7 +265,7 @@ body{padding-bottom:56px}
     <h4 style="margin:14px 0 4px;font-size:14px">客户退水 %<small class="muted">（空=跟上面默认，0=不退）</small></h4>
     <div id="s_creb" style="font-size:13px"></div>
     <div style="margin:4px 0"><input id="s_cnew" placeholder="客户名" style="width:8em"> <button type="button" id="s_cadd">添加客户</button></div>
-    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。<br><small>版本 v21.17 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计风险 · 平特不含本1 · 尾各数为特码 · 默认退点4%（已存平特/连肖5改为4） · 兑奖明细汇总行距更紧 · 结算称最终结算 · 静默待开奖注单挡保存</small></p>
+    <p class="note">优先级：单上设的 > 客户 > 默认。改默认不会动到有自己设置的客户和单。<br>平特马（本命）和平特尾数不退点。退点＝下注×比例，中没中都退。盈亏＝中奖−下注（特码、平特中奖都含本；平特赔率仍按不含本录入，中奖＝本金＋本金×赔率；退水另计不进盈亏）。<br>数据只存在本机当前浏览器，不会同步到其他设备。多台合计只读本机 1/2/3 号台已保存的注单（wb_data_v2、wb_data_v2__t2、wb_data_v2__t3），不上传，也不把合计除以台数。<br><small>版本 v21.18 · 开奖自动含新澳、香港、老澳 · 生肖各为特肖 · 多台合计风险 · 平特不含本1 · 尾各数为特码 · 默认退点4%（已存平特/连肖5改为4） · 兑奖明细汇总行距更紧 · 结算称最终结算 · 静默待开奖注单挡保存 · 特N尾各X展开成特码</small></p>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">记住的写法 <span id="s_ln"></span></summary><div id="s_learn" style="font-size:13px"></div></details>
     <details style="margin:8px 0"><summary style="cursor:pointer;font-size:14px">回收站 <span id="s_tn"></span></summary><div id="s_trash" style="font-size:13px"></div></details>
     <div class="btns">
@@ -989,7 +989,9 @@ function flush0(g,out){
     return;
   }
   // v21.11：N尾各数 / 各数N尾 → 特码单码（6→06 16 26 36 46），不是平特尾。没写各数的 N尾 仍走下面的平特尾。
-  if(g.zx&&g.items.length&&g.items.every(i=>i.k==="tail")){
+  // v21.18：特N尾 / 特码N尾各X 同样展开。单尾不写各也展开；多个尾没写各仍标红。平特尾不动。
+  const temaTail=P==="特码"&&g.amount>0&&g.items.length&&g.items.every(i=>i.k==="tail")&&(g.each||g.items.length===1);
+  if((g.zx&&g.items.length&&g.items.every(i=>i.k==="tail"))||temaTail){
     const tails=[];
     g.items.forEach(i=>{const t=String(i.v);if(/^[0-9]$/.test(t)&&!tails.includes(t))tails.push(t)});
     if(!tails.length){mk("其他",[],g.amount,["没找到尾"]);return}
