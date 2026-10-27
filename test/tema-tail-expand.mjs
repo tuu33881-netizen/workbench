@@ -206,9 +206,9 @@ async function main() {
     if (!win || win.res !== "win") throw new Error("特码 16 未中 6 尾: " + JSON.stringify(win));
     if (!lose6 || lose6.res !== "lose" || !lose8 || lose8.res !== "lose") throw new Error("不中的尾被算中: " + JSON.stringify(r.judged));
     if (win.ret !== 20 * r.temaOdds) throw new Error("中奖金额不是普通特码: " + win.ret);
-    if (!r.version.includes("v21.18") || !r.version.includes("特N尾各X展开成特码")) throw new Error("版本不对: " + r.version);
-    if (!r.sw.includes("wb-v2118")) throw new Error("缓存名不对: " + r.sw);
-    console.log("ok v21.18 特6.8尾各20 →", TAIL68.join(" "), "各20，共", r.saved.length, "注可保存");
+    if (!r.version.includes("v21.19") || !r.version.includes("特N尾各X展开成特码") || !r.version.includes("同行彩种标签归前段")) throw new Error("版本不对: " + r.version);
+    if (!r.sw.includes("wb-v2119")) throw new Error("缓存名不对: " + r.sw);
+    console.log("ok v21.19 特6.8尾各20 →", TAIL68.join(" "), "各20，共", r.saved.length, "注可保存");
     console.log("平特尾", JSON.stringify(ping[0]));
     console.log("连肖仍红", lian[0].warn);
     b.close();
